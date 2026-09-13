@@ -13,53 +13,102 @@
 
 
 @*<component type="typeof(App)" render-mode="ServerPrerendered" />*@
-<script src="js/blazorHelpers.js"></script>
+
+@* <script src="js/blazorHelpers.js"></script>
 <script src="editor/ckeditor/ckeditor.js"></script>
-<script src="editor/editor.js?v=2"></script>
+<script src="editor/editor.js?v=2"></script> *@
+
 @* <script src="editor/editorInterop.js"></script> *@
 
-<script src="js/bootstrap.modals.js"></script>
+@* <script src="js/bootstrap.modals.js"></script> *@
+
+
+
+<script src="js/blazorHelpers.js" asp-append-version="true"></script>
+<script src="editor/ckeditor/ckeditor.js" asp-append-version="true"></script>
+<script src="editor/editor.js" asp-append-version="true"></script>
+
+<script src="js/bootstrap.modals.js" asp-append-version="true"></script>
+
+
 
 <script type="module" src="editor/editorInterop.js?v=3" asp-append-version="true"></script>
-<script src="js/fileUtils.js"></script>
+@* <script src="js/fileUtils.js"></script> *@
+
+<script src="js/fileUtils.js" asp-append-version="true"></script>
+
+<link href="fullcalendar/main.min.css"
+      rel="stylesheet"
+      asp-append-version="true" />
 
 
 
-<link href="fullcalendar/main.min.css" rel="stylesheet" />
-<script src="fullcalendar/main.min.js"></script>
+@* <link href="fullcalendar/main.min.css" rel="stylesheet" /> *@
+
+
+@* <script src="fullcalendar/main.min.js"></script>
 <script src="fullcalendar/locales-all.min.js"></script>
-<script src="js/agenda.js?v=2"></script>
+<script src="js/agenda.js?v=2"></script> *@
 
-<script src="js/download.js"></script>
-<script src="js/pdfPreview.js?v=6"></script>
+
+<script src="fullcalendar/main.min.js" asp-append-version="true"></script>
+<script src="fullcalendar/locales-all.min.js" asp-append-version="true"></script>
+<script src="js/agenda.js" asp-append-version="true"></script>
+
+
+@* <script src="js/download.js"></script>
+<script src="js/pdfPreview.js?v=6"></script> *@
+
+<script src="js/download.js" asp-append-version="true"></script>
+<script src="js/pdfPreview.js" asp-append-version="true"></script>
 
 <!--  Tu archivo modal.js -->
-<script src="js/modal.js?v=5"></script>
+@* <script src="js/modal.js?v=5"></script>
 <script src="js/tts.js"></script>
 <script src="js/ttsios.js?v=2"></script>
 <script src="js/voiceDictation.js"></script>
 <script src="js/voiceConfirm.js"></script>
 <script src="js/uiConfirm.js"></script>
 <script src="js/mic.js?v=4"></script>
-<script src="js/audioUtils.js"></script>
+<script src="js/audioUtils.js"></script> *@
+
+<script src="js/modal.js" asp-append-version="true"></script>
+<script src="js/tts.js" asp-append-version="true"></script>
+<script src="js/ttsios.js" asp-append-version="true"></script>
+<script src="js/voiceDictation.js" asp-append-version="true"></script>
+<script src="js/voiceConfirm.js" asp-append-version="true"></script>
+<script src="js/uiConfirm.js" asp-append-version="true"></script>
+<script src="js/mic.js" asp-append-version="true"></script>
+<script src="js/audioUtils.js" asp-append-version="true"></script>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+@* <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script> *@
+<script src="js/site.js" asp-append-version="true"></script>
+
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
 
-<script src="js/site.js" ></script>
-<script src="js/voiceDictation.js?v=7"></script>
+@* <script src="js/site.js" ></script> *@
+@* <script src="js/voiceDictation.js?v=7"></script> *@
 
 @* <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script> *@
 @* <script src="js/winWindowDrag.js" asp-append-version="true"></script> *@
 
-<script src="js/device.js"></script>
+@* <script src="js/device.js"></script> *@
+
+
+<script src="js/device.js" asp-append-version="true"></script>
+<script src="js/winCapture.js" asp-append-version="true"></script>
+<script src="js/floatingWindows.js" asp-append-version="true"></script>
+<script src="js/googleLink.js" asp-append-version="true"></script>
+
 <!-- Nuestro helper para mover ventanas (NO es módulo) -->
 <script src="js/winCapture.js" asp-append-version="true"></script>
-<script src="js/floatingWindows.js"></script>
-<script src="js/googleLink.js"></script>
+
+
+@* <script src="js/floatingWindows.js"></script>
+<script src="js/googleLink.js"></script> *@
 
 
 
