@@ -1,0 +1,101 @@
+﻿@using IurixBlazor.Services
+@* @inject ParteProcesoService PartesService
+@inject PersonaService PersonaService
+@inject CaracterIntervencionService CaracterService *@
+
+@inherits PartesModalBase
+
+@if (Visible)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-people"></i>
+                        Partes del @(TipoGestion == "Judicial" ? "Proceso Judicial" : "Proceso Extrajudicial")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Alta de nueva parte -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label>Persona</label>
+                            <InputSelect class="form-select" @bind-Value="PersonaIdSeleccionada">
+                                <option value="">Seleccione...</option>
+                                @foreach (var p in Personas)
+                                {
+                                    <option value="@p.Id">
+                                        @(!string.IsNullOrEmpty(p.RazonSocial)
+                                            ? p.RazonSocial
+                                            : $"{p.Apellido}, {p.Nombre}")
+                                    </option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Carácter de intervención</label>
+                            <InputSelect class="form-select" @bind-Value="CaracterIdSeleccionado">
+                                <option value="">Seleccione...</option>
+                                @foreach (var c in Caracteres)
+                                {
+                                    <option value="@c.Id">@c.Nombre</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary mb-3" @onclick="AgregarParte" disabled="@(!PuedeAgregar)">
+                        <i class="bi bi-plus-circle"></i> Agregar parte
+                    </button>
+
+                    <hr />
+
+                    <!-- Listado de partes -->
+                    @if (Partes.Count == 0)
+                    {
+                        <p class="text-muted">No hay partes cargadas.</p>
+                    }
+                    else
+                    {
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Persona</th>
+                                    <th>Carácter</th>
+                                    <th style="width:80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var parte in Partes)
+                                {
+                                    <tr>
+                                        <td>@parte.NombrePersona</td>
+                                        <td>@parte.NombreCaracter</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    title="Eliminar"
+                                                    @onclick="() => EliminarParte(parte.Id)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="Cerrar">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

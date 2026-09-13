@@ -1,0 +1,141 @@
+﻿.presupuesto-ver .logo-estudio {
+    max-height: 80px;
+    max-width: 100%;
+}
+
+.presupuesto-ver .print-area {
+    padding: 18px;
+}
+
+.presupuesto-ver .muted {
+    color: #6c757d;
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 1040; /* atrás */
+}
+
+.modal-card {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(720px, 95vw);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    z-index: 1050; /* delante */
+    max-width: 980px;
+    width: 95vw;
+}
+
+.modal-header, .modal-body {
+    padding: 16px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-close {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+}
+
+
+.logo-estudio {
+    max-width: 100%;
+    max-height: 120px; /* alto máximo razonable para encabezado */
+    object-fit: contain; /* mantiene proporciones sin recortar */
+    display: inline-block;
+}
+
+
+
+
+
+
+
+@media print {
+    .d-print-none {
+        display: none !important;
+    }
+
+    .print-area {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .logo-estudio {
+        max-height: 80px; /* en impresión, un poco más chico */
+    }
+
+
+
+    body * {
+        visibility: hidden;
+    }
+
+    #print-root, #print-root * {
+        visibility: visible;
+    }
+
+    #print-root {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .acciones-no-print {
+        display: none !important;
+    }
+
+    .modal-card {
+        width: 98vw;
+    }
+}
+
+
+
+@media (max-width: 576px) {
+    .presupuesto-ver h2 {
+        font-size: 1.4rem;
+    }
+
+    .presupuesto-ver .totales {
+        font-size: 0.95rem;
+    }
+
+    .presupuesto-ver .nota {
+        font-size: 0.9rem;
+    }
+}
+
+
+.preview-adjunto-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+    /* que nada dentro se salga del contorno */
+    .preview-adjunto-wrapper * {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+
+

@@ -1,0 +1,120 @@
+﻿/* =============== Base =============== */
+/* Truncados y anchos ya existentes se mantienen */
+.maxw-240 {
+    max-width: 240px;
+}
+
+.maxw-280 {
+    max-width: 280px;
+}
+
+.minw-200 {
+    min-width: 200px;
+}
+
+.minw-220 {
+    min-width: 220px;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table {
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.badge {
+    font-size: .9em;
+    padding: .4em .6em;
+}
+
+/* Header pegajoso dentro del .table-responsive */
+.table-responsive thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bs-dark);
+    color: #fff;
+}
+
+/* =============== Notebook (992–1399) =============== */
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    /* Un pelín más de aire lateral que el container normal */
+    .honorarios-container {
+        padding-left: .75rem;
+        padding-right: .75rem;
+    }
+
+        /* Texto un 5% más compacto para que “respire” */
+        .honorarios-container table {
+            font-size: .95rem;
+        }
+
+    /* Columnas un poco más flexibles */
+    .maxw-280 {
+        max-width: 240px;
+    }
+
+    .minw-220 {
+        min-width: 180px;
+    }
+
+    .minw-200 {
+        min-width: 160px;
+    }
+
+    /* Columna Acciones: que no empuje tanto */
+    thead th.minw-200 {
+        min-width: 160px;
+    }
+
+    td .btn-group.btn-group-sm > .btn {
+        padding: .25rem .5rem;
+    }
+    /* ya es sm, pero reforzamos */
+}
+
+/* =============== Tablet (≤991) =============== */
+@media (max-width: 991.98px) {
+    /* La tabla más compacta en vertical */
+    .honorarios-container .table {
+        font-size: .92rem;
+    }
+
+        .honorarios-container .table td,
+        .honorarios-container .table th {
+            padding: .5rem .55rem;
+        }
+
+    /* Aflojamos mínimos para que no haya scroll horizontal innecesario */
+    .minw-220 {
+        min-width: 160px;
+    }
+
+    .minw-200 {
+        min-width: 140px;
+    }
+
+    .maxw-280 {
+        max-width: 200px;
+    }
+
+    /* El grupo de acciones ya lo resolvés con dropdown en mobile (perfecto) */
+}
+
+/* =============== Desktop grande (≥1400) =============== */
+@media (min-width: 1400px) {
+    /* Si querés aún más ancho usable en 1400+, podés llevar la mesa al tope del container-xxl */
+    .honorarios-container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}

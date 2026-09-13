@@ -1,0 +1,24 @@
+﻿.grupo-gestion-list,
+.grupo-gestion-form {
+    max-width: 700px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .grupo-gestion-list h3,
+    .grupo-gestion-form h3 {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .grupo-gestion-form .form-label {
+        font-weight: 500;
+    }
+
+    .grupo-gestion-form .btn {
+        font-size: 0.9rem;
+        padding: 8px 14px;
+    }

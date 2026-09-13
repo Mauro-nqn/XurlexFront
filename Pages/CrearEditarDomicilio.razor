@@ -1,0 +1,79 @@
+﻿@attribute [Authorize]
+
+@page "/domicilios/editar/{Id:int?}"
+@inherits CrearEditarDomicilioBase
+@layout AdminLayout
+
+<div class="container mt-4 domicilio-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Domicilio" : "➕ Nuevo Domicilio")</h3>
+
+    <EditForm Model="@Domicilio" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrEmpty(ErrorMensaje))
+{
+    <div class="alert alert-warning">
+        @ErrorMensaje
+    </div>
+}
+
+        <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <InputText class="form-control" @bind-Value="Domicilio.Descripcion" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tipo de Domicilio</label>
+            <InputSelect class="form-control" @bind-Value="Domicilio.Tipo">
+                @foreach (var tipo in Enum.GetValues<TipoDomicilio>())
+                {
+                    <option value="@tipo">@tipo</option>
+                }
+            </InputSelect>
+        </div>
+
+        @if (Domicilio.Tipo == TipoDomicilio.Constituido)  @* ajustá al nombre real del enum *@
+        {
+            <div class="mb-3">
+                <label class="form-label">Ciudad</label>
+                <InputText class="form-control" @bind-Value="Domicilio.Ciudad" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Provincia</label>
+                <InputText class="form-control" @bind-Value="Domicilio.Provincia" />
+            </div>
+        }
+
+        @* <button class="btn btn-primary me-2" type="submit">💾 Guardar</button> *@
+        <button class="btn btn-primary"
+                disabled="@IsSaving"
+                @onclick="Guardar">
+            @(IsSaving ? "Guardando..." : "Guardar")
+        </button>
+
+     @*    @if (Id.HasValue)
+        {
+            <button class="btn btn-danger" type="button" @onclick="Eliminar">🗑️ Eliminar</button>
+        } *@
+
+
+    @*     @if (Id.HasValue)
+        {
+            <button class="btn btn-danger ms-2"
+                    disabled="@IsDeleting"
+                    @onclick="Eliminar">
+                @(IsDeleting ? "Eliminando..." : "Eliminar")
+            </button>
+        } *@
+
+        @* <button class="btn btn-secondary ms-2" type="button" @onclick="Cancelar">Cancelar</button> *@
+
+        <button class="btn btn-secondary ms-2" @onclick="Cancelar">
+            Cancelar
+        </button>
+    </EditForm>
+</div>
+
+

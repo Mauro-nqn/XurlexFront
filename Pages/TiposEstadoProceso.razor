@@ -1,0 +1,44 @@
+﻿@attribute [Authorize]
+
+@page "/tiposestadoproceso"
+@inherits TipoEstadoProcesoBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>⚙️ Tipos de Estado de Proceso</h3>
+    <button class="btn btn-success mb-3" @onclick="Nuevo">➕ Nuevo Estado</button>
+
+    @if (Estados == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Estados.Any())
+    {
+        <p>No hay tipos de estado registrados.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo de Proceso</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Estados)
+                {
+                    <tr>
+                        <td>@e.Nombre</td>
+                        <td>@e.TipoProceso</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(e.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(e.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

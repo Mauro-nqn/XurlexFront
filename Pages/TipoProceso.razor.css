@@ -1,0 +1,24 @@
+﻿.tipo-proceso-list,
+.tipo-proceso-form {
+    max-width: 600px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .tipo-proceso-form h3,
+    .tipo-proceso-list h3 {
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .tipo-proceso-form .form-label {
+        font-weight: 500;
+    }
+
+    .tipo-proceso-form .btn {
+        font-size: 0.9rem;
+        padding: 8px 14px;
+    }

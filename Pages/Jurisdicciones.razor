@@ -1,0 +1,42 @@
+﻿@attribute [Authorize]
+
+@page "/jurisdicciones"
+@inherits JurisdiccionBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>🏛 Jurisdicciones</h3>
+    <button class="btn btn-success mb-3" @onclick="Nueva">➕ Nueva Jurisdicción</button>
+
+    @if (Jurisdicciones == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Jurisdicciones.Any())
+    {
+        <p>No hay jurisdicciones registradas.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var j in Jurisdicciones)
+                {
+                    <tr>
+                        <td>@j.Nombre</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(j.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(j.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

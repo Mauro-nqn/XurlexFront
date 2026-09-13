@@ -1,0 +1,64 @@
+﻿@attribute [Authorize]
+
+@page "/domicilios"
+@inherits DomicilioBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>🏠 Domicilios</h3>
+    <div class="d-flex justify-content-between mb-3">
+        <PermisoView Permiso="@Permisos.Domicilios.Crear">
+        <button class="btn btn-success" @onclick="NuevoDomicilio">➕ Nuevo Domicilio</button>
+        </PermisoView>
+
+        <!-- 🔍 Filtro por tipo -->
+        <div class="d-flex align-items-center">
+            <label class="me-2">Filtrar por tipo:</label>
+            <InputSelect class="form-select" @bind-Value="FiltroTipo">
+                <option value="">Todos</option>
+                @foreach (var tipo in Enum.GetValues<TipoDomicilio>())
+                {
+                    <option value="@tipo">@tipo</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+
+    @if (DomiciliosFiltrados == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!DomiciliosFiltrados.Any())
+    {
+        <p>No hay domicilios registrados.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in DomiciliosFiltrados)
+                {
+                    <tr>
+                        <td>@d.Descripcion</td>
+                        <td>@d.Tipo</td>
+                        <td>
+                            <PermisoView Permiso="@Permisos.Domicilios.Editar">
+                            <button class="btn btn-primary btn-sm" @onclick="() => EditarDomicilio(d.Id)">✏️ Editar</button>
+                            </PermisoView>
+                            <PermisoView Permiso="@Permisos.Domicilios.Eliminar">
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => EliminarDomicilio(d.Id)">🗑️ Eliminar</button>
+                            </PermisoView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

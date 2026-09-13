@@ -1,0 +1,748 @@
+﻿@attribute [Authorize]
+
+@page "/movimientos/{tipo}/{procesoId:int}"
+@inherits MovimientosPorProcesoBase
+@layout AdminLayout
+
+@* <div class="container mt-4">
+
+    <h3>📚 Movimientos - @Titulo</h3>
+
+    @if (!string.IsNullOrEmpty(NombreProceso))
+    {
+        <div class="alert alert-info">
+
+            @if (Tipo == "Judicial")
+            {
+                <p><strong>Proceso:</strong> @NombreProceso <strong>Expte:</strong> @NumeroExpediente</p>
+                <p><strong>Tipo Proceso:</strong> @TipoProceso </p>
+                <p><strong>Juzgado Dextra:</strong> @(JuzgadoDextraAplicacionExacta ?? "—")</p>
+
+            }
+            else
+            {
+                <p><strong>Proceso:</strong> @NombreProceso </p>
+                <p><strong>Tipo Proceso:</strong>@Materia </p>
+                
+            }
+        </div>
+    }
+
+    @* <button class="btn btn-success mb-3" @onclick="MostrarFormularioNuevoMovimiento">➕ Agregar Movimiento</button> *@@*
+    <div class="mt-4">
+        <button class="btn btn-success me-2" @onclick="@(() => Nav.NavigateTo($"/movimientos/{Tipo}/crear/{ProcesoId}"))"> <i class="bi bi-plus-lg"></i> Agregar Movimiento</button>
+        
+            <button class="btn btn-danger me-2" @onclick="EliminarTodosMovimientos">
+            <i class="bi bi-trash3"></i> Eliminar TODOS los movimientos
+            </button>
+        
+        <button class=" btn btn-secondary" @onclick="VolverAGestiones"><i class="bi bi-arrow-left-circle"></i> Volver a Gestiones</button>
+        
+       @*  <button class="btn btn-warning btn-sm ms-2"
+                title="Sincronizar con Dextra"
+                disabled="@IsSyncing(ProcesoId)"
+                @onclick="() => SyncUno(ProcesoId)">
+            @if (IsSyncing(ProcesoId))
+            {
+                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <p>Sincronizando..</p>
+            }
+            else
+            {
+                <span>🔁 Sync Dextra</span>
+            }
+        </button> *@
+
+        @*
+
+        @if (PuedeSincronizar)
+{
+            <button class="btn btn-warning"
+                    title="Sincronizar con Dextra"
+                    disabled="@(IsSyncing(ProcesoId) || IsConsulting)"
+                    @onclick="() => SyncUno(ProcesoId)"
+                    style="margin-left:5px">
+
+                @if (IsConsulting)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>Consultando…</span>
+                }
+                else if (IsSyncing(ProcesoId))
+                {
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    <span>Sincronizando…</span>
+                }
+                else
+                {
+                    <span><i class="bi bi-cloud-arrow-down"></i> @TextoBotonDextra</span>
+                }
+
+            </button>
+        }
+
+
+</div> *@
+
+
+
+<div class="container mt-4">
+
+    <h3>📚 Movimientos - @Titulo</h3>
+
+    @if (!string.IsNullOrEmpty(NombreProceso))
+    {
+        <div class="alert alert-info">
+
+            @if (Tipo == "Judicial")
+            {
+                <p><strong>Proceso:</strong> @NombreProceso <strong>Expte:</strong> @NumeroExpediente</p>
+                <p><strong>Tipo Proceso:</strong> @TipoProceso </p>
+                <p><strong>Juzgado Dextra:</strong> @(JuzgadoDextraAplicacionExacta ?? "—")</p>
+            }
+            else
+            {
+                <p><strong>Proceso:</strong> @NombreProceso </p>
+                <p><strong>Tipo Proceso:</strong> @Materia </p>
+            }
+        </div>
+    }
+
+    @if (esMovil)
+    {
+        <!-- ===== MOBILE: botones apilados ===== -->
+        <div class="mt-3 d-flex flex-column gap-2">
+            <button class="btn btn-success w-100"
+                    @onclick="@(() => Nav.NavigateTo($"/movimientos/{Tipo}/crear/{ProcesoId}"))">
+                <i class="bi bi-plus-lg"></i> Agregar Movimiento
+            </button>
+
+            <button class="btn btn-danger w-100"
+                    @onclick="EliminarTodosMovimientos">
+                <i class="bi bi-trash3"></i> Eliminar TODOS los movimientos
+            </button>
+
+            <button class="btn btn-secondary w-100"
+                    @onclick="VolverAGestiones">
+                <i class="bi bi-arrow-left-circle"></i> Volver a Gestiones
+            </button>
+
+            @if (PuedeSincronizar)
+            {
+                <button class="btn btn-warning w-100"
+                        title="Sincronizar con Dextra"
+                        disabled="@(IsSyncing(ProcesoId) || IsConsulting)"
+                        @onclick="() => SyncUno(ProcesoId)">
+
+                    @if (IsConsulting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span> Consultando…</span>
+                    }
+                    else if (IsSyncing(ProcesoId))
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span> Sincronizando…</span>
+                    }
+                    else
+                    {
+                        <span><i class="bi bi-cloud-arrow-down"></i> @TextoBotonDextra</span>
+                    }
+                </button>
+            }
+        </div>
+
+        @if (MostrarSugerenciaMic)
+        {
+            <div class="alert alert-warning mic-hint mb-3">
+                <span class="mic-text">
+                    🎙️ Para responder <b>sí / no</b> por voz, habilitá el micrófono
+                </span>
+
+                <button class="btn btn-sm btn-outline-dark mic-btn"
+                        @onclick="HabilitarMicAsync">
+                    Habilitar
+                </button>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- ===== DESKTOP: botones en fila ===== -->
+        <div class="mt-4 d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-success me-2"
+                    @onclick="@(() => Nav.NavigateTo($"/movimientos/{Tipo}/crear/{ProcesoId}"))">
+                <i class="bi bi-plus-lg"></i> Agregar Movimiento
+            </button>
+
+            <button class="btn btn-danger me-2"
+                    @onclick="EliminarTodosMovimientos">
+                <i class="bi bi-trash3"></i> Eliminar TODOS los movimientos
+            </button>
+
+            <button class="btn btn-secondary me-2"
+                    @onclick="VolverAGestiones">
+                <i class="bi bi-arrow-left-circle"></i> Volver a Gestiones
+            </button>
+
+            @if (PuedeSincronizar)
+            {
+                <button class="btn btn-warning"
+                        title="Sincronizar con Dextra"
+                        disabled="@(IsSyncing(ProcesoId) || IsConsulting)"
+                        @onclick="() => SyncUno(ProcesoId)"
+                        style="margin-left:5px">
+
+                    @if (IsConsulting)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span>Consultando…</span>
+                    }
+                    else if (IsSyncing(ProcesoId))
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span>Sincronizando…</span>
+                    }
+                    else
+                    {
+                        <span><i class="bi bi-cloud-arrow-down"></i> @TextoBotonDextra</span>
+                    }
+                </button>
+            }
+        </div>
+    }
+
+
+
+
+
+
+    
+    @if (Movimientos == null || !Movimientos.Any())
+    {
+        <div class="mt-4 alert alert-warning">
+            No hay movimientos registrados para este proceso.
+        </div>
+    }
+    @* else
+    {
+        <div class="mt-4">
+            <table class="table table-striped table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:10%">📅 Fecha</th>
+                        <th style="width:30%">📝 Título</th>
+                        @* <th>📄 Detalle</th> *@ @*
+                        <th style="text-align:center; width:10%">✏️ Escrito</th>
+                        <th style="text-align:center; width:10%">📎 Adjuntos</th>
+                        <th class="text-center" style="width:8%;">🗓️</th>
+                        <th class="text-center" style="width:13%;">Google</th>
+                        <th style="text-align:center; width:18%">🔧 Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var mov in Movimientos)
+                    {
+                        <tr>
+                            <td>@mov.Fecha.ToShortDateString()</td>
+                            <td>@(string.IsNullOrWhiteSpace(mov.Titulo) ? "(Sin título)" : mov.Titulo)</td>
+                            @* <td>@(string.IsNullOrWhiteSpace(mov.Detalle) ? "(Sin detalle)" : mov.Detalle)</td> *@ @*
+                            <td style="text-align:center">
+                                @if (mov.TieneEscritoPersonalizado)
+                                {
+                                    <span><i class="bi bi-file-text fs-3" style="color:black"></i></span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(mov.EscritoBaseTitulo))
+                                {
+                                    <span class="badge bg-info">@mov.EscritoBaseTitulo</span>
+                                }
+
+                                
+                                else
+                                {
+                                    <span class="text-muted">Sin escrito</span>
+                                }
+@*                                 @if (mov.CantidadArchivos > 0)
+                                {
+                                    <p style="font-weight:bold"><i class="bi bi-paperclip">Archivos Adjuntos</i></p>
+                                } else
+                                {
+                                    <p>Sin adjunto</p>
+                                } *@
+                                @*
+                                </td>
+
+                            <td style="text-align:center">
+
+                                @if (mov.CantidadArchivos > 0)
+                                {
+                                    <button type="button"
+                                            class="btn btn-info"
+                                            title="Ver adjuntos"
+                                            @onclick="() => AbrirAdjuntos(mov.Id)">
+                                        <i class="bi bi-eye">
+                                            (@mov.CantidadArchivos)
+
+                                        </i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin adjunto</span>
+                                }
+                            </td>
+                            <td class="text-center align-middle" style="width:60px;">
+                                @if (mov.TieneAgenda)
+                                {
+                                    <i class="bi bi-calendar2-check fs-5" title="@TooltipAgenda(mov.AgendaFechaAgendadaUtc)"></i>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fs-4"> </span>
+                                }
+           
+                            </td>
+                            <td class="text-center">
+                            @if (mov.AgendaGoogleRegistrado)
+                            {
+                                <a class="badge bg-success" href="@mov.AgendaGoogleHtmlLink" target="_blank" title="Abrir en Google Calendar">
+                                    <i class="bi bi-google"></i> En Google 
+                                </a> <br />
+                                <small class="text-muted ms-2">
+                                    @mov.AgendaGoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No sincronizado</span>
+                            }
+                        </td>
+
+                            <td class="text-center align-middle" style="width:220px">
+                                <button type="button" class="btn btn-secondary py-1 px-2 me-1" @onclick="() => VerAsync(mov)">
+                                    <i class="bi bi-eye fs-5"></i>
+                                </button>
+                                <button class="btn btn-primary py-1 px-2 me-1" @onclick="@(() => EditarMovimiento(mov.Id))">
+                                    <i class="bi bi-pencil-square fs-5"></i>
+                                </button>
+                                <button class="btn btn-danger py-1 px-2" @onclick="@(() => EliminarMovimiento(mov.Id))">
+                                    <i class="bi bi-trash3-fill fs-5"></i>
+                                </button>
+                                
+                            
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    } *@
+
+
+
+
+
+
+    else
+    {
+        @if (!esMovil)
+        {
+            <!-- ===== DESKTOP: TABLA ===== -->
+            <div class="mt-4">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:10%">📅 Fecha</th>
+                            <th style="width:30%">📝 Título</th>
+                            <th style="text-align:center; width:10%">✏️ Escrito</th>
+                            <th style="text-align:center; width:10%">📎 Adjuntos</th>
+                            <th class="text-center" style="width:8%;">🗓️</th>
+                            <th class="text-center" style="width:13%;">Google</th>
+                            <th style="text-align:center; width:18%">🔧 Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in Movimientos)
+                        {
+                            <tr>
+                                <td>@mov.Fecha.ToShortDateString()</td>
+                                <td>@(string.IsNullOrWhiteSpace(mov.Titulo) ? "(Sin título)" : mov.Titulo)</td>
+
+                                <td style="text-align:center">
+                                    @if (mov.TieneEscritoPersonalizado)
+                                    {
+                                        <span><i class="bi bi-file-text fs-3" style="color:black"></i></span>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(mov.EscritoBaseTitulo))
+                                    {
+                                        <span class="badge bg-info">@mov.EscritoBaseTitulo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin escrito</span>
+                                    }
+                                </td>
+
+                                <td style="text-align:center">
+                                    @if (mov.CantidadArchivos > 0)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-info"
+                                                title="Ver adjuntos"
+                                                @onclick="() => AbrirAdjuntos(mov.Id)">
+                                            <i class="bi bi-eye"> (@mov.CantidadArchivos)</i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Sin adjunto</span>
+                                    }
+                                </td>
+
+                                <td class="text-center align-middle" style="width:60px;">
+                                    @if (mov.TieneAgenda)
+                                    {
+                                        <i class="bi bi-calendar2-check fs-5" title="@TooltipAgenda(mov.AgendaFechaAgendadaUtc)"></i>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fs-4"></span>
+                                    }
+                                </td>
+
+                                <td class="text-center">
+                                    @if (mov.AgendaGoogleRegistrado)
+                                    {
+                                        <a class="badge bg-success"
+                                           href="@mov.AgendaGoogleHtmlLink"
+                                           target="_blank"
+                                           title="Abrir en Google Calendar">
+                                            <i class="bi bi-google"></i> En Google
+                                        </a>
+                                        <br />
+                                        <small class="text-muted ms-2">
+                                            @mov.AgendaGoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No sincronizado</span>
+                                    }
+                                </td>
+
+                                <td class="text-center align-middle" style="width:220px">
+                                    <button type="button" class="btn btn-secondary py-1 px-2 me-1"
+                                            @onclick="() => VerAsync(mov)">
+                                        <i class="bi bi-eye fs-5"></i>
+                                    </button>
+                                    <button class="btn btn-primary py-1 px-2 me-1"
+                                            @onclick="@(() => EditarMovimiento(mov.Id))">
+                                        <i class="bi bi-pencil-square fs-5"></i>
+                                    </button>
+                                    <button class="btn btn-danger py-1 px-2"
+                                            @onclick="@(() => EliminarMovimiento(mov.Id))">
+                                        <i class="bi bi-trash3-fill fs-5"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <!-- ===== MOBILE: CARDS ===== -->
+            <div class="mt-3">
+                @foreach (var mov in Movimientos)
+                {
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-primary">
+                                    @mov.Fecha.ToString("dd/MM/yyyy")
+                                </span>
+
+                                @if (mov.TieneAgenda)
+                                {
+                                    <i class="bi bi-calendar2-check"
+                                       title="@TooltipAgenda(mov.AgendaFechaAgendadaUtc)"></i>
+                                }
+                            </div>
+
+                            <h6 class="card-title mb-1">
+                                @(string.IsNullOrWhiteSpace(mov.Titulo) ? "(Sin título)" : mov.Titulo)
+                            </h6>
+
+                            <p class="card-text small mb-2 text-muted">
+                                @if (mov.TieneEscritoPersonalizado)
+                                {
+                                    <span><i class="bi bi-file-text"></i> Escrito personalizado</span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(mov.EscritoBaseTitulo))
+                                {
+                                    <span><i class="bi bi-file-earmark-text"></i> @mov.EscritoBaseTitulo</span>
+                                }
+                                else
+                                {
+                                    <span>Sin escrito</span>
+                                }
+                            </p>
+
+                            <p class="card-text small mb-2">
+                                <strong>Adjuntos:</strong>
+                                @if (mov.CantidadArchivos > 0)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-info ms-1"
+                                            @onclick="() => AbrirAdjuntos(mov.Id)">
+                                        <i class="bi bi-eye"></i> (@mov.CantidadArchivos)
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted ms-1">Sin adjunto</span>
+                                }
+                            </p>
+
+                            <p class="card-text small mb-2">
+                                <strong>Google:</strong>
+                                @if (mov.AgendaGoogleRegistrado)
+                                {
+                                    <a class="badge bg-success ms-1"
+                                       href="@mov.AgendaGoogleHtmlLink"
+                                       target="_blank">
+                                        <i class="bi bi-google"></i> En Google
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary ms-1">No sincronizado</span>
+                                }
+                            </p>
+
+
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        @onclick="() => VerAsync(mov)">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+       @*                          <button class="btn btn-outline-secondary btn-sm"
+                                        title="Leer en voz alta"
+                                        @onclick="() => LeerMovimientoAsync(mov.Id)">
+                                    <i class="bi bi-volume-up"></i>
+                                </button> *@
+
+                                @* <div class="btn-group"> *@
+             @*                        <button class="btn btn-outline-secondary btn-sm"
+                                            title="Leer"
+                                            @onclick="() => LeerMovimientoAsync(mov.Id)">
+                                        <i class="bi bi-volume-up"></i>
+                                    </button> *@
+
+                                   @*  @if (EsIOS)
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    title="Leer (iPhone)"
+                                                    onclick="window.ttsIOS && window.ttsIOS.readMovimiento(@mov.Id)">
+                                                <i class="bi bi-volume-up"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                    title="Leer"
+                                                    @onclick="() => LeerMovimientoAsync(mov.Id)">
+                                                <i class="bi bi-volume-up"></i>
+                                            </button>
+                                        }
+
+
+                                
+
+                                    
+
+
+
+                                    <button class="btn btn-success btn-sm" @onclick="TestTts">
+                                        Test TTS iPhone
+                                    </button> 
+
+                                    <button type="button" class="btn btn-success"
+                                            onclick="window.tts && window.tts.testIOS && window.tts.testIOS()">
+                                        Test iPhone TTS (JS)
+                                    </button>
+
+
+
+
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            title="Releer"
+                                            @onclick="() => ReleerMovimientoAsync(mov.Id)">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+
+       @*                              <button class="btn btn-outline-danger btn-sm"
+                                            title="Detener"
+                                            @onclick="StopTts">
+                                        <i class="bi bi-stop-fill"></i>
+                                    </button> *@@*
+
+                                        @if (EsIOS)
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                        title="Detener"
+                                                        onclick="window.tts && window.tts.stop && window.tts.stop()">
+                                                    <i class="bi bi-stop-fill"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                        title="Detener"
+                                                        @onclick="StopTts">
+                                                    <i class="bi bi-stop-fill"></i>
+                                                </button>
+                                            }
+ *@
+                                <div class="d-inline-flex gap-1">
+    <button type="button" class="btn btn-outline-secondary btn-sm"
+            title="Leer"
+            @onclick="() => LeerMovimientoAsync(mov.Id)">
+        <i class="bi bi-volume-up"></i>
+    </button>
+
+    <button type="button" class="btn btn-outline-primary btn-sm"
+            title="Releer"
+            @onclick="() => ReleerMovimientoAsync(mov.Id)">
+        <i class="bi bi-arrow-repeat"></i>
+    </button>
+
+    <button type="button" class="btn btn-outline-danger btn-sm"
+            title="Detener"
+            @onclick="StopTts">
+        <i class="bi bi-stop-fill"></i>
+    </button>
+</div>
+
+
+                     @*            @if (EsIOS)
+                                {
+                                <button type="button" class="btn btn-success"
+                                        onclick="window.tts && window.tts.testIOS && window.tts.testIOS()">
+                                    Test iPhone TTS (JS)
+                                </button>
+                                }    *@
+
+                               @*      @if (!MicHabilitado)
+                                    {
+                                        <button class="btn btn-outline-info btn-sm"
+                                                title="Habilitar micrófono"
+                                                @onclick="HabilitarMicAsync">
+                                            <i class="bi bi-mic"></i>
+                                        </button>
+                                    } *@
+
+                                @if (!MicHabilitado)
+                                {
+                                    <button class="btn btn-outline-info btn-sm"
+                                            title="Habilitar micrófono"
+                                            @onclick="HabilitarMicAsync">
+                                        <i class="bi bi-mic"></i>
+                                    </button>
+                                }
+                            @*     else
+                                {
+                                    <button class="btn btn-outline-info btn-sm" disabled title="Micrófono habilitado">
+                                        <i class="bi bi-mic-fill"></i>
+                                    </button>
+                                } *@
+
+
+                                @*     else
+                                    {
+                                        <button class="btn btn-outline-info btn-sm"
+                                                title="Micrófono habilitado"
+                                                disabled>
+                                            <i class="bi bi-mic-fill"></i>
+                                        </button>
+                                    } *@
+
+                              @*   @if (EsIOS)
+                                {
+                                    <button type="button" class="btn btn-warning btn-sm" @onclick="UnlockAudio">
+                                        🔊 Habilitar audio
+                                    </button>
+                                } *@
+
+                                @if (EsIOS)
+                                {
+                                    <button type="button" class="btn btn-warning btn-sm"
+                                            onclick="window.tts && window.tts.iosUnlock && window.tts.iosUnlock('es-AR')">
+                                        🔊 Habilitar audio
+                                    </button>
+                                }
+
+                                @* </div> *@
+
+                                @if (Escuchando)
+                                {
+                                    <div class="alert alert-info text-center">
+                                        🎙️ Escuchando… decí <b>sí</b> o <b>no</b>
+                                    </div>
+                                }
+
+                               
+
+
+                                <button class="btn btn-primary btn-sm"
+                                        @onclick="@(() => EditarMovimiento(mov.Id))">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm"
+                                        @onclick="@(() => EliminarMovimiento(mov.Id))">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+
+                            </div>
+
+           @*                  <div>
+                                @if (MostrarSugerenciaMic)
+                                {
+                                    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                                        <span>🎙️ Para responder “sí/no” por voz, habilitá el micrófono.</span>
+                                        <button class="btn btn-sm btn-outline-dark" @onclick="HabilitarMicAsync">
+                                            Habilitar
+                                        </button>
+                                    </div>
+                                }
+
+                            </div> *@
+
+                        </div>
+           @*              <div style="margin-top:10px;">
+                            <button type="button"
+                                    class="btn btn-outline-secondary btn-sm"
+                                    @onclick="() => LeerMovimientoAsync(mov.Id)">
+                                Leer
+                            </button>
+                        </div> *@
+                    </div>
+                }
+            </div>
+        }
+    }
+
+
+
+
+    <AdjuntosModal @ref="_adjuntosModal"
+               ModalId="modalAdjuntosMov"
+               VisorId="modalAdjuntosVisor" />
+
+    <VerMovimientoModal @ref="_verModal" />
+
+</div>
+
+

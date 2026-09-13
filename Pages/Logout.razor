@@ -1,0 +1,74 @@
+﻿@* @page "/logout"
+@using IurixBlazor.Services.Auth
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ITokenStore TokenStore
+
+<div class="logout-modal-overlay">
+    <div class="logout-modal-content">
+        <h3>Cerrando sesión...</h3>
+        <p>Por favor, espere un momento.</p>
+    </div>
+</div>
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await JS.InvokeVoidAsync("localStorage.clear");
+        await TokenStore.ClearAsync();
+        if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+            customProvider.NotifyUserLogout();
+
+        await JS.InvokeVoidAsync("detenerInactividad");
+
+        await Task.Delay(2000);
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}
+ *@
+
+
+@page "/logout"
+@attribute [AllowAnonymous]   
+
+@using IurixBlazor.Services.Auth
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ITokenStore TokenStore
+
+<div class="logout-modal-overlay">
+    <div class="logout-modal-content">
+        <h3>Cerrando sesión...</h3>
+        <p>Por favor, espere un momento.</p>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // 1) Detener control de inactividad (si lo tenés en JS)
+        await JS.InvokeVoidAsync("detenerInactividad");
+
+        // 2) Limpiar lado cliente
+        await JS.InvokeVoidAsync("localStorage.clear");
+        await TokenStore.ClearAsync();
+
+        if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+        {
+            // si lo tenés como Task:
+            // await customProvider.NotifyUserLogoutAsync();
+
+            // si todavía es void:
+            customProvider.NotifyUserLogout();
+        }
+
+        // 3) Pequeño delay para que se vea "Cerrando sesión..."
+        await Task.Delay(2000);
+
+        // 4) Redirigir al login
+        Nav.NavigateTo("/login", forceLoad: true);
+    }
+}

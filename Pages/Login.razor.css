@@ -1,0 +1,276 @@
+/*html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.login-page {
+    height: 100vh;
+    width: 100%;
+    background-size: cover;  Esto hace que siempre cubra toda la pantalla 
+    background-position:center;
+    background-repeat: no-repeat;
+    position: relative;
+}*/
+
+
+
+/* Logo inferior derecho con marco */
+/*.logo-bottom-right {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+    .logo-bottom-right img {
+        height: 120px;
+        width: auto;
+        object-fit: contain;
+    }*/
+
+/* Logo inferior izquierdo */
+/*.logo-bottom-left {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    height: 120px;
+    width: auto;
+    object-fit: contain;
+}*/
+
+/* Contenedor del login */
+/*.login-container {
+    position: absolute;
+    top: 160px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 330px;
+    height: 440px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 2;
+}*/
+
+
+
+/* Responsive */
+/*@media (max-width: 768px) {
+    .logo-bottom-right img,
+    .logo-bottom-left {
+        height: 70px;
+    }
+
+    .login-container {
+        width: 90%;
+        padding: 20px;
+    }
+}*/
+
+/* Base (mobile-first) */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    background-size: cover; /* cubre toda la pantalla */
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* Logos en esquinas */
+.logo-bottom-right,
+.logo-bottom-left {
+    position: absolute;
+    bottom: 32px; /* más chico en mobile */
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.logo-bottom-right {
+    right: 32px;
+}
+
+.logo-frame {
+    background: white;
+}
+
+.logo-bottom-left {
+    left: 32px;
+    background: transparent;
+    padding: 0;
+}
+
+.logo-bottom-right img,
+.logo-bottom-left {
+    height: clamp(72px, 12vw, 120px);
+    width: auto;
+    object-fit: contain;
+}
+
+/* Tarjeta de login */
+.login-container {
+    position: absolute;
+    left: 50%;
+    /*top: 50%; /* centrado vertical en mobile */
+    top: 30vh; /* antes 50% */
+    /*transform: translate(-50%, -50%);*/
+    transform: translateX(-50%);
+    width: min(92vw, 300px); /* fluido con límite */
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 2;
+    /* altura auto para no cortar contenido en pantallas chicas */
+}
+
+
+
+/* ========== TABLETS (10") ========== */
+@media (min-width: 768px) {
+    .logo-bottom-right, .logo-bottom-left {
+        bottom: 80px;
+    }
+
+    .logo-bottom-right {
+        right: 60px;
+    }
+
+    .logo-bottom-left {
+        left: 60px;
+    }
+
+    .login-container {
+        width: min(70vw, 400px);
+        top: 120px; /* un poco más arriba en pantallas altas */
+        transform: translateX(-50%); /* sólo centrado horizontal */
+        padding: 24px;
+    }
+}
+
+/* ========== NOTEBOOKS / DESKTOP CHICO (992px) ========== */
+@media (min-width: 992px) {
+    .login-container {
+        width: min(46vw, 400px);
+        top: 12vh; /* baja un toque con viewport */
+        padding: 28px;
+    }
+    .logo-bottom-right, .logo-bottom-left {
+        bottom: 80px;
+    }
+
+    .logo-bottom-right {
+        right: 80px;
+    }
+
+    .logo-bottom-left {
+        left: 80px;
+    }
+
+    .logo-bottom-right img,
+    .logo-bottom-left {
+        height: clamp(80px, 9vw, 130px);
+    }
+}
+
+/* ========== NOTEBOOK 15.6" (1200px) OPCIONAL FINO ========== */
+@media (min-width: 1200px) {
+    .login-container {
+        width: min(40vw, 440px);
+        top: 14vh;
+    }
+
+    .logo-bottom-right, .logo-bottom-left {
+        bottom: 80px;
+    }
+
+    .logo-bottom-right {
+        right: 110px;
+    }
+
+    .logo-bottom-left {
+        left: 90px;
+    }
+
+    .logo-bottom-right img,
+    .logo-bottom-left {
+        height: clamp(90px, 9vw, 130px);
+    }
+}
+
+/* ========== MONITORES GRANDES (1400px) ========== */
+@media (min-width: 1400px) {
+    .login-container {
+        width: 440px; /* fijo cómodo */
+        top: 16vh;
+        padding: 32px;
+    }
+
+    .logo-bottom-right img,
+    .logo-bottom-left {
+        height: 140px;
+    }
+
+
+    .logo-bottom-right, .logo-bottom-left {
+        bottom: 100px;
+    }
+
+    .logo-bottom-right {
+        right: 100px;
+    }
+
+    .logo-bottom-left {
+        left: 100px;
+    }
+    .logo-bottom-right img,
+    .logo-bottom-left {
+        height: clamp(100px, 9vw, 130px);
+    }
+}
+
+/* Accesibilidad: safe areas (iPhone notch) */
+@supports (padding: max(0px)) {
+    .login-page {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+}
+
+
+
+
+    @media (max-width: 767px) {
+        .login-page .login-container {
+            top: calc(16px + env(safe-area-inset-top) + 60px ); /*  baja un poco */
+            transform: translateX(-50%);
+        }
+
+
+        .logo-bottom-right,
+        .logo-bottom-left {
+            bottom: 130px; /*  sube los logos */
+        }
+    }
+
+
+/*@media (max-width: 767px) {
+    .login-page .login-container {
+        outline: 4px solid red;
+    }
+}
+*/

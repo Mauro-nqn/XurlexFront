@@ -1,0 +1,467 @@
+﻿@attribute [Authorize]
+
+@page "/presupuestos/editar/{Id:int?}"
+@inherits CrearEditarPresupuestoBase
+@layout AdminLayout
+
+
+@using IurixBlazor.Shared.Enums
+
+<div class="container mt-4 presupuesto-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Presupuesto" : "➕ Nuevo Presupuesto")</h3>
+
+    <EditForm Model="@Presupuesto" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        @if (!string.IsNullOrWhiteSpace(AlertText))
+        {
+            <div class="alert alert-@AlertCss mt-2">@AlertText</div>
+        }
+
+        <!--Nombre-->
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" 
+            @bind-Value="Presupuesto.Nombre"
+                       disabled="@(!PuedeEditarEstado())" />
+        </div>
+
+
+        <!-- Cliente -->
+        <div class="mb-3">
+            <label>Cliente</label>
+            <InputSelect class="form-control" 
+            @bind-Value="Presupuesto.PersonaId"
+                         disabled="@(!PuedeEditarEstado())">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var cli in Personas)
+                {
+                    <option value="@cli.Id">@((cli.Tipo == TipoPersona.Juridica ? cli.RazonSocial : $"{cli.Apellido}, {cli.Nombre}"))</option>
+                }
+            </InputSelect>
+        </div>
+
+@*         <div class="alert alert-info">
+            PersonaId en Presupuesto: @Presupuesto?.PersonaId
+            <br />
+            Cantidad de Personas: @Personas?.Count
+        </div>
+
+        @if (Personas != null)
+        {
+            <ul>
+                @foreach (var p in Personas)
+                {
+                    <li>@p.Id - @(p.Tipo == TipoPersona.Juridica ? p.RazonSocial : $"{p.Apellido}, {p.Nombre}")</li>
+                }
+            </ul>
+        } *@
+
+
+        <!-- Distribución de Honorarios -->
+        <div class="mb-3">
+            <label>Distribución de Honorarios</label>
+            <InputSelect class="form-control" 
+            @bind-Value="Presupuesto.DistribucionHonorarioId"
+                         disabled="@(!PuedeEditarEstado())">
+                <option value="0">-- Seleccione --</option>
+                @foreach (var dist in Distribuciones)
+                {
+                    <option value="@dist.Id">@dist.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+
+        <!-- Fecha y Estado -->
+        <div class="row">
+            <div class="col-md-6">
+                <label>Fecha</label>
+                <InputDate class="form-control" 
+                @bind-Value="Presupuesto.Fecha" 
+                           disabled="@(!PuedeEditarEstado())" />
+            </div>
+
+            <div class="col-md-3">
+                <label>Validez (días)</label>
+                <InputNumber class="form-control" 
+                @bind-Value="Presupuesto.PlazoValidezDias" 
+                disabled="@(!PuedeEditarEstado())"/>
+            </div>
+
+            
+
+     @*        <div class="col-md-6">
+                <label>Estado</label>
+                <InputSelect class="form-control" @bind-Value="Presupuesto.Estado">
+                    @foreach (var estado in Enum.GetValues<EstadoPresupuesto>())
+                    {
+                        <option value="@estado">@estado</option>
+                    }
+                </InputSelect>
+            </div> *@
+
+           @*  <div class="col-md-6">
+                <label>Estado</label>
+
+                <InputSelect @key="selectKey"
+                             class="form-control"
+                             @bind-Value="Presupuesto.Estado"
+                             disabled="@(!PuedeEditarEstado())">
+                    @foreach (var estado in EstadosVisibles())
+                    {
+                        <option value="@estado">@estado</option>
+                    }
+                </InputSelect>
+
+                @if (!PuedeEditarEstado())
+                {
+                    <small class="text-muted">
+                        @MensajeBloqueoEstado()
+                    </small>
+                }
+            </div> *@
+
+            <div class="col-md-6">
+                <label>Estado</label>
+
+                @if (EsNuevo)
+                {
+                    
+                    <!-- Creación: solo Presupuestado, deshabilitado -->
+                    <InputSelect class="form-control"
+                                 TValue="EstadoPresupuesto"
+                                 Value="Presupuesto.Estado"
+                                 ValueExpression="() => Presupuesto.Estado"
+                                 disabled>
+                        <option value="@EstadoPresupuesto.Presupuestado">Presupuestado</option>
+                    </InputSelect>
+                }
+                else
+                {
+                    <!-- Edición: lista completa y auto-guardar al cambiar -->
+                    <InputSelect @key="selectKey"
+                                 class="form-control"
+                                 TValue="EstadoPresupuesto"
+                                 Value="Presupuesto.Estado"
+                                 ValueChanged="@(async (EstadoPresupuesto e) => await OnEstadoChangedAsync(e))"
+                                 ValueExpression="() => Presupuesto.Estado"
+                                 disabled="@(!PuedeEditarEstado())">
+                        @foreach (var estado in EstadosVisibles())
+                        {
+                            <option value="@estado">@estado</option>
+                        }
+                    </InputSelect>
+
+                    @if (!PuedeEditarEstado())
+                    {
+                        <small class="text-muted">@MensajeBloqueoEstado()</small>
+                    }
+                }
+            </div>
+
+            <div class="col-12 col-md-5 col-lg-3">
+                @* <label>Variable de ajuste (opcional)</label> *@
+
+                <label class="form-label d-flex align-items-center">
+                    Variable de ajuste (opcional)
+                    <span class="ms-2"
+                          tabindex="0"
+                          data-bs-toggle="popover"
+                          data-bs-trigger="focus"
+                          data-bs-placement="top"
+                          data-bs-content="Permite ajustar el presupuesto por variables. Seleccionar, guardar y reingresar para ->Actualizar Valores">
+                        <i class="bi bi-info-circle"></i>
+                    </span>
+                </label>
+
+                <InputSelect class="form-control"
+                             @bind-Value="AjusteVariableGlobalId"
+                             disabled="@EstaBloqueadoDetalles()"
+                             title="Permite ajustar el presupuesto por variables. Seleccionar, guardar y reingresar para ->Actualizar Valores">
+                    >
+                    <option value="">— Sin variable —</option>
+                    @foreach (var v in Variables)
+                    {
+                        <option value="@v.Id">@v.Nombre (@v.Clave) — @v.ValorActual</option>
+                    }
+                </InputSelect>
+                @* <small class="text-muted">
+                    Se marca la variable en todos los ítems actuales y nuevos. No cambia precios ahora.
+                </small> *@
+
+                <!-- ESTADO USADO VS ACTUAL (solo si hay variable activa en las líneas) -->
+                <!-- ESTADO USADO VS ACTUAL (solo si hay variable activa en las líneas) -->
+                @if (AjusteVariableGlobalId is not null)
+                {
+                    // Tomamos la primera línea que tenga esa variable
+                    var d = Detalles.FirstOrDefault(x => x.AjusteVariableId == AjusteVariableGlobalId);
+
+                    if (d is not null)
+                    {
+                        <span class="badge bg-light text-muted mt-2">
+                            Índice @d.AjusteVariableClave:
+                            usado @d.VariableValorUsado?.ToString("N0")
+                            — actual @d.AjusteVariableValorActual?.ToString("N0")
+                        </span>
+                    }
+                }
+            </div>
+   
+        </div>
+
+       @*   <div class="d-flex justify-content-end me-2" style="margin-top:10px">
+           
+
+
+            @if (Presupuesto.Estado == EstadoPresupuesto.Aprobado && !CargoPresupuestoYaCargado)
+            {
+                <button type="button"
+                        class="btn btn-outline-primary ms-2"
+                        disabled="@BusyCtaCte"
+                        @onclick="AgregarACtaCte">
+                    ➕ Agregar a Cuenta Corriente
+                </button>
+            }
+            @if (Presupuesto.Estado == EstadoPresupuesto.Aprobado && CargoPresupuestoYaCargado)
+            {
+                <button type="button"
+                        class="btn btn-outline-danger ms-2"
+                        disabled="@BusyCtaCte"
+                        @onclick="RetirarDeCtaCte">
+                    ✖️ Retirar de Cuenta Corriente
+                </button>
+            }
+        </div>  *@
+
+
+
+
+        <!--SACAMOS LA LOGICA DE AGREGAR EN CTA CTE EL PRESUPUESTO-->
+        @* <div class="d-flex justify-content-end me-2" style="margin-top:10px; margin-left: 20px">
+            @if (Id.HasValue && Presupuesto.Estado == EstadoPresupuesto.Aprobado && !CargoPresupuestoYaCargado)
+            {
+                <button type="button"
+                        class="btn btn-outline-primary ms-2"
+                        disabled="@BusyCtaCte"
+                        @onclick="AgregarACtaCte">
+                    ➕ Agregar a Cuenta Corriente
+                </button>
+            }
+            @if (Id.HasValue && Presupuesto.Estado == EstadoPresupuesto.Aprobado && CargoPresupuestoYaCargado)
+            {
+                <button type="button"
+                        class="btn btn-outline-danger ms-2"
+                        disabled="@BusyCtaCte"
+                        @onclick="RetirarDeCtaCte">
+                    ✖️ Retirar de Cuenta Corriente
+                </button>
+            }
+        </div> *@
+
+
+        <!-- Detalles -->
+        <h5 class="mt-3">Detalles</h5>
+        <div class="table-responsive"
+        <table class="table">
+            <thead>
+                <tr>
+                    <th >Cantidad</th>
+                    <th >Descripción</th>
+                    <th >Precio Unitario</th>
+                    <th >IVA</th>
+                    <th >Subtotal</th>
+                    <th ></th>
+                </tr>
+            </thead>
+            <tbody>
+               
+
+                @{
+                    var bloqueado = EstaBloqueadoDetalles();
+                }
+
+                @foreach (var det in Detalles)
+                {
+                    var cantidadChanged = EventCallback.Factory.Create<decimal>(this, v => OnDetalleChanged(det, v, nameof(PresupuestoDetalleDto.Cantidad)));
+                    var precioChanged = EventCallback.Factory.Create<decimal>(this, v => OnDetalleChanged(det, v, nameof(PresupuestoDetalleDto.PrecioUnitario)));
+
+                    <tr>
+                        <td style="width:100px">
+                            <InputNumber class="form-control"
+                                         Value="det.Cantidad"
+                                         ValueChanged="@cantidadChanged"
+                                         ValueExpression="@(() => det.Cantidad)"
+                                         disabled="@bloqueado" />
+                        </td>
+
+                        <td>
+                            <InputText class="form-control"
+                                       Value="@det.Descripcion"
+                                       ValueChanged="@( (string v) => OnDetalleDescripcionChanged(det, v) )"
+                                       ValueExpression="@(() => det.Descripcion)"
+                                       disabled="@EstaBloqueadoDetalles()" />
+
+                        </td>
+
+                        <td style="max-width:160px">
+                            <InputNumber class="form-control"
+                                         Value="det.PrecioUnitario"
+                                         ValueChanged="@precioChanged"
+                                         ValueExpression="@(() => det.PrecioUnitario)"
+                                         disabled="@bloqueado" />
+                        </td>
+
+                        <td>
+                            <InputSelect class="form-control"
+                                         Value="det.IvaAlicuotaId"
+                                         ValueChanged="@((int v) => OnDetalleChanged(det, v, nameof(PresupuestoDetalleDto.IvaAlicuotaId)))"
+                                         ValueExpression="@(() => det.IvaAlicuotaId)"
+                                         disabled="@bloqueado">
+                                @foreach (var iva in IvaAlicuotas)
+                                {
+                                    <option value="@iva.Id">@iva.Nombre (@iva.Porcentaje%)</option>
+                                }
+                            </InputSelect>
+                        </td>
+
+                        <td>@det.Subtotal.ToString("C")</td>
+                        <td>
+                            @if (!bloqueado)
+                            {
+                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => EliminarDetalle(det)">🗑</button>
+                            }
+                        </td>
+                    </tr>
+                }
+                <div>
+                
+                </div>
+                </tbody>
+        </table>
+        <button type="button" class="btn btn-secondary mb-3" style="margin-left:5px" @onclick="AgregarDetalle" disabled="@bloqueado">
+                    ➕ Agregar Detalle
+                </button>
+        </div>
+
+        <!-- Totales -->
+        <div class="row text-end">
+            <div class="col-12">
+                <p><strong>Neto:</strong> @Presupuesto.Neto.ToString("C")</p>
+                <p><strong>IVA:</strong> @Presupuesto.Iva.ToString("C")</p>
+                <h5><strong>Total:</strong> @Presupuesto.Total.ToString("C")</h5>
+            </div>
+        </div>
+
+      
+
+        <div class="mb-3">
+            <label>Observaciones</label>
+            <InputTextArea class="form-control" rows="3" @bind-Value="Presupuesto.Observaciones" />
+        </div>
+
+       @*  <div>
+            @{
+                
+                
+                    var (badgeCss, badgeText) = Presupuesto.AjusteEstado switch
+                    {
+                        AjusteEstadoPresupuesto.AlDia => ("bg-success", "Presupuesto actualizado"),
+                        AjusteEstadoPresupuesto.Desfasado => ("bg-warning text-dark", "Presupuesto desactualizado"),
+                        _ => ("bg-secondary", "Sin actualizar")
+                    };
+               
+
+                var tieneFecha = Presupuesto.RevalorizadoUtc.HasValue;
+                var fechaStr = tieneFecha ? Presupuesto.RevalorizadoUtc!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : null;
+
+                string? leyendaFecha = Presupuesto.AjusteEstado switch
+                {
+                    AjusteEstadoPresupuesto.AlDia => tieneFecha ? $"Actualizado: {fechaStr}" : "Actualizado (sin fecha)",
+                    AjusteEstadoPresupuesto.Desfasado => tieneFecha ? $"Última actualización: {fechaStr}" : "Nunca revalorizado",
+                    _ => null
+                };
+
+               
+            }
+
+            <span class="badge @badgeCss">@badgeText</span>
+
+            @if (!string.IsNullOrEmpty(leyendaFecha))
+            {
+                <small class="text-muted ms-2">@leyendaFecha</small>
+            }
+
+        </div> *@
+
+        @if (Presupuesto.Estado != EstadoPresupuesto.FacturadoTotal)
+        {
+            <div>
+                @{
+                    var (badgeCss, badgeText) = Presupuesto.AjusteEstado switch
+                    {
+                        AjusteEstadoPresupuesto.AlDia => ("bg-success", "Presupuesto actualizado"),
+                        AjusteEstadoPresupuesto.Desfasado => ("bg-warning text-dark", "Presupuesto desactualizado"),
+                        _ => ("bg-secondary", "Sin actualizar")
+                    };
+
+                    var tieneFecha = Presupuesto.RevalorizadoUtc.HasValue;
+                    var fechaStr = tieneFecha
+                    ? Presupuesto.RevalorizadoUtc!.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                    : null;
+
+                    string? leyendaFecha = Presupuesto.AjusteEstado switch
+                    {
+                        AjusteEstadoPresupuesto.AlDia => tieneFecha
+                        ? $"Actualizado: {fechaStr}"
+                        : "Actualizado (sin fecha)",
+                        AjusteEstadoPresupuesto.Desfasado => tieneFecha
+                        ? $"Última actualización: {fechaStr}"
+                        : "Nunca revalorizado",
+                        _ => null
+                    };
+                }
+
+                <span class="badge @badgeCss">@badgeText</span>
+
+                @if (!string.IsNullOrEmpty(leyendaFecha))
+                {
+                    <small class="text-muted ms-2">@leyendaFecha</small>
+                }
+            </div>
+        }
+
+
+        <button class="btn btn-primary me-2 mt-3" type="submit">💾 Guardar</button>
+        
+        
+        
+   @*      @if (Id.HasValue && Detalles.Any(d => d.AjusteVariableId.HasValue))
+        {
+            <button type="button" class="btn btn-primary me-2 mt-3" style="background-color:azure; color: black" @onclick="Revalorizar">
+                🔄 Actualizar Valores
+            </button>
+        }
+        <button class="btn btn-secondary mt-3" type="button" @onclick="Cancelar">Cancelar</button> *@
+
+        @if (Id.HasValue
+                && Detalles.Any(d => d.AjusteVariableId.HasValue)
+                && (Presupuesto.AjusteEstado == AjusteEstadoPresupuesto.Desfasado)
+                && (Presupuesto.Estado != EstadoPresupuesto.FacturadoTotal))
+        {
+            <button type="button"
+                    class="btn btn-primary me-2 mt-3"
+                    style="background-color:azure; color: black"
+                    @onclick="Revalorizar">
+                🔄 Actualizar Valores
+            </button>
+        }
+
+
+        <button class="btn btn-secondary mt-3" type="button" @onclick="Cancelar">Cancelar</button>
+
+
+        
+        
+    </EditForm>
+</div>

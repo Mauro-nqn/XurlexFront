@@ -1,0 +1,24 @@
+﻿@inject NavigationManager Nav
+
+<div class="auth-warning-container">
+    <div class="auth-warning-box">
+        <h4>⚠️ Acceso no autorizado</h4>
+        <p>Por favor, ingresá con tu usuario y contraseña para continuar.</p>
+        <button class="btn btn-primary mt-3" @onclick="IrAlLogin">Ir al login</button>
+    </div>
+</div>
+
+@code {
+//     protected override async Task OnInitializedAsync()
+//     {
+//         await Task.Delay(3000); // Espera 3 segundos
+//         Nav.NavigateTo("/login", forceLoad: true);
+//     }
+
+
+   
+
+    void IrAlLogin() => Nav.NavigateTo("/login", forceLoad: true);
+ }
+
+

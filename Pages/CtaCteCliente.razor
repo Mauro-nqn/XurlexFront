@@ -1,0 +1,1111 @@
+﻿@attribute [Authorize]
+
+@page "/clientes/{PersonaId:int}/cta-cte"
+@inherits CtaCteClienteBase
+@layout AdminLayout
+@using IurixBlazor.Shared.Enums
+@using IurixBlazor.Shared.Dtos
+@using IurixBlazor.Pages  @* o el namespace real del modal *@
+
+
+@{
+    bool EsReciboActivo(MovimientoCuentaDto mov) =>
+        mov.OrigenTipo == OrigenMovimientoCuenta.Recibo
+        && mov.OrigenId.HasValue
+        && !RecibosReversados.Contains(mov.OrigenId.Value);
+
+    // bool EsPresupuestoReversado(MovimientoCuentaDto mov) =>
+    //     mov.OrigenTipo == OrigenMovimientoCuenta.Presupuesto
+    //     && mov.PresupuestoId.HasValue
+    //     && PresupuestosReversados.Contains(mov.PresupuestoId.Value);
+}
+
+
+@* <div class="container mt-4 cta-cte-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">🧾 Cuenta Corriente</h3>
+            <h5 class="text-muted" style="margin-top:10px">@PersonaNombre</h5>
+        </div>
+        <div>
+
+            @if (Cuenta is null)
+            {
+                 <PermisoView Permiso="@Permisos.CuentasCorrientes.Crear">
+                <button class="btn btn-success" @onclick="ToggleCrearCuenta"><i class="bi bi-plus-lg"></i> Crear Cta Corriente</button>
+                </PermisoView>
+            }
+            else
+            {
+                <button class="btn btn-outline-secondary me-2" @onclick="Refrescar"><i class="bi bi-arrow-clockwise"></i> Actualizar</button>
+                <PermisoView Permiso="@Permisos.CuentasCorrientes.Editar">
+                <button class="btn btn-outline-secondary me-2" @onclick="ToggleEditarCuenta"><i class="bi bi-gear"></i> Editar cuenta</button>
+                </PermisoView>
+
+                //Falta agregar aca la funcion para borrar cuenta corriente//
+
+                //TO DO
+                //Debemos verificar cuando generamos la cta cte, el crédito disponible, al facturar debemos verificar si
+                //lo hacemos en cta cte ese monto, si lo excede no permitir la facturacion
+
+
+                <PermisoView Permiso="@Permisos.Recibos.Crear">
+                <button class="btn btn-primary" @onclick="AbrirRecibo"><i class="bi bi-plus-lg"></i> Nuevo Recibo</button>
+                </PermisoView>
+
+            }
+           
+            
+        </div>
+    </div>
+ *@
+
+<div class="container mt-4 cta-cte-container">
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <!-- Título + nombre -->
+        <div>
+            <h3 class="mb-0">🧾 Cuenta Corriente</h3>
+            <h5 class="text-muted mt-2">@PersonaNombre</h5>
+        </div>
+
+        <!-- Botones (responsivos) -->
+        @* <div class="d-flex flex-column flex-sm-row gap-2">
+            @if (Cuenta is null)
+            {
+                <PermisoView Permiso="@Permisos.CuentasCorrientes.Crear">
+                    <button class="btn btn-success w-100 w-sm-auto"
+                            @onclick="ToggleCrearCuenta">
+                        <i class="bi bi-plus-lg"></i> Crear Cta Corriente
+                    </button>
+                </PermisoView>
+            }
+            else
+            {
+                <button class="btn btn-outline-secondary w-100 w-sm-auto"
+                        @onclick="Refrescar">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+
+                <PermisoView Permiso="@Permisos.CuentasCorrientes.Editar">
+                    <button class="btn btn-outline-secondary w-100 w-sm-auto"
+                            @onclick="ToggleEditarCuenta">
+                        <i class="bi bi-gear"></i> Editar cuenta
+                    </button>
+                </PermisoView>
+
+                <PermisoView Permiso="@Permisos.Recibos.Crear">
+                    <button class="btn btn-primary w-100 w-sm-auto"
+                            @onclick="AbrirRecibo">
+                        <i class="bi bi-plus-lg"></i> Nuevo Recibo
+                    </button>
+                </PermisoView>
+            }
+        </div> *@
+
+        <div class="d-flex flex-column flex-sm-row gap-2 cta-cte-actions">
+            @if (Cuenta is null)
+            {
+                <PermisoView Permiso="@Permisos.CuentasCorrientes.Crear">
+                    <button class="btn btn-success w-100 w-sm-auto"
+                            @onclick="ToggleCrearCuenta">
+                        <i class="bi bi-plus-lg"></i> Crear Cta Corriente
+                    </button>
+                </PermisoView>
+            }
+            else
+            {
+                <button class="btn btn-outline-secondary w-100 w-sm-auto"
+                        @onclick="Refrescar">
+                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                </button>
+
+                <PermisoView Permiso="@Permisos.CuentasCorrientes.Editar">
+                    <button class="btn btn-outline-secondary w-100 w-sm-auto"
+                            @onclick="ToggleEditarCuenta">
+                        <i class="bi bi-gear"></i> Editar cuenta
+                    </button>
+                </PermisoView>
+
+                <PermisoView Permiso="@Permisos.Recibos.Crear">
+                    <button class="btn btn-primary w-100 w-sm-auto"
+                            @onclick="AbrirRecibo">
+                        <i class="bi bi-plus-lg"></i> Nuevo Recibo
+                    </button>
+                </PermisoView>
+            }
+        </div>
+
+    </div>
+
+    @if (Cuenta is not null && MostrarEditarCuenta)
+{
+    <EditForm Model="@CuentaEdicion" OnValidSubmit="ConfirmarEditarCuenta" class="card shadow-sm p-3 mb-3">
+        <div class="row g-3 align-items-end">
+            <div class="col-auto">
+                <div class="form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="CuentaEdicion.Activa" />
+                    <label class="form-check-label ms-2">Activa</label>
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Límite de crédito</label>
+                <InputNumber TValue="decimal?" class="form-control" @bind-Value="CuentaEdicion.LimiteCredito" />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success">💾 Guardar</button>
+                <button type="button" class="btn btn-outline-secondary ms-2" @onclick="ToggleEditarCuenta">Cancelar</button>
+            </div>
+        </div>
+    </EditForm>
+}
+
+    @if (Cuenta is null)
+    {
+        <div class="alert alert-info mb-3">
+            Este cliente aún no tiene cuenta corriente.
+        </div>
+
+        @if (MostrarFormCrearCuenta)
+        {
+            <EditForm Model="@CuentaNueva" OnValidSubmit="ConfirmarCrearCuenta" class="card shadow-sm crear-cta-form">
+                <DataAnnotationsValidator />
+                <div class="card-body">
+                    <h5 class="card-title">Crear Cuenta Corriente</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de apertura</label>
+                            <InputDate class="form-control" @bind-Value="CuentaNueva.FechaApertura" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Saldo de apertura</label>
+                            <InputNumber class="form-control" @bind-Value="CuentaNueva.SaldoApertura" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Límite de crédito (opcional)</label>
+                            <InputNumber class="form-control" @bind-Value="CuentaNueva.LimiteCredito" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="form-check">
+                                <InputCheckbox id="activa" class="form-check-input" @bind-Value="CuentaNueva.Activa" />
+                                <label class="form-check-label ms-2" for="activa">Activa</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-success">✅ Confirmar</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="ToggleCrearCuenta">Cancelar</button>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    }
+
+
+
+
+
+    @if (Cuenta is not null)
+    
+    {
+
+        <div class="row mb-3 resume-cards">
+            <div class="col-md-4">
+                <div class="card text-bg-light">
+                    <div class="card-body">
+                        <div class="card-title">Débitos</div>
+                        <div class="h4">@DebitosTotal.ToString("C")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-bg-light">
+                    <div class="card-body">
+                        <div class="card-title">Créditos</div>
+                        <div class="h4">@CreditosTotal.ToString("C")</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card @(Saldo >= 0 ? "text-bg-success" : "text-bg-danger")">
+                    <div class="card-body">
+                        <div class="card-title">Saldo</div>
+                        <div class="h4">@Saldo.ToString("C")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        <div class="row g-2 mt-1 info-strip align-items-center">
+            <div class="col-auto">
+                <span class="stat-pill">
+                    <span class="label">Límite:</span>
+                    <span class="value">@((LimiteCredito.HasValue ? LimiteCredito.Value.ToString("C") : "Sin límite"))</span>
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="stat-pill">
+                    <span class="label">Deuda actual:</span>
+                    <span class="value">@DeudaActual.ToString("C")</span>
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="stat-pill @(DisponibleCredito.HasValue && DisponibleCredito.Value < 0 ? "neg" : "pos")">
+                    <span class="label">Crédito disp.:</span>
+                    <span class="value">@((DisponibleCredito.HasValue ? DisponibleCredito.Value.ToString("C") : "—"))</span>
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="stat-pill">
+                    <span class="label">Estado:</span>
+                    <span class="value">@((Cuenta.Activa ? "Activa" : "Inactiva"))</span>
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="stat-pill">
+                    <span class="label">Apertura:</span>
+                    <span class="value">
+                        @(Cuenta.FechaApertura.HasValue
+                                            ? Cuenta.FechaApertura.Value.ToLocalTime().ToString("dd/MM/yyyy")
+                                            : "-")
+                </span>
+                </span>
+            </div>
+        </div>
+
+
+
+
+    }
+    
+
+    @if (Cuenta is null)
+    {
+        <div class="alert alert-info">
+            Este cliente aún no tiene cuenta corriente. Creala para registrar movimientos.
+        </div>
+    }
+ 
+    @* <h5 class="mt-4">Movimientos</h5>
+    <table class="table table-striped table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Detalle</th>
+                <th class="text-end">Importe</th>
+                <th class="text-end">Saldo</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Movimientos.Count == 0)
+            {
+                <tr><td colspan="5" class="text-center text-muted">Sin movimientos.</td></tr>
+            }
+            else
+            {              
+
+
+                @foreach (var m in MovimientosOrdenados)
+                {
+       
+
+                  
+
+
+                    <tr>
+                        <td>@m.Mov.Fecha?.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(m.Mov.Tipo == TipoMovimientoCuenta.Debito ? "Débito" : "Crédito")</td>
+ 
+
+                        <td>
+                            @m.Mov.Detalle
+
+                            @* SI ESTE MOVIMIENTO ES UNA REVERSA *@
+                            @*
+                            @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                            {
+                                <span class="badge text-bg-warning ms-2">Reversa</span>
+                            }
+                        </td>
+
+                        <td class="text-end">@((m.Mov.Importe ?? 0).ToString("C"))</td>
+                        <td class="text-end">@m.Running.ToString("C")</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center flex-wrap gap-1">
+
+                            <!--Ya no cargamos PRESUPUESTO EN CTA CTE-->
+       @*                      @* Presupuesto: solo mostrar "✏️ Presupuesto". (Retirar/Agregar lo manejás en la pantalla del presupuesto) *@ 
+                       @*    @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Presupuesto && m.Mov.PresupuestoId.HasValue)
+                            {
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary me-2"
+                                        @onclick="() => EditarPresupuestoDesdeCta(m.Mov.PresupuestoId.Value)">
+                                    ✏️ Presupuesto
+                                </button>
+                            } *@
+
+
+                        
+
+            @* 🔓 Deshacer reversa – SOLO si este movimiento ES una reversa *@
+            @*
+            <PermisoView Permiso="@Permisos.Recibos.Reversa">
+                @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                {
+                    <button type="button"
+                            class="btn btn-sm btn-warning me-1"
+                            @onclick="() => DeshacerAnulacionDesdeCtaCte(m.Mov.Id)">
+                        🔓 Deshacer reversa
+                    </button>
+                }
+            </PermisoView>
+
+
+                       
+
+                            @* Recibo: ocultar si fue reversado *@
+                            @*
+                            @if (EsReciboActivo(m.Mov))
+                            {
+                                <PermisoView Permiso="@Permisos.Recibos.Ver">
+                                    <button type="button"
+                                    class="btn btn-sm btn-outline-primary me-2"
+                                    @onclick="() => VerRecibo(m.Mov.OrigenId!.Value)">
+                                        <i class="bi bi-eyeglasses"></i> Ver
+                                    </button>
+                                </PermisoView>
+                                <PermisoView Permiso="@Permisos.Recibos.Editar">
+                                    <button type="button"
+                                    class="btn btn-sm btn-outline-secondary me-2"
+                                    @onclick="() => EditarRecibo(m.Mov.OrigenId!.Value)">
+                                        <i class="bi bi-pencil-fill"></i> Recibo
+                                    </button>
+                                </PermisoView>
+                                <PermisoView Permiso="@Permisos.Recibos.Eliminar">
+                                    <button type="button"
+                                    class="btn btn-sm btn-outline-danger"
+                                    @onclick="() => EliminarRecibo(m.Mov.OrigenId!.Value)">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </PermisoView>
+
+
+
+                            }
+                            @* 🔹 Factura: ver y borrar movimiento de cta cte *@
+                            @*
+    @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Factura && m.Mov.OrigenId.HasValue)
+    {
+        <PermisoView Permiso="@Permisos.Facturas.Ver">
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary me-2"
+                    @onclick="() => VerFactura(m.Mov.OrigenId.Value)">
+                <i class="bi bi-receipt"></i> Ver factura
+            </button>
+        </PermisoView>
+
+        <PermisoView Permiso="@Permisos.Facturas.Eliminar">
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    @onclick="() => EliminarMovimientoCuentaAsync(m.Mov.Id)">
+                <i class="bi bi-trash3-fill"></i>
+            </button>
+
+        </PermisoView>
+                                
+                            }
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+            }
+        </tbody>
+    </table> *@
+
+
+
+    <h5 class="mt-4">Movimientos</h5>
+
+    @if (!esMovil)   @* mismo flag que venimos usando *@
+    {
+        <table class="table table-striped table-hover shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Tipo</th>
+                    <th>Detalle</th>
+                    <th class="text-end">Importe</th>
+                    <th class="text-end">Saldo</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Movimientos.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Sin movimientos.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var m in MovimientosOrdenados)
+                    {
+                        <tr>
+                            <td>@m.Mov.Fecha?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(m.Mov.Tipo == TipoMovimientoCuenta.Debito ? "Débito" : "Crédito")</td>
+                            <td>
+                                @m.Mov.Detalle
+
+                                @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                                {
+                                    <span class="badge text-bg-warning ms-2">Reversa</span>
+                                }
+                            </td>
+
+                            <td class="text-end">@((m.Mov.Importe ?? 0).ToString("C"))</td>
+                            <td class="text-end">@m.Running.ToString("C")</td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center flex-wrap gap-1">
+                                    <PermisoView Permiso="@Permisos.Recibos.Reversa">
+                                        @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-warning me-1"
+                                                    @onclick="() => DeshacerAnulacionDesdeCtaCte(m.Mov.Id)">
+                                                🔓 Deshacer reversa
+                                            </button>
+                                        }
+                                    </PermisoView>
+
+                                    @if (EsReciboActivo(m.Mov))
+                                    {
+                                        <PermisoView Permiso="@Permisos.Recibos.Ver">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary me-2"
+                                                    @onclick="() => VerRecibo(m.Mov.OrigenId!.Value)">
+                                                <i class="bi bi-eyeglasses"></i> Ver
+                                            </button>
+                                        </PermisoView>
+                                        <PermisoView Permiso="@Permisos.Recibos.Editar">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary me-2"
+                                                    @onclick="() => EditarRecibo(m.Mov.OrigenId!.Value)">
+                                                <i class="bi bi-pencil-fill"></i> Recibo
+                                            </button>
+                                        </PermisoView>
+                                        <PermisoView Permiso="@Permisos.Recibos.Eliminar">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    @onclick="() => EliminarRecibo(m.Mov.OrigenId!.Value)">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </PermisoView>
+                                    }
+
+                                    @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Factura && m.Mov.OrigenId.HasValue)
+                                    {
+                                        <PermisoView Permiso="@Permisos.Facturas.Ver">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary me-2"
+                                                    @onclick="() => VerFactura(m.Mov.OrigenId.Value)">
+                                                <i class="bi bi-receipt"></i> Ver factura
+                                            </button>
+                                        </PermisoView>
+
+                                        <PermisoView Permiso="@Permisos.Facturas.Eliminar">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    @onclick="() => EliminarMovimientoCuentaAsync(m.Mov.Id)">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </PermisoView>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <!-- 📱 MOBILE: movimientos como cards -->
+        @if (Movimientos.Count == 0)
+        {
+            <div class="text-center text-muted py-3">Sin movimientos.</div>
+        }
+        else
+        {
+            <div class="cta-movimientos-cards">
+                @foreach (var m in MovimientosOrdenados)
+                {
+                    var tipoTexto = m.Mov.Tipo == TipoMovimientoCuenta.Debito ? "Débito" : "Crédito";
+                    var importeTexto = (m.Mov.Importe ?? 0).ToString("C");
+                    var saldoTexto = m.Running.ToString("C");
+
+                    <div class="card cta-mov-card shadow-sm mb-2">
+                        <div class="card-body">
+                            <!-- Fecha + tipo + importe -->
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="text-muted small">
+                                        @m.Mov.Fecha?.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                    <div class="small">
+                                        <strong>Tipo:</strong> @tipoTexto
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-muted">Importe</div>
+                                    <div class="fw-bold cta-mov-importe">
+                                        @importeTexto
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detalle + badge Reversa -->
+                            <div class="small mb-2">
+                                <strong>Detalle:</strong>
+                                <span class="ms-1">@m.Mov.Detalle</span>
+
+                                @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                                {
+                                    <span class="badge text-bg-warning ms-2">Reversa</span>
+                                }
+                            </div>
+
+                            <!-- Saldo -->
+                            <div class="small mb-2">
+                                <strong>Saldo:</strong>
+                                <span class="ms-1">@saldoTexto</span>
+                            </div>
+
+
+
+                            <!-- Acciones -->
+                            <div class="d-flex flex-column flex-sm-row flex-wrap gap-2 mt-2">
+                                <PermisoView Permiso="@Permisos.Recibos.Reversa">
+                                    @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Reversa)
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-warning flex-fill"
+                                                @onclick="() => DeshacerAnulacionDesdeCtaCte(m.Mov.Id)">
+                                            🔓 Deshacer reversa
+                                        </button>
+                                    }
+                                </PermisoView>
+
+                                @if (EsReciboActivo(m.Mov))
+                                {
+                                    <PermisoView Permiso="@Permisos.Recibos.Ver">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary flex-fill"
+                                                @onclick="() => VerRecibo(m.Mov.OrigenId!.Value)">
+                                            <i class="bi bi-eyeglasses"></i> Ver
+                                        </button>
+                                    </PermisoView>
+                                    <PermisoView Permiso="@Permisos.Recibos.Editar">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary flex-fill"
+                                                @onclick="() => EditarRecibo(m.Mov.OrigenId!.Value)">
+                                            <i class="bi bi-pencil-fill"></i> Recibo
+                                        </button>
+                                    </PermisoView>
+                                    <PermisoView Permiso="@Permisos.Recibos.Eliminar">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger flex-fill"
+                                                @onclick="() => EliminarRecibo(m.Mov.OrigenId!.Value)">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </PermisoView>
+                                }
+
+                                @if (m.Mov.OrigenTipo == OrigenMovimientoCuenta.Factura && m.Mov.OrigenId.HasValue)
+                                {
+                                    <PermisoView Permiso="@Permisos.Facturas.Ver">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-primary flex-fill"
+                                                @onclick="() => VerFactura(m.Mov.OrigenId.Value)">
+                                            <i class="bi bi-receipt"></i> Ver factura
+                                        </button>
+                                    </PermisoView>
+
+                                    <PermisoView Permiso="@Permisos.Facturas.Eliminar">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger flex-fill"
+                                                @onclick="() => EliminarMovimientoCuentaAsync(m.Mov.Id)">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </PermisoView>
+                                }
+
+
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+
+    @* @if (MostrarRecibo)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5>🧾 Nuevo Recibo</h5>
+                <EditForm Model="@Recibo" OnValidSubmit="GuardarRecibo">
+                    <DataAnnotationsValidator />
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Monto</label>
+                            <InputNumber class="form-control" @bind-Value="Recibo.Total" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Medio de Pago</label>
+                            <InputSelect class="form-select" @bind-Value="Recibo.MedioPagoId">
+                                <option value="0">-- Seleccione --</option>
+                                @foreach (var mp in MediosPago)
+                                {
+                                    <option value="@mp.Id">@mp.Nombre</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Observaciones</label>
+                            <InputText class="form-control" @bind-Value="Recibo.Observaciones" />
+                        </div>
+                    </div>
+
+                    @if (CreditoCreado != null)
+                    {
+                        <div class="alert alert-info">Crédito creado (Mov #@CreditoCreado.Id). Imputá el monto:</div>
+
+                        <h6>Imputar contra débitos abiertos</h6>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Detalle</th>
+                                    <th class="text-end">Saldo Débito</th>
+                                    <th class="text-end">Imputar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var d in DebitosAbiertos)
+                                {
+                                    <tr>
+                                        <td>@d.Debito.Fecha?.ToString("dd/MM/yyyy")</td>
+                                        <td>@((d.Debito.FacturaId.HasValue ? $"Factura #{d.Debito.FacturaId}" : d.Debito.Detalle))</td>
+                                        <td class="text-end">@d.Saldo.ToString("C")</td>
+                                        <td class="text-end">
+                                            <InputNumber @bind-Value="d.Imputar" class="form-control form-control-sm" />
+                                        </td>
+                                    </tr>
+                                }
+                                <tr class="table-secondary">
+                                    <td colspan="3" class="text-end"><b>Total a imputar</b></td>
+                                    <td class="text-end"><b>@DebitosAbiertos.Sum(x => x.Imputar).ToString("C")</b></td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+
+                     @*    <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" @onclick="ConfirmarImputaciones">✅ Confirmar imputaciones</button>
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CancelarRecibo">Cancelar</button>
+                            <button type="button" class="btn btn-outline-primary" @onclick="GuardarSinImputar">
+                                Guardar sin imputar
+                            </button>
+                        </div> *@
+                        @*
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" @onclick="ConfirmarImputaciones">
+                                ✅ Confirmar imputaciones
+                            </button>
+
+                            <!-- acá va CERRAR -->
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CancelarRecibo">
+                                Cerrar
+                            </button>
+
+                            <button type="button" class="btn btn-outline-primary" @onclick="GuardarSinImputar">
+                                Guardar sin imputar
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">💾 Crear Recibo</button>
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CancelarRecibo">Cancelar</button>
+                        </div>
+                    }
+                </EditForm>
+            </div>
+        </div>
+    } *@
+
+@if (MostrarRecibo)
+{
+    <!-- Overlay del modal -->
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5);">
+        @* <div class="modal-dialog modal-xl modal-dialog-scrollable"> *@
+            <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🧾 Nuevo Recibo</h5>
+                    <button type="button" class="btn-close" aria-label="Close"
+                            @onclick="CancelarRecibo"></button>
+                </div>
+
+                <EditForm Model="@Recibo" OnValidSubmit="GuardarRecibo">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label>Monto</label>
+                                <InputNumber class="form-control" @bind-Value="Recibo.Total" />
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Medio de Pago</label>
+                                <InputSelect class="form-select" @bind-Value="Recibo.MedioPagoId">
+                                    <option value="0">-- Seleccione --</option>
+                                    @foreach (var mp in MediosPago)
+                                    {
+                                        <option value="@mp.Id">@mp.Nombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Observaciones</label>
+                                <InputText class="form-control" @bind-Value="Recibo.Observaciones" />
+                            </div>
+                        </div>
+
+                        @if (CreditoCreado != null)
+                        {
+                            <div class="alert alert-info">
+                                Crédito creado (Mov #@CreditoCreado.Id). Imputá el monto:
+                            </div>
+
+                            <h6>Imputar contra débitos abiertos</h6>
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Detalle</th>
+                                        <th class="text-end">Saldo Débito</th>
+                                        <th class="text-end">Imputar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var d in DebitosAbiertos)
+                                    {
+                                        <tr>
+                                            <td>@d.Debito.Fecha?.ToString("dd/MM/yyyy")</td>
+                                            <td>@((d.Debito.FacturaId.HasValue ? $"Factura #{d.Debito.FacturaId}" : d.Debito.Detalle))</td>
+                                            <td class="text-end">@d.Saldo.ToString("C")</td>
+                                            <td class="text-end">
+                                                <InputNumber @bind-Value="d.Imputar"
+                                                             class="form-control form-control-sm" />
+                                            </td>
+                                        </tr>
+                                    }
+                                    <tr class="table-secondary">
+                                        <td colspan="3" class="text-end"><b>Total a imputar</b></td>
+                                        <td class="text-end">
+                                            <b>@DebitosAbiertos.Sum(x => x.Imputar).ToString("C")</b>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        @if (CreditoCreado != null)
+                        {
+                            <button type="button" class="btn btn-success"
+                                    @onclick="ConfirmarImputaciones">
+                                ✅ Confirmar imputaciones
+                            </button>
+
+                            <button type="button" class="btn btn-outline-primary"
+                                    @onclick="GuardarSinImputar">
+                                Guardar sin imputar
+                            </button>
+
+                            <button type="button" class="btn btn-outline-secondary"
+                                    @onclick="CancelarRecibo">
+                                Cerrar
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-success">
+                                💾 Crear Recibo
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary"
+                                    @onclick="CancelarRecibo">
+                                Cancelar
+                            </button>
+                        }
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backdrop (para oscurecer el fondo) -->
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+
+
+   @*  @if (MostrarEditarRecibo)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5>✏️ Editar Recibo #@ReciboEdicion.Id</h5>
+                <EditForm Model="@ReciboEdicion" OnValidSubmit="GuardarEdicionRecibo">
+                    <DataAnnotationsValidator />
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Monto</label>
+                            <InputNumber class="form-control" @bind-Value="ReciboEdicion.Total" />
+                            <small class="text-muted">Original: @MontoOriginalRecibo.ToString("C")</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Medio de Pago</label>
+                            <InputSelect class="form-select" @bind-Value="ReciboEdicion.MedioPagoId">
+                                <option value="0">-- Seleccione --</option>
+                                @foreach (var mp in MediosPago)
+                                {
+                                    <option value="@mp.Id">@mp.Nombre</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Fecha</label>
+                            <InputDate class="form-control" @bind-Value="ReciboEdicion.Fecha" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Observaciones</label>
+                            <InputText class="form-control" @bind-Value="ReciboEdicion.Observaciones" />
+                        </div>
+                    </div>
+
+                    
+
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">💾 Guardar cambios</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CancelarEdicionRecibo">Cancelar</button>
+                        
+                        <!--Debug info-->
+                        
+@*                         @if (ReciboVista is not null)
+                        {
+                            <pre class="mt-3">
+        Anulado: @ReciboVista.Anulado
+        Total recibo: @ReciboVista.Recibo.Total
+        Total imputado: @ReciboVista.TotalImputado
+        Saldo resultante: @ReciboVista.SaldoResultante
+        PuedeImputar: @ReciboVista.PuedeImputar
+            </pre>
+                     
+                        } *@
+
+
+                      @* Imputar desde Cta Cte *@
+                      @*
+
+                    @if (ReciboVista?.PuedeImputar == true)
+                    {
+                        <button type="button"
+                                class="btn btn-success"
+                                @onclick="AbrirImputarDesdeCtaCte">
+                            💸 Imputar
+                        </button>
+                    }
+
+                    @* Anular desde Cta Cte *@
+                    @*
+                    <PermisoView Permiso="@Permisos.Recibos.Anular">
+                        @if (ReciboVista?.PuedeAnular == true)
+                        {
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    @onclick="AnularReciboDesdeCtaCte">
+                                ❌ Anular
+                            </button>
+                        }
+                    </PermisoView>
+
+
+@*                         <PermisoView Permiso="@Permisos.Recibos.Reversa">
+                            @if (ReciboVista?.PuedeDeshacerAnulacion == true)
+                            {
+                                <button type="button"
+                                        class="btn btn-warning"
+                                        @onclick="DeshacerAnulacionDesdeCtaCte">
+                                    🔓 Deshacer anulación
+                                </button>
+                            }
+                        </PermisoView> *@
+
+
+                        @*
+
+
+
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    } *@
+
+@if (MostrarEditarRecibo)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">✏️ Editar Recibo #@ReciboEdicion.Id</h5>
+                    <button type="button" class="btn-close" aria-label="Close"
+                            @onclick="CancelarEdicionRecibo"></button>
+                </div>
+
+                <EditForm Model="@ReciboEdicion" OnValidSubmit="GuardarEdicionRecibo">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label>Monto</label>
+                                <InputNumber class="form-control" @bind-Value="ReciboEdicion.Total" />
+                                <small class="text-muted">
+                                    Original: @MontoOriginalRecibo.ToString("C")
+                                </small>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label>Medio de Pago</label>
+                                <InputSelect class="form-select" @bind-Value="ReciboEdicion.MedioPagoId">
+                                    <option value="0">-- Seleccione --</option>
+                                    @foreach (var mp in MediosPago)
+                                    {
+                                        <option value="@mp.Id">@mp.Nombre</option>
+                                    }
+                                </InputSelect>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label>Fecha</label>
+                                <InputDate class="form-control" @bind-Value="ReciboEdicion.Fecha" />
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label>Observaciones</label>
+                                <InputText class="form-control" @bind-Value="ReciboEdicion.Observaciones" />
+                            </div>
+                        </div>
+
+                        @* Si quisieras mostrar info de estado del recibo, podrías agregar algo tipo:
+                        @if (ReciboVista is not null)
+                        {
+                            <div class="mt-3 small text-muted">
+                                Anulado: @ReciboVista.Anulado<br />
+                                Total recibo: @ReciboVista.Recibo.Total<br />
+                                Total imputado: @ReciboVista.TotalImputado<br />
+                                Saldo resultante: @ReciboVista.SaldoResultante<br />
+                                PuedeImputar: @ReciboVista.PuedeImputar
+                            </div>
+                        }
+                        *@
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">
+                            💾 Guardar cambios
+                        </button>
+
+                        @* Imputar desde Cta Cte *@
+                        @if (ReciboVista?.PuedeImputar == true)
+                        {
+                            <button type="button"
+                                    class="btn btn-success"
+                                    @onclick="AbrirImputarDesdeCtaCte">
+                                💸 Imputar
+                            </button>
+                        }
+
+                        @* Anular desde Cta Cte *@
+                        <PermisoView Permiso="@Permisos.Recibos.Anular">
+                            @if (ReciboVista?.PuedeAnular == true)
+                            {
+                                <button type="button"
+                                        class="btn btn-outline-danger"
+                                        @onclick="AnularReciboDesdeCtaCte">
+                                    ❌ Anular
+                                </button>
+                            }
+                        </PermisoView>
+
+                        @* Reversa (si en algún momento lo volvés a habilitar)
+                        <PermisoView Permiso="@Permisos.Recibos.Reversa">
+                            @if (ReciboVista?.PuedeDeshacerAnulacion == true)
+                            {
+                                <button type="button"
+                                        class="btn btn-warning"
+                                        @onclick="DeshacerAnulacionDesdeCtaCte">
+                                    🔓 Deshacer anulación
+                                </button>
+                            }
+                        </PermisoView>
+                        *@
+
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                @onclick="CancelarEdicionRecibo">
+                            Cancelar
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backdrop -->
+    <div class="modal-backdrop fade show"></div>
+}
+
+
+
+    
+
+
+
+</div>
+
+
+
+<ImputarReciboModal @ref="_imputarModalCtaCte"
+                    OnImputado="OnImputadoDesdeCtaCte" />
+
+

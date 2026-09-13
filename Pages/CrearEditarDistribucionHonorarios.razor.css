@@ -1,0 +1,105 @@
+﻿/* Contenedor principal */
+.distribucion-form {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+    /* Encabezado */
+    .distribucion-form h3 {
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    /* Inputs y selects */
+    .distribucion-form .form-control {
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 0.95rem;
+    }
+
+    /* Botones principales */
+    .distribucion-form button {
+        min-width: 120px;
+        font-weight: bold;
+    }
+
+/* Tabla de detalles */
+.detalles-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+    .detalles-table th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .detalles-table td {
+        padding: 8px;
+        text-align: center;
+        vertical-align: middle;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+/* Botón eliminar detalle */
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .btn-delete:hover {
+        background-color: #c0392b;
+    }
+
+/* Botón agregar detalle */
+.btn-add {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+    .btn-add:hover {
+        background-color: #2980b9;
+    }
+
+/* Sección de detalles */
+.detalles-section {
+    margin-top: 25px;
+    border-top: 1px solid #dee2e6;
+    padding-top: 20px;
+}
+
+/* Inputs pequeños dentro de la tabla (porcentajes y conceptos) */
+.detalles-table input[type="number"],
+.detalles-table input[type="text"] {
+    width: 90%;
+    padding: 5px;
+    font-size: 0.85rem;
+    text-align: center;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+/* Mensajes de validación */
+.validation-message {
+    font-size: 0.85rem;
+    color: #e74c3c;
+    margin-top: 5px;
+}

@@ -1,0 +1,47 @@
+﻿@attribute [Authorize]
+
+@page "/ajustes-variables"
+@inherits AjustesVariablesBase
+@layout AdminLayout
+
+
+<div class="container mt-4 list-page-container">
+<h3>⚙️ Variables de Ajuste</h3>
+<button class="btn btn-primary mb-3" @onclick="Nuevo">➕ Nueva Variable</button>
+
+<table class="table table-striped table-hover shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Clave</th>
+            <th>Nombre</th>
+            <th>Valor Actual</th>
+            <th>Activa</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (items is null || items.Count == 0)
+        {
+            <tr><td colspan="5" class="text-center text-muted">Sin variables.</td></tr>
+        }
+        else
+        {
+            @foreach (var v in items)
+            {
+                <tr>
+                    <td>@v.Clave</td>
+                    <td>@v.Nombre</td>
+                    <td>@v.ValorActual</td>
+                    <td>@(v.Activa ? "Sí" : "No")</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(v.Id)">✏️ Editar</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(v.Id)">🗑️</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+</div>
+
+

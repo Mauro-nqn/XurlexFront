@@ -1,0 +1,43 @@
+﻿@using IurixBlazor.Services.Windowing
+@inject WindowService Windows
+@implements IDisposable
+
+<div class="win-host">
+    @foreach (var w in Windows.Windows)
+    {
+        <IurixBlazor.Services.Windowing.FloatingWindow @key="w.Id" Item="w" />
+    }
+</div>
+
+<!--Este es el task bar de abajo donde se mantienen las ventanas minimizadas-->
+@if (Windows.Windows.Any(w => w.IsMinimized))
+{
+    <Taskbar />
+}
+
+@code {
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    private Action? _handler;
+    protected override void OnInitialized()
+    {
+        _handler = () => InvokeAsync(StateHasChanged);
+        Windows.OnChanged += _handler!;
+
+        _handler = async () =>
+            {
+                await InvokeAsync(StateHasChanged);
+                try
+                {
+                    await JS.InvokeVoidAsync("winCaptureLog",
+                        $"OnChanged total:{Windows.Windows.Count} min:{Windows.Windows.Count(w => w.IsMinimized)}");
+                }
+                catch { }
+            };
+
+    }
+    public void Dispose()
+    {
+        if (_handler != null) Windows.OnChanged -= _handler;
+    }
+}

@@ -1,0 +1,440 @@
+﻿
+
+
+
+ @attribute [Authorize]
+
+
+
+@page "/agendas"
+@inherits AgendasBase
+@layout AdminLayout
+@using IurixBlazor.Shared.Enums
+
+<div class="container mt-4 agendas-page">
+   
+
+         <!-- Encabezado alineado CON la card -->
+<div class="container px-0 mb-3">
+    <div class="row align-items-center g-2">
+        <div class="col">
+            <h3 class="m-0">🗓️ Agenda de Eventos</h3>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="NuevaAgenda">
+                <i class="bi bi-plus-lg"></i> Nuevo
+            </button>
+        </div>
+    </div>
+</div>
+
+  
+
+
+  <div class="card mb-3 shadow-sm">
+  <div class="card-body">
+
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-3">
+        <label class="form-label">Modo fecha</label>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="swRango"
+                 @bind="UsarRango" @bind:after="OnToggleRangoAsync" />
+          <label class="form-check-label" for="swRango">
+            @(UsarRango ? "Rango de fechas" : "Un día")
+          </label>
+        </div>
+      </div>
+
+      @if (!UsarRango)
+      {
+        <div class="col-12 col-md-4">
+          <label class="form-label">Fecha</label>
+          <div class="input-group">
+            <InputDate @bind-Value="FiltroFecha"
+                       class="form-control"
+                        /> @* @bind-Value:after="BuscarAgendaAsync" *@
+            <button class="btn btn-outline-secondary" type="button" title="Quitar fecha" @onclick="LimpiarFechaAsync">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      }
+      else
+      {
+        <div class="col-12 col-md-4">
+          <label class="form-label">Desde</label>
+          <InputDate @bind-Value="FiltroDesde"
+                     class="form-control"
+                      /> @* @bind-Value:after="BuscarAgendaAsync" *@
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Hasta</label>
+          <InputDate @bind-Value="FiltroHasta"
+                     class="form-control"
+                      /> @* @bind-Value:after="BuscarAgendaAsync" *@
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label d-none d-md-block">&nbsp;</label>
+          <button class="btn btn-outline-secondary w-100" type="button" @onclick="LimpiarRangoAsync">
+            Limpiar rango
+          </button>
+        </div>
+      }
+
+      <div class="col-12 col-md-3">
+      <label class="form-label">Orden</label>
+      <InputSelect class="form-select"
+                   @bind-Value="OrdenFecha"
+                   @bind-Value:after="OnOrdenChangedAsync">
+        <option value="desc">Más nuevo primero</option>
+        <option value="asc">Más viejo primero</option>
+      </InputSelect>
+    </div>
+
+      <div class="col-12 col-md-3">
+        <label class="form-label">Estado</label>
+        <InputSelect class="form-select"
+                     @bind-Value="FiltroEstado"
+                     @bind-Value:after="BuscarAgendaAsync">
+          <option value="">Todos</option>
+          <option value="@EstadoAgenda.Pendiente">Pendiente</option>
+          <option value="@EstadoAgenda.Realizado">Realizado</option>
+          <option value="@EstadoAgenda.Cancelado">Cancelado</option>
+          <option value="@EstadoAgenda.Reprogramado">Reprogramado</option>
+        </InputSelect>
+      </div>
+
+      <div class="col-12 col-md-5">
+        <label class="form-label">Buscar</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input class="form-control"
+                 placeholder="Cliente, título u observación…"
+                 @bind="FiltroBusqueda" 
+                  /> @* @bind:event="oninput" @bind:after="OnSearchInputAsync" *@
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4 text-md-end">
+        <label class="form-label d-none d-md-block">&nbsp;</label>
+        <div class="d-grid d-md-flex gap-2">
+@*           <button class="btn btn-primary w-100" @onclick="NuevaAgenda">
+            <i class="bi bi-plus-lg"></i> Nuevo
+          </button> *@
+          <button class="btn btn-outline-secondary" @onclick="LimpiarFiltros">
+            Limpiar todo
+          </button>
+          <button class="btn btn-outline-primary" @onclick="BuscarAgendaAsync">
+              Filtrar
+          </button>
+
+        </div>
+      </div>
+   @*  </div> *@
+
+
+
+        <hr class="my-3" />
+
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label me-3">Usuarios</label>
+
+        <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="chkTodos"
+               @bind="FiltroTodosUsuarios"
+               @bind:after="OnToggleTodosAsync" />
+        @* <label class="form-check-label" for="chkTodos">Todos</label> *@
+          <label class="form-check-label" for="chkTodos">Todos</label>
+        </div>
+
+         @if (!FiltroTodosUsuarios)
+        {
+          <div class="d-flex flex-wrap gap-3 mt-2">
+            @foreach (var u in ListaUsuarios)
+            {
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox"
+                       checked="@FiltroUsuarioIds.Contains(u.Id)"
+                       @onchange="(ChangeEventArgs e) => OnToggleUsuarioAsync(u.Id, e.Value is bool b && b)" />
+                <label class="form-check-label">@u.Nombre</label>
+              </div>
+            }
+          </div>
+
+          @* Chips de seleccionados (visual) *@
+          @if (FiltroUsuarioIds.Count > 0)
+          {
+            <div class="mt-2">
+              @foreach (var uid in FiltroUsuarioIds)
+              {
+                var nombre = ListaUsuarios.FirstOrDefault(x => x.Id == uid)?.Nombre ?? $"ID {uid}";
+                <span class="badge bg-light text-dark me-2">
+                  <i class="bi bi-person"></i> @nombre
+                </span>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+ 
+
+  </div>
+</div>
+
+
+  
+
+    </div>
+
+
+
+   @*  <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>📅 Fecha</th>
+                    <th>📋 Tipo</th>
+                    <th>⚙️ Estado</th>
+                    <th class="d-none d-lg-table-cell">👤 Cliente</th>
+                    <th class="d-none d-xl-table-cell">👨‍⚖️ Responsable</th>
+                    <th class="d-none d-md-table-cell">📝 Titulo</th>
+                    <th>Sincronizado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody> *@
+@*                 @foreach (var agenda in AgendasFiltradas)
+                {
+                    <tr>
+                        <td>@agenda.FechaAgendada.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@agenda.TipoAgendamientoNombre</td>
+
+                        <td>
+                            @{
+                                var estado = ObtenerEstadoInfo(agenda.EstadoAgenda);
+                            }
+                            <span class="estado-badge @estado.ClaseBg" title="@estado.Texto">
+                                @estado.Letra
+                            </span>
+                            <span class="ms-2 d-none d-sm-inline">@estado.Texto</span>
+                        </td>
+
+                        <td class="d-none d-lg-table-cell">@agenda.PersonaNombre</td>
+                        <td class="d-none d-xl-table-cell">@agenda.UsuarioNombre</td>
+                        <td class="d-none d-md-table-cell">@agenda.Titulo</td>
+                        <td class="text-center">
+                            @if (agenda.GoogleRegistrado)
+                            {
+                                <a class="badge bg-success" href="@agenda.GoogleHtmlLink" target="_blank" title="Abrir en Google Calendar">
+                                    ✔ En Google 
+                                </a> <br />
+                                <small class="text-muted ms-2">
+                                    @agenda.GoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No sincronizado</span>
+                            }
+                        </td>
+                        
+                        <td class="text-nowrap">
+                            <button class="btn btn-sm btn-primary" @onclick="() => EditarAgenda(agenda)"><i class="bi bi-pencil-square fs-5"></i></button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => EliminarAgenda(agenda)"><i class="bi bi-trash3-fill fs-5"></i></button>
+                        </td>
+                    </tr>
+                } *@
+
+
+
+                @if (!esMovil)  @* 👈 igual que en Personas/Gestiones *@
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>📅 Fecha</th>
+                    <th>📋 Tipo</th>
+                    <th>⚙️ Estado</th>
+                    <th class="d-none d-lg-table-cell">👤 Cliente</th>
+                    <th class="d-none d-xl-table-cell">👨‍⚖️ Responsable</th>
+                    <th class="d-none d-md-table-cell">📝 Título</th>
+                    <th>Sincronizado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var agenda in AgendasFiltradas)
+                {
+                    var estado = ObtenerEstadoInfo(agenda.EstadoAgenda);
+
+                    <tr>
+                        <td>@agenda.FechaAgendada.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@agenda.TipoAgendamientoNombre</td>
+                        <td>
+                            <span class="estado-badge @estado.ClaseBg" title="@estado.Texto">
+                                @estado.Letra
+                            </span>
+                            <span class="ms-2 d-none d-sm-inline">@estado.Texto</span>
+                        </td>
+                        <td class="d-none d-lg-table-cell">@agenda.PersonaNombre</td>
+                        <td class="d-none d-xl-table-cell">@agenda.UsuarioNombre</td>
+                        <td class="d-none d-md-table-cell">@agenda.Titulo</td>
+                        <td class="text-center">
+                            @if (agenda.GoogleRegistrado)
+                            {
+                                <a class="badge bg-success" href="@agenda.GoogleHtmlLink" target="_blank" title="Abrir en Google Calendar">
+                                    ✔ En Google
+                                </a> <br />
+                                <small class="text-muted ms-2">
+                                    @agenda.GoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No sincronizado</span>
+                            }
+                        </td>
+                        <td class="text-nowrap">
+                            <button class="btn btn-sm btn-primary" @onclick="() => EditarAgenda(agenda)">
+                                <i class="bi bi-pencil-square fs-5"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => EliminarAgenda(agenda)">
+                                <i class="bi bi-trash3-fill fs-5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <!-- 📱 MOBILE: cards para agenda -->
+    <div class="agenda-cards">
+        @foreach (var agenda in AgendasFiltradas)
+        {
+            var estado = ObtenerEstadoInfo(agenda.EstadoAgenda);
+
+            <div class="card agenda-card shadow-sm mb-2">
+                <div class="card-body">
+                    <!-- Fecha + título + estado -->
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <div class="text-muted small">
+                                @agenda.FechaAgendada.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            <div class="fw-semibold">
+                                @(!string.IsNullOrWhiteSpace(agenda.Titulo) ? agenda.Titulo : "(Sin título)")
+                            </div>
+                            <div class="small text-muted">
+                                @agenda.TipoAgendamientoNombre
+                            </div>
+                        </div>
+
+                        <div class="ms-2 text-end">
+                            <span class="estado-badge @estado.ClaseBg estado-pill" title="@estado.Texto">
+                                @estado.Letra
+                            </span>
+                            <div class="small text-muted">@estado.Texto</div>
+                        </div>
+                    </div>
+
+                    <!-- Cliente / Responsable -->
+                    <div class="small mb-2">
+                        @if (!string.IsNullOrWhiteSpace(agenda.PersonaNombre))
+                        {
+                            <div><strong>Cliente:</strong> @agenda.PersonaNombre</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(agenda.UsuarioNombre))
+                        {
+                            <div><strong>Responsable:</strong> @agenda.UsuarioNombre</div>
+                        }
+                    </div>
+
+                    <!-- Google + Acciones -->
+                    <div class="d-flex flex-column gap-2">
+                        <div class="small">
+                            @if (agenda.GoogleRegistrado)
+                            {
+                                <a class="badge bg-success" href="@agenda.GoogleHtmlLink" target="_blank">
+                                    ✔ En Google
+                                </a>
+                                <div class="text-muted mt-1">
+                                    <small>
+                                        Últ. sync:
+                                        @agenda.GoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                    </small>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No sincronizado</span>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-fill"
+                                    @onclick="() => EditarAgenda(agenda)">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger flex-fill"
+                                    @onclick="() => EliminarAgenda(agenda)">
+                                <i class="bi bi-trash3-fill"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+   @*          </tbody>
+        </table>
+    </div>*@
+</div> 
+
+
+<style>
+  @* .agendas-page .card .form-label { font-weight: 600; }
+  .agendas-page .input-group-text { background: #f8f9fa; }
+  .estado-badge { display:inline-flex; align-items:center; width:1.6rem; height:1.6rem; justify-content:center; border-radius:50%; } *@
+
+  /* Cards de agenda en mobile */
+.agenda-card {
+    border-left: 4px solid #0d6efd;
+}
+
+.agenda-card .estado-pill {
+    border-radius: 999px;           /* más pastilla en mobile */
+    width: 1.8rem;
+    height: 1.8rem;
+    justify-content: center;
+}
+
+/* Ajustes específicos para pantallas chicas */
+@@media (max-width: 768px) {
+    .agendas-page {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .agenda-card .card-body {
+        padding: 0.75rem 0.9rem;
+    }
+
+    .agenda-card .fw-semibold {
+        font-size: 0.95rem;
+    }
+
+    .agenda-card .small {
+        font-size: 0.8rem;
+    }
+}
+
+</style>

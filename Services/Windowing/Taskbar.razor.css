@@ -1,0 +1,30 @@
+﻿.taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 10px;
+    z-index: 9999;
+}
+
+.taskbar-item {
+    padding: 8px 12px;
+    background-color: #555;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    transition: background-color 0.2s;
+}
+
+    .taskbar-item:hover {
+        background-color: #777;
+    }

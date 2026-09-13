@@ -1,0 +1,21 @@
+﻿.usuario-form {
+    max-width: 900px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+    .usuario-form label {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .usuario-form input,
+    .usuario-form select {
+        border-radius: 6px;
+    }
+
+    .usuario-form .btn {
+        min-width: 150px;
+    }

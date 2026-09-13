@@ -1,0 +1,24 @@
+🔔 Mostrar un toast:
+csharp
+Copiar
+Editar
+await JS.InvokeVoidAsync("mostrarToast", "✅ Operación exitosa", "success");
+❓ Confirmación:
+csharp
+Copiar
+Editar
+bool confirmado = await JS.InvokeAsync<bool>("mostrarConfirmacion", "¿Está seguro de continuar?");
+if (confirmado) { /* lógica confirmada */ }
+✏️ Prompt:
+csharp
+Copiar
+Editar
+string nuevoTitulo = await JS.InvokeAsync<string>("mostrarPrompt", "Ingrese el título:", "Título sin nombre");
+if (!string.IsNullOrWhiteSpace(nuevoTitulo)) { /* guardar */ }
+🔀 Guardar escrito (actualizar/nuevo):
+csharp
+Copiar
+Editar
+string opcion = await JS.InvokeAsync<string>("mostrarOpcionGuardar");
+if (opcion == "actualizar") { /* actualizar */ }
+else if (opcion == "nuevo") { /* guardar como nuevo */ }

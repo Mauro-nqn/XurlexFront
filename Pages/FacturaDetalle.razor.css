@@ -1,0 +1,11 @@
+﻿.factura-letra {
+    border: 3px solid black;
+    font-size: 3rem;
+    font-weight: bold;
+    width: 80px;
+    height: 80px;
+    text-align: center;
+    line-height: 70px;
+    border-radius: 8px;
+    background: white;
+}

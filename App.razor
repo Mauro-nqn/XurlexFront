@@ -1,0 +1,116 @@
+﻿@*
+@inject IJSRuntime JS
+@using IurixBlazor.Services.Windowing;
+@using IurixBlazor.Pages
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <ErrorBoundary>
+                @* <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" /> *@
+@*
+
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        <LayoutView Layout="@typeof(MainLayout)">
+                            <NotAuthorizedMessage />
+                        </LayoutView>
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </ErrorBoundary>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>❌ Página no encontrada.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+    <WindowHost />
+</CascadingAuthenticationState>
+
+*@
+
+@*
+@code {
+    // private ErrorBoundary? errorBoundary;
+
+    // protected override void OnAfterRender(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         errorBoundary?.Recover(); // Para reiniciar el límite de errores al recargar.
+    //     }
+    // }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+        
+    //     // if (firstRender) await JS.InvokeVoidAsync("winInterop.init");
+    //     await JS.InvokeVoidAsync("winCaptureHUD.enable", true);
+    // }
+
+}
+*@
+
+
+
+@* @inject IJSRuntime JS
+@using IurixBlazor.Services.Windowing;
+@using IurixBlazor.Pages
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <ErrorBoundary>
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            </ErrorBoundary>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>❌ Página no encontrada.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+    <WindowHost />
+</CascadingAuthenticationState>
+
+@code { }
+ *@
+
+
+@inject IJSRuntime JS
+@using IurixBlazor.Services.Windowing;
+@using IurixBlazor.Pages
+@using Microsoft.AspNetCore.Components.Authorization
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <ErrorBoundary>
+                @* 👇 Cambiamos RouteView por AuthorizeRouteView *@
+                <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                    <NotAuthorized>
+                        @* 👇 Acá usamos tu componente reutilizable *@
+                        <NotAuthorizedMessage />
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </ErrorBoundary>
+
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>❌ Página no encontrada.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+
+    <WindowHost />
+</CascadingAuthenticationState>
+
+
+
+@code { }

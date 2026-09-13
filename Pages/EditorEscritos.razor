@@ -1,0 +1,22 @@
+﻿@attribute [Authorize]
+
+@page "/editor/{Id:int?}"
+@layout AdminLayout
+
+@* <link href="css/editor.css" rel="stylesheet" /> *@
+
+<div class="container mt-4">
+    <h3 class="mb-3">✍️ Editor de Escritos Judiciales</h3>
+    
+    
+    <textarea id="editor1"></textarea>
+    
+
+    <div class="mt-3">
+        <button class="btn btn-primary me-2" @onclick="GuardarEscrito">💾 Guardar</button>
+        <button class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+    </div>
+</div>
+
+
+

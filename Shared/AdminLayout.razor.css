@@ -1,0 +1,524 @@
+﻿/* Menú móvil debajo de la barra superior */
+
+
+/*.mobile-menu {
+    position: absolute;
+    top: 56px;*/ /* Altura del navbar superior */
+    /*left: 0;
+    right: 0;
+    z-index: 1100;
+}
+
+    .mobile-menu .nav-link {
+        padding: 12px 16px;
+        display: block;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }*/
+
+
+
+/* Overlay detrás del menú mobile */
+.mobile-menu-overlay {
+    position: fixed;
+    inset: 0; /* top:0; right:0; bottom:0; left:0; */
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1090;
+}
+
+/* Panel del menú mobile */
+.mobile-menu {
+    position: fixed;
+    top: var(--topbar-h, 56px); /* usa tu variable o 56px por defecto */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+    padding: 0.75rem 1rem 1rem;
+    overflow-y: auto;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Header del menú */
+.mobile-menu-header {
+    padding-bottom: 0.25rem;
+}
+
+.mobile-menu-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Secciones */
+.mobile-menu-section {
+    margin-bottom: 0.75rem;
+}
+
+.mobile-menu-section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 0.25rem;
+}
+
+/* Links / items básicos */
+/*.mobile-menu .nav-link,
+.mobile-menu .mobile-item {
+    padding: 10px 14px;
+    display: block;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    border: 0;
+}
+
+    .mobile-menu .nav-link:hover,
+    .mobile-menu .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.12);
+    }*/
+
+
+
+
+
+
+
+
+
+/* Grupo toggle */
+.mobile-menu .group-toggle {
+    background: transparent;
+    border: 0;
+    text-align: left;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+}
+
+    .mobile-menu .group-toggle:hover {
+        background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    /* caret animado */
+    .mobile-menu .group-toggle .caret {
+        transition: transform .2s ease;
+    }
+
+.group-toggle[aria-expanded="true"] .caret {
+    transform: rotate(180deg);
+}
+
+/* Sub-links (indent) */
+/*.mobile-menu .sub-link {
+    padding: 8px 14px 8px 32px;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    border-radius: 6px;
+}
+
+    .mobile-menu .sub-link:hover,
+    .mobile-menu .sub-link.active {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+*/
+
+
+
+
+
+
+/* Mejorar accesibilidad y separación en mobile */
+.mobile-menu .nav-link,
+.mobile-menu .mobile-item {
+    padding: 14px 18px !important; /* más alto y tocable */
+    margin-bottom: 6px; /* separación entre elementos */
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px; /* separa icono de texto */
+    min-height: 48px; /* touch target recomendado */
+    background-color: rgba(255,255,255,0.03); /* sutil fondo base */
+    margin-top: 6px;
+}
+
+    /* Hover y Active más visibles */
+    .mobile-menu .nav-link:hover,
+    .mobile-menu .nav-link.active,
+    .mobile-menu .mobile-item:hover,
+    .mobile-menu .mobile-item.active {
+        background-color: rgba(255,255,255,0.15);
+        border-radius: 8px;
+    }
+
+/* Sub-links con separación e indentación */
+.mobile-menu .sub-link {
+    padding: 10px 18px 10px 34px !important;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background-color: rgba(255,255,255,0.02);
+    min-height: 42px;
+}
+
+    /* Hover sub-links */
+    .mobile-menu .sub-link:hover,
+    .mobile-menu .sub-link.active {
+        background-color: rgba(255,255,255,0.12);
+    }
+
+/* Lo que ya tenías para main-content / sidebar puede quedar igual,
+   esto solo afecta la parte mobile */
+
+
+
+
+
+
+
+
+
+
+/* Sidebar escritorio */
+/*.sidebar {
+    width: 220px;
+    min-height: 100%;
+    flex-shrink: 0;
+}*/
+
+
+/* Contenido principal cuando hay sidebar */
+.main-content {
+    margin-left: 260px; /* Igual al ancho de la sidebar */
+    width: calc(100% - 260px);
+}
+
+
+/* Ajustá si tu topbar mide distinto */
+
+
+/* El contenedor general arranca debajo de la topbar fija */
+/* Vars en el contenedor del layout (funciona en CSS aislado) */
+.layout-admin {
+    --topbar-h: 60px; /* alto navbar */
+    --sidebar-w: 260px; /* ancho sidebar (se ajusta en breakpoints) */
+    padding-top: var(--topbar-h);
+}
+
+#topBar {
+    height:60px
+}
+/* Sidebar escritorio */
+.sidebar {
+    width: var(--sidebar-w);
+    top: var(--topbar-h);
+    height: calc(100dvh - var(--topbar-h)); /* Ocupa todo el alto de la pantalla */
+    position: fixed; /* Fija la barra en la izquierda */
+
+    left: 0;
+    z-index: 1020;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    max-height: 100vh;
+}
+
+
+
+
+    .sidebar .nav-link {
+        padding: 10px 15px;
+    }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+        }
+
+
+
+    /* Toggle del grupo */
+    .sidebar .group-toggle
+    /*.mobile-menu .group-toggle */{
+        background: transparent;
+        border: 0;
+        text-align: left;
+        padding: 10px 15px;
+    }
+
+        .sidebar .group-toggle .caret
+        /*.mobile-menu .group-toggle .caret*/ {
+            transition: transform .2s ease;
+        }
+
+/* Rotar caret cuando está abierto (Bootstrap setea aria-expanded="true") */
+.group-toggle[aria-expanded="true"] .caret {
+    transform: rotate(180deg);
+}
+
+/* Submenú */
+.sidebar .sub-menu .sub-link
+/*.mobile-menu .sub-link*/ {
+    padding: 8px 12px 8px 28px; /* indent */
+    font-size: .95rem;
+    opacity: .95;
+
+}
+
+    .sidebar .sub-menu .sub-link.active,
+    .sidebar .sub-menu .sub-link:hover
+    /*.mobile-menu .sub-link.active,
+    .mobile-menu .sub-link:hover*/ {
+        background-color: rgba(255,255,255,.1);
+        border-radius: 5px;
+    }
+
+/* (Opcional) Aplicá margen al contenido si la sidebar es fixed */
+/*main.main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+}*/
+
+/* Contenido: a la derecha de la sidebar solo en ≥ md/ lg (según prefieras) */
+main.main-content {
+    min-height: calc(100dvh - var(--topbar-h));
+    margin-left: var(--sidebar-w);
+    width: calc(100dvw - var(--sidebar-w));
+    box-sizing: border-box;
+}
+
+
+@media (max-width: 768px) {
+    main.main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+
+
+
+/* Mobile / tablet: sidebar oculta (por clases Bootstrap), contenido a full */
+@media (max-width: 991.98px) {
+    .layout-admin {
+        --sidebar-w: 0px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Notebooks 992–1399: sidebar más angosta */
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .layout-admin {
+        --sidebar-w: 260px;
+    }
+    /* ideal 1366x768 */
+    .main-content {
+        margin-left: var(--sidebar-w);
+        width: calc(100% - var(--sidebar-w));
+    }
+}
+
+/* Desktop grande ≥1400: sidebar más ancha */
+@media (min-width: 1400px) {
+    .layout-admin {
+        --sidebar-w: 280px;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-w);
+        width: calc(100% - var(--sidebar-w));
+    }
+}
+
+
+
+/* Mobile menu: acordeón */
+/*#mobileMenu .accordion-button {
+  border-radius: .5rem;
+}
+
+#mobileMenu .accordion-button:not(.collapsed) {
+  background: rgba(255,255,255,.10);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+}
+
+#mobileMenu .accordion-button::after {
+  filter: invert(1);*/ /* flechita blanca */
+/*}
+
+#mobileMenu .accordion-body .nav-link {
+  border-left: 2px solid transparent;
+}
+
+#mobileMenu .accordion-body .nav-link.active {
+  border-left-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.08);
+  border-radius: .4rem;
+}*/
+
+
+/* Quitar fondo blanco default del accordion en dark mode */
+/*.offcanvas.text-bg-dark .accordion-button {
+    box-shadow: none;
+}
+
+    .offcanvas.text-bg-dark .accordion-button:not(.collapsed) {
+        background-color: rgba(255,255,255,0.05);
+    }*/
+
+/* NavLink dentro del menú móvil */
+/*.offcanvas.text-bg-dark .nav-link {
+    color: #f8f9fa;
+}
+
+    .offcanvas.text-bg-dark .nav-link.active {
+        background-color: rgba(255,255,255,0.12);
+        font-weight: 500;
+        border-radius: .375rem;
+    }*/
+
+
+
+
+/* --- Offcanvas Dark Accordion (Bootstrap 5) --- */
+.offcanvas.text-bg-dark .accordion-item {
+    background: transparent;
+    border: 0;
+}
+
+.offcanvas.text-bg-dark .accordion-button {
+    background: transparent !important;
+    color: #f8f9fa !important;
+    border-radius: .6rem;
+    box-shadow: none !important;
+    padding: .85rem 1rem;
+}
+
+    /* Estado ABIERTO: se distingue fuerte */
+    .offcanvas.text-bg-dark .accordion-button:not(.collapsed) {
+        background: rgba(255,255,255,.12) !important;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.18) !important;
+        font-weight: 600;
+    }
+
+    /* Quitar la línea azul / focus ring */
+    .offcanvas.text-bg-dark .accordion-button:focus {
+        box-shadow: none !important;
+        border-color: transparent !important;
+    }
+
+    /* Flechita (chevron) blanca: reemplazamos el SVG */
+    .offcanvas.text-bg-dark .accordion-button::after {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+        transform: rotate(-90deg); /* cerrado: hacia la derecha (opcional) */
+        transition: transform .2s ease;
+        opacity: .9;
+    }
+
+    /* Abierto: flecha hacia abajo */
+    .offcanvas.text-bg-dark .accordion-button:not(.collapsed)::after {
+        transform: rotate(0deg);
+    }
+
+/* Links internos */
+.offcanvas.text-bg-dark .accordion-body {
+    padding: .25rem 0 .5rem 0;
+}
+
+    .offcanvas.text-bg-dark .accordion-body .nav-link {
+        color: #f8f9fa;
+        border-radius: .45rem;
+        margin: .15rem .75rem;
+    }
+
+        .offcanvas.text-bg-dark .accordion-body .nav-link.active {
+            background: rgba(255,255,255,.12);
+            font-weight: 600;
+            border-left: 3px solid rgba(255,255,255,.5);
+        }
+
+
+
+
+
+
+/* Tamaño del logo */
+.logo-xurlex {
+    height: 36px; /* ajuste recomendado */
+    width: auto;
+    object-fit: contain;
+}
+
+/* En pantallas más grandes, agrandá un poco si querés */
+@media (min-width: 768px) {
+    .logo-xurlex {
+        height: 42px;
+    }
+}
+
+
+.logo-xurlex:hover {
+    opacity: 0.9;
+    transition: opacity .2s;
+}
+
+
+
+/* Mobile menu: acordeón */
+#mobileMenu .accordion-button {
+    border-radius: .5rem;
+}
+
+    #mobileMenu .accordion-button:not(.collapsed) {
+        background: rgba(255,255,255,.10);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+    }
+
+    #mobileMenu .accordion-button::after {
+        filter: invert(1); /* flechita blanca */
+    }
+
+#mobileMenu .accordion-body .nav-link {
+    border-left: 2px solid transparent;
+}
+
+    #mobileMenu .accordion-body .nav-link.active {
+        border-left-color: rgba(255,255,255,.5);
+        background: rgba(255,255,255,.08);
+        border-radius: .4rem;
+    }
+
+
+
+/* Variables dentro del offcanvas */
+#mobileMenu {
+    --bs-accordion-btn-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+    --bs-accordion-btn-active-icon: var(--bs-accordion-btn-icon);
+}
+
+    /* ✅ Forzar icono (cerrado y abierto) */
+    #mobileMenu .accordion-button::after,
+    #mobileMenu .accordion-button:not(.collapsed)::after {
+        background-image: var(--bs-accordion-btn-icon) !important;
+        opacity: .95;
+        filter: none !important;
+    }
+
+    /* Rotación */
+    #mobileMenu .accordion-button::after {
+        transform: rotate(-90deg);
+    }
+
+    #mobileMenu .accordion-button:not(.collapsed)::after {
+        transform: rotate(0deg);
+    }
+
+
+@media (max-width: 991px) {
+    #mobileMenu .accordion-button::after,
+    #mobileMenu .accordion-button:not(.collapsed)::after {
+        filter: invert(1) grayscale(1) !important; /* lo vuelve blanco sí o sí */
+    }
+}

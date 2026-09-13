@@ -1,0 +1,174 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@using IurixBlazor.Services
+@using IurixBlazor.Services.Auth
+@inject GoogleService GoogleService
+
+@inject IJSRuntime JS
+
+<PageTitle>XurLex - Tu estudio evoluciona</PageTitle>
+
+<div class="page">
+@*     <div class="sidebar">
+        <!-- (Opcional) Sidebar contenido -->
+    </div> *@
+
+    <main>
+        @* <article class="content px-4"> *@
+        <article class="@ArticleClass" style="@(IsLogin ? "padding-left:0;padding-right:0" : null)">
+            <!-- body-start -->
+            @Body
+            <!-- body-end -->
+            @code {
+                protected override void OnInitialized()
+                => Nav.LocationChanged += OnLocationChanged;
+
+                private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+                {
+                    try { await JS.InvokeVoidAsync("bsModal.cleanupHard"); }
+                    catch { }
+                }
+
+                public void Dispose()
+                => Nav.LocationChanged -= OnLocationChanged;
+            }
+        </article>
+    </main>
+</div>
+
+@code {
+
+    private bool _initHecho = false;
+
+
+    private bool redireccionHecha = false;
+
+    private bool IsLogin => Nav.ToBaseRelativePath(Nav.Uri)
+    .StartsWith("login", StringComparison.OrdinalIgnoreCase);
+
+    private string ArticleClass => IsLogin ? "content no-pad" : "content padded px-4";
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender && !redireccionHecha)
+    //     {
+    //         redireccionHecha = true;
+
+    //         var currentUri = Nav.ToBaseRelativePath(Nav.Uri).ToLower();
+
+    //         // Evitar redirección si ya estamos en login
+    //         if (currentUri.StartsWith("login"))
+    //             return;
+
+    //         var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+
+    //         if (string.IsNullOrEmpty(token))
+    //         {
+    //             Nav.NavigateTo("/login", forceLoad: true);
+    //         }
+    //     }
+    // }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // if (firstRender && !redireccionHecha)
+        // {
+        //     redireccionHecha = true;
+
+
+
+
+        //     var currentUri = Nav.ToBaseRelativePath(Nav.Uri).ToLower();
+        //     if (currentUri.StartsWith("login"))
+        //         return;
+
+        //     var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        //     var user = authState.User;
+
+        //     if (!user.Identity?.IsAuthenticated ?? true)
+        //     {
+        //         // Estamos en una vista no autorizada, dejá que Blazor muestre el mensaje
+        //         return;
+        //     }
+
+        //     var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+        //     if (string.IsNullOrEmpty(token))
+        //     {
+        //         Nav.NavigateTo("/login", forceLoad: true);
+        //     }
+        // }
+  
+        if (!firstRender || _initHecho)
+            return;
+
+        _initHecho = true;
+
+        // 1) Inicializar Bearer del GoogleService desde localStorage (JS seguro)
+        try
+        {
+            await GoogleService.InitAsync();
+        }
+        catch (JSDisconnectedException) { /* ignorar: volverá a renderizar */ }
+        catch (JSException) { /* ignorar o loguear */ }
+
+        // 2) Si estamos en /login, no forzar nada
+        var currentUri = Nav.ToBaseRelativePath(Nav.Uri);
+        if (currentUri.StartsWith("login", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // 3) Verificar autenticación de Blazor
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (!user.Identity?.IsAuthenticated ?? true)
+            return; // dejar que la vista muestre "no autorizado"
+
+        // 4) Asegurar que hay token de app en localStorage; si no, redirigir
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+            if (string.IsNullOrEmpty(token))
+            {
+                Nav.NavigateTo("/login", forceLoad: true);
+                return;
+            }
+        }
+        catch (JSException)
+        {
+            // Si falla JS por algún motivo, mejor ir a /login para re-hidratar
+            Nav.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+         // 5) Registrar el callback que llamará JS -> C# cuando venza la inactividad
+        SesionInterop.OnCerrarSesionSolicitada = async () =>
+        {
+            try
+            {
+                // Opcional: asegurar que se detiene la lógica JS
+                await JS.InvokeVoidAsync("detenerInactividad");
+            }
+            catch { /* si falla JS no nos frena el logout */ }
+
+            // TODO: si tenés AuthService, lo ideal es:
+            // await AuthService.LogoutAsync();
+
+            Nav.NavigateTo("/login", forceLoad: true);
+        };
+
+        // 6) Arrancar el timer de inactividad en JS
+        try
+        {
+            await JS.InvokeVoidAsync("iniciarInactividad");
+        }
+        catch (JSException)
+        {
+            // si falla, simplemente no se usa auto-logout por inactividad
+        }
+
+    
+    }
+
+}
+
+

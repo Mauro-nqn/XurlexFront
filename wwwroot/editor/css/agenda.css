@@ -1,0 +1,53 @@
+﻿/* ---------- Modal de agenda ---------- */
+
+/* Tamaño del modal intermedio (ni lg ni xl) */
+#modalAgenda .modal-dialog {
+    max-width: 950px !important; /* Ajusta aquí si lo querés más grande o chico */
+}
+
+/* Quitar exceso de padding del modal body */
+#modalAgenda .modal-body {
+    padding: 10px 15px !important;
+}
+
+/* ---------- Calendario ---------- */
+
+/* Contenedor del calendario centrado */
+#modalAgenda #calendar {
+    max-width: 900px !important; /* Ancho máximo del calendario */
+    margin: 0 auto !important; /* Centrado horizontal */
+}
+
+/* Tamaño del texto del calendario */
+#modalAgenda .fc {
+    font-size: 0.9rem !important;
+}
+
+/* ---------- Estilos de eventos ---------- */
+
+/* Base para eventos */
+.fc-event {
+    border: none !important;
+    color: white !important;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+    /* Ejemplo: colores según estado (puedes cambiar hex o RGB) */
+    .fc-event.estado-pendiente {
+        background-color: orange !important;
+    }
+
+    .fc-event.estado-realizado {
+        background-color: green !important;
+    }
+
+    .fc-event.estado-cancelado {
+        background-color: red !important;
+    }
+
+    /* Hover para que se vea clickeable */
+    .fc-event:hover {
+        filter: brightness(1.15);
+        cursor: pointer;
+    }

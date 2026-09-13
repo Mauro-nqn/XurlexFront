@@ -1,0 +1,19 @@
+﻿.crear-editar-punto-venta h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.crear-editar-punto-venta label {
+    font-weight: 500;
+}
+
+.crear-editar-punto-venta .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 4px rgba(13, 110, 253, 0.4);
+}
+
+.validation-summary-errors ul {
+    margin: 10px 0;
+    color: #dc3545;
+    list-style: none;
+}

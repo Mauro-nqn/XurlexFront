@@ -1,0 +1,38 @@
+﻿.usuarios-container {
+    max-width: 1200px;
+}
+
+.usuario-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 12px;
+    border: none;
+}
+
+    .usuario-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+.badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.6em;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+        .card-body .d-flex.flex-column {
+            width: 100%;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+}

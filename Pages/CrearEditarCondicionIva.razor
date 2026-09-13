@@ -1,0 +1,36 @@
+﻿@attribute [Authorize]
+
+@page "/condicioniva/editar/{Id:int?}"
+@inherits CrearEditarCondicionIvaBase
+@layout AdminLayout
+
+<div class="container mt-4 condicioniva-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Condición de IVA" : "➕ Nueva Condición de IVA")</h3>
+
+    <EditForm Model="@Condicion" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" @bind-Value="Condicion.Nombre" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Código AFIP</label>
+            <InputNumber class="form-control" @bind-Value="Condicion.CodigoAfip" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Alicuota General (%)</label>
+            <InputNumber class="form-control" @bind-Value="Condicion.AlicuotaGeneral" />
+        </div>
+
+        <button class="btn btn-primary me-2" type="submit">💾 Guardar</button>
+        @if (Id.HasValue)
+        {
+            <button class="btn btn-danger" type="button" @onclick="Eliminar">🗑️ Eliminar</button>
+        }
+        <button class="btn btn-secondary ms-2" type="button" @onclick="Cancelar">Cancelar</button>
+    </EditForm>
+</div>

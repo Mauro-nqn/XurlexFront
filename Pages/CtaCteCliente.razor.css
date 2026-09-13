@@ -1,0 +1,96 @@
+﻿/* wwwroot/css/cta-cte.css */
+.cta-cte-container h3 {
+    font-weight: 700;
+}
+
+.resume-cards .card-title {
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.text-muted {
+    font-style: italic;
+}
+
+
+.crear-cta-form .card-title {
+    font-weight: 600;
+}
+
+.crear-cta-form .form-label {
+    font-weight: 500;
+}
+
+.crear-cta-form .form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 4px rgba(13,110,253,.3);
+}
+
+
+/* CtaCteCliente.razor.css */
+.info-strip {
+    margin-bottom: .5rem;
+}
+
+.stat-pill {
+    display: inline-flex;
+    gap: .5rem;
+    align-items: baseline;
+    padding: .35rem .6rem;
+    border: 1px solid #e5e7eb;
+    border-radius: .5rem;
+    background: #f8f9fa;
+    font-size: .9rem;
+}
+
+    .stat-pill .label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .stat-pill .value {
+        font-weight: 600;
+    }
+
+    .stat-pill.pos {
+        border-color: #d1e7dd;
+        background: #f8fff9;
+    }
+
+    .stat-pill.neg {
+        border-color: #f5c2c7;
+        background: #fff8f8;
+    }
+
+
+
+/* Cards de movimientos en mobile */
+.cta-mov-card {
+    border-left: 4px solid #0d6efd;
+}
+
+.cta-mov-importe {
+    font-size: 0.95rem;
+}
+
+/* Ajustes finos para pantallas chicas */
+@media (max-width: 768px) {
+    .cta-mov-card .card-body {
+        padding: 0.75rem 0.9rem;
+    }
+
+    .cta-mov-card .small {
+        font-size: 0.8rem;
+    }
+}
+
+
+
+@media (min-width: 576px) {
+    .cta-cte-actions button {
+        white-space: nowrap;
+    }
+}

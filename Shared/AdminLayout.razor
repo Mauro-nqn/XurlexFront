@@ -1,0 +1,1396 @@
+﻿@inherits LayoutComponentBase
+@inject IApiSesionService sesionService
+@inject NavigationManager Nav
+@using IurixBlazor.Services
+@using IurixBlazor.Pages
+@inject UsuarioActualService UsuarioActual
+
+
+@* <div class="layout-admin d-flex flex-column h-100">
+    <!-- Barra superior -->
+    <nav class="navbar navbar-dark bg-primary px-3 d-flex justify-content-between align-items-center no-print fixed-top" id="topBar">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-light d-md-none me-2" type="button" @onclick="ToggleMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+
+            <!-- BOTÓN DEL MENÚ MOBILE (va SIEMPRE aquí) -->
+            <button class="navbar-toggler d-lg-none"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu"
+                    aria-controls="mobileMenu"
+                    aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <span class="navbar-brand mb-0 h4" style="margin-left:5rem">iurixGo</span>
+        </div>
+        <div class="text-light medium d-none d-md-block" style="margin-right:5rem">
+            👋 Bienvenido, <strong>@UsuarioNombre</strong> 
+            <span class="ms-3">@FechaActual</span>
+        </div>
+       @*  <button class="btn btn-outline-light btn-sm" style="margin-right:2.5rem" @onclick="CerrarSesion">Cerrar sesión</button> *@
+    @*</nav> *@
+
+
+@* <div class="layout-admin d-flex flex-column h-100">
+    <!-- Barra superior -->
+    <nav class="navbar navbar-dark bg-primary px-3 d-flex justify-content-between align-items-center no-print fixed-top" id="topBar">
+        <div class="d-flex align-items-center">
+
+            <!-- 🔹 BOTÓN MOBILE: abre el offcanvas -->
+            <button class="navbar-toggler d-lg-none me-2"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu"
+                    aria-controls="mobileMenu"
+                    aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+
+            <!-- 🔹 BOTÓN DESKTOP: colapsar/expandir sidebar (opcional) -->
+@*             <button class="btn btn-outline-light d-none d-lg-inline-flex me-2"
+                    type="button"
+                    @onclick="ToggleMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button> *@
+
+          @*  <span class="navbar-brand mb-0 h4" style="margin-left:5rem">iurixGo</span>
+        </div>
+
+        <div class="text-light medium d-none d-md-block me-5">
+            👋 Bienvenido, <strong>@UsuarioNombre</strong>
+            <span class="ms-3">@FechaActual</span>
+        </div>
+    </nav> *@
+
+
+    <div class="layout-admin d-flex flex-column h-100">
+    <!-- Barra superior -->
+    <nav class="navbar navbar-dark bg-primary px-3 d-flex justify-content-between align-items-center no-print fixed-top" id="topBar">
+        <div class="d-flex align-items-center">
+
+            <!-- Botón MOBILE: abre el offcanvas -->
+            <button class="navbar-toggler d-lg-none me-2"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileMenu"
+                    aria-controls="mobileMenu"
+                    aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Logo -->
+            @* <span class="navbar-brand mb-0 h4 ms-2 ms-md-5">XurLex</span> *@
+
+            <!-- LOGO UNIFICADO -->
+            <a class="navbar-brand d-flex align-items-center ms-2 ms-md-4" href="/main">
+                <img src="images/xurlexHeader.png" class="logo-xurlex" alt="XurLex" />
+            </a>
+
+            <!-- Bienvenida SOLO en mobile -->
+            <span class="text-light small d-inline d-md-none ms-2">
+                👋Bienvenido, <strong>@UsuarioNombre</strong>
+            </span>
+        </div>
+
+        <!-- Bienvenida completa SOLO en desktop/tablet -->
+        <div class="text-light medium d-none d-md-block me-5">
+            👋 Bienvenido, <strong>@UsuarioNombre</strong>
+            <span class="ms-3">@FechaActual</span>
+        </div>
+    </nav>
+
+
+
+
+
+
+@*     <div class="text-muted small">
+    Usuario: @UsuarioActual.Usuario?.NombreUsuario <br />
+    Permisos:
+    @if (UsuarioActual.Usuario?.Permisos is not null)
+    {
+        @string.Join(", ", UsuarioActual.Usuario.Permisos)
+    }
+    else
+    {
+        <text>(sin usuario o sin permisos)</text>
+    }
+</div> *@
+
+
+
+
+@*MENU MOBILE VIEJO*@
+    <!-- Menú móvil desplegable -->
+@*     @if (menuVisible && esMovil)
+    {
+        @* <div class="mobile-menu bg-dark text-light shadow"> *@
+
+    @*       <div class="mobile-menu bg-dark text-light shadow p-2 no-print" id="mobileMenu">
+            @* <button class="btn btn-outline-light btn-sm" @onclick="CerrarSesion">Cerrar sesión</button> *@
+
+    @*        <button class="btn btn-outline-light btn-sm" @onclick="async () => await CerrarSesion()">Cerrar sesión</button>
+
+
+
+
+            <NavLink class="nav-link text-light" href="/main" @onclick="CloseMenu">🏠 Inicio</NavLink>
+
+            <PermisoView Permiso="@Permisos.Usuarios.Ver">
+
+            <NavLink class="nav-link text-light" href="/usuarios" @onclick="CloseMenu">👤 Usuarios</NavLink>
+
+            </PermisoView>
+            @* <NavLink class="nav-link text-light" href="/admin/roles" @onclick="CloseMenu"><i class="bi bi-shield-lock"></i> Permisos</NavLink> *@
+
+    @*        <PermisoView Permiso="@Permisos.Roles.Ver">
+                        
+                <NavLink class="nav-link text-light" href="/admin/roles" @onclick="CloseMenu">
+                                <i class="bi bi-shield-lock"></i> Permisos
+                </NavLink>
+                        
+            </PermisoView>
+
+            <NavLink class="nav-link text-light" href="/google-test" @onclick="CloseMenu">🌐 Google</NavLink>
+            <NavLink class="nav-link text-light" href="/agendas" @onclick="CloseMenu">📅 Agenda</NavLink>
+
+            <!-- Grupo Persona-->
+            <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#mgrpPersonas">
+                👥 Personas
+                <i class="bi bi-chevron-down caret"></i>
+            </button>
+            <div class="collapse" id="mgrpPersonas" data-bs-parent="#mobileMenu">
+                <NavLink class="nav-link text-light sub-link" href="/personas" @onclick="CloseMenu">👥 Personas</NavLink>
+                <NavLink class="nav-link text-light sub-link" href="/clasificacionpersona" @onclick="CloseMenu">📝 Clasificacion</NavLink>
+                <NavLink class="nav-link text-light sub-link" href="/caracteresintervencion" @onclick="CloseMenu">🙋 Caracteres Intervencion</NavLink>
+                <NavLink class="nav-link text-light sub-link" href="/domicilios" @onclick="CloseMenu">📍 Domicilios</NavLink>
+            </div>
+
+                <!-- Grupo Facturación AFIP -->
+                <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mgrpFacturacion">
+                    💰 Facturación AFIP
+                    <i class="bi bi-chevron-down caret"></i>
+                </button>
+                <div class="collapse" id="mgrpFacturacion" data-bs-parent="#mobileMenu">
+                    <NavLink class="nav-link text-light sub-link" href="/afip-auth" @onclick="CloseMenu">🔐 AFIP Auth</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/facturas" @onclick="CloseMenu">🧾 Facturas</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/tipo-comprobantes" @onclick="CloseMenu">📑 Tipos Comprobante</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/puntos-venta" @onclick="CloseMenu">🏷 Puntos de Venta</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/ivaalicuotas" @onclick="CloseMenu">💰 Iva Alicuotas</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/condicioniva" @onclick="CloseMenu">💼 Condicion Iva</NavLink>
+                </div>
+            
+
+            
+                <!-- Grupo CAJA -->
+                <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mgrpCaja">
+                    💲 Caja
+                    <i class="bi bi-chevron-down caret"></i>
+                </button>
+                <div class="collapse" id="mgrpCaja" data-bs-parent="#mobileMenu">
+                    <NavLink class="nav-link text-light sub-link" href="/rubros" @onclick="CloseMenu">💼 Rubros</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/medios-pago" @onclick="CloseMenu">💳 Medios de Pago</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/centros-costo" @onclick="CloseMenu">💼 Centros Costo</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/grupogestion" @onclick="CloseMenu">🖋 Grupo Gestion</NavLink>
+                </div>
+
+
+                <!-- Grupo PRESUPUESTOS -->
+                <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mgrpPresupuestos">
+                    🧾 Presupuestos
+                    <i class="bi bi-chevron-down caret"></i>
+                </button>
+                <div class="collapse" id="mgrpPresupuestos" data-bs-parent="#mobileMenu">
+                    <NavLink class="nav-link text-light sub-link" href="/distribucion-honorarios" @onclick="CloseMenu">💼 Distribucion</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/presupuestos" @onclick="CloseMenu">🧾 Presupuestos</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/ajustes-variables" @onclick="CloseMenu">💲 Ajustes Variables</NavLink>
+                <NavLink class="nav-link text-light sub-link" href="/informes/honorarios" @onclick="CloseMenu">🧾 Informes</NavLink>
+               
+                </div>
+
+
+                <!-- Grupo GESTIONES -->
+                <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mgrpGestiones">
+                    🗄️ Gestiones
+                    <i class="bi bi-chevron-down caret"></i>
+                </button>
+                <div class="collapse" id="mgrpGestiones" data-bs-parent="#mobileMenu">
+                    <NavLink class="nav-link text-light sub-link" href="/gestiones" @onclick="CloseMenu">🗄️ Gestiones</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/escritos" @onclick="CloseMenu">📂 Escritos</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/editor?origen=navbar" @onclick="CloseMenu">🖺 Editor</NavLink>
+
+
+                </div>
+
+
+
+
+
+                <!-- Grupo PARAMETROS -->
+                <button class="nav-link text-light w-100 d-flex justify-content-between align-items-center group-toggle"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#mgrpParametros">
+                    ⚙️ Parametros
+                    <i class="bi bi-chevron-down caret"></i>
+                </button>
+                <div class="collapse" id="mgrpParametros" data-bs-parent="#mobileMenu">
+                    <NavLink class="nav-link text-light sub-link" href="/usuarios" @onclick="CloseMenu">👤 Usuarios</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/jurisdicciones" @onclick="CloseMenu">🏛 Jurisdicciones</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/circunscripciones" @onclick="CloseMenu">📌 Circunscripciones</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/juzgados" @onclick="CloseMenu">⚖️ Juzgados</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/secretarias" @onclick="CloseMenu">🖋 Secretarias</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/tiposproceso" @onclick="CloseMenu">🖋 Tipos Proceso</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/tiposestadoproceso" @onclick="CloseMenu">🖋 Tipos Estado Proceso</NavLink>
+                    <NavLink class="nav-link text-light sub-link" href="/tipo-agendamiento" @onclick="CloseMenu">🖋 Tipo Agendamiento</NavLink>
+                
+                </div>
+            
+
+            
+               
+            
+           
+
+
+            @* <NavLink class="nav-link text-light" href="/escritos" @onclick="CloseMenu">📂 Escritos</NavLink>
+            <NavLink class="nav-link text-light" href="/editor" @onclick="CloseMenu">🖺 Editor</NavLink> *@
+            
+            @*  <NavLink class="nav-link text-light" href="/distribucion-honorarios" @onclick="CloseMenu">💼 Distribucion</NavLink>
+            <NavLink class="nav-link text-light" href="/presupuestos" @onclick="CloseMenu">🧾 Presupuestos</NavLink> *@
+
+
+            @* <NavLink class="nav-link text-light" href="/usuarios" @onclick="CloseMenu">👤 Usuarios</NavLink>
+                <NavLink class="nav-link text-light" href="/afip-auth" @onclick="CloseMenu">💰 AfipAuth</NavLink>
+            <NavLink class="nav-link text-light" href="/facturas" @onclick="CloseMenu">🧾 Factura</NavLink>
+            <NavLink class="nav-link text-light" href="/tipo-comprobantes" @onclick="CloseMenu">🖺 Tipos Comprobante</NavLink>
+            <NavLink class="nav-link text-light" href="/puntos-venta" @onclick="CloseMenu">🏠 Puntos Venta</NavLink>
+            <NavLink class="nav-link text-light" href="/ivaalicuotas" @onclick="CloseMenu">💰 Iva Alicuotas</NavLink> 
+             <NavLink class="nav-link text-light" href="/condicioniva" @onclick="CloseMenu">💼 Condicion Iva</NavLink>*@
+            
+             @* <NavLink class="nav-link text-light" href="/jurisdicciones" @onclick="CloseMenu">🏛 Jurisdicciones</NavLink>
+            <NavLink class="nav-link text-light" href="/circunscripciones" @onclick="CloseMenu">📌 Circunscripciones</NavLink>
+            <NavLink class="nav-link text-light" href="/juzgados" @onclick="CloseMenu">⚖️ Juzgados</NavLink>
+            <NavLink class="nav-link text-light" href="/secretarias" @onclick="CloseMenu">🖋 Secretarias</NavLink>
+            <NavLink class="nav-link text-light" href="/grupogestion" @onclick="CloseMenu">🖋 Grupo Gestion</NavLink>
+            <NavLink class="nav-link text-light" href="/tiposproceso" @onclick="CloseMenu">🖋 Tipos Proceso</NavLink>
+            <NavLink class="nav-link text-light" href="/tiposestadoproceso" @onclick="CloseMenu">🖋 Tipos Estado Proceso</NavLink>
+            <NavLink class="nav-link text-light" href="/tipo-agendamiento" @onclick="CloseMenu">🖋 Tipo Agendamiento</NavLink> *@
+
+    @*
+        </div>
+    } *@
+
+
+
+
+
+
+    @if (esMovil)
+    {
+
+
+        <div class="offcanvas offcanvas-start text-bg-dark no-print"
+             tabindex="-1"
+             id="mobileMenu"
+             aria-labelledby="mobileMenuLabel">
+
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="mobileMenuLabel">Menú</h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="offcanvas"
+                        aria-label="Cerrar"></button>
+            </div>
+
+
+            <div class="offcanvas-body p-0 d-flex flex-column">
+
+                <!-- Acciones rápidas -->
+                <div class="px-3 mb-3">
+
+      @*               <button class="btn btn-outline-light w-100 mb-2"
+                            @onclick="async () => { await CerrarSesion(); await CerrarMobileMenuAsync(); }">
+                        ❌ Cerrar sesión
+                    </button> *@
+
+                    <button class="btn btn-outline-light w-100 mb-2"
+                            @onclick="async () => { await CerrarSesion(); await CerrarMobileMenuAsync(); }">
+                        <i class="bi bi-power me-2"></i> Cerrar sesión
+                    </button>
+
+
+@*                     <NavLink class="nav-link px-3 py-2 text-light"
+                             href="/main"
+                             Match="NavLinkMatch.All"
+                             @onclick="CerrarMobileMenuAsync">
+                        🏠 Inicio
+                    </NavLink> *@
+
+                    <NavLink class="nav-link px-3 py-2 text-light"
+                             href="/main"
+                             Match="NavLinkMatch.All"
+                             @onclick="CerrarMobileMenuAsync">
+                        <i class="bi bi-house-door me-2"></i> Inicio
+                    </NavLink>
+
+                    <PermisoView Permiso="@Permisos.Usuarios.Ver">
+
+                        <NavLink class="nav-link px-3 py-2 text-light" 
+                                href="/usuarios" 
+                                 Match="NavLinkMatch.All"
+                                @onclick="CerrarMobileMenuAsync">
+                            <i class="bi bi-people me-2"></i> Usuarios
+                        </NavLink>
+
+                    </PermisoView>
+
+                    <PermisoView Permiso="@Permisos.Roles.Ver">
+                        <NavLink class="nav-link px-3 py-2 text-light" 
+                                 Match="NavLinkMatch.All"
+                                href="/admin/roles" @onclick="CerrarMobileMenuAsync">
+                            <i class="bi bi-shield-lock me-2"></i> Permisos
+                        </NavLink>
+
+                    </PermisoView>
+
+                    <NavLink class="nav-link px-3 py-2 text-light" 
+                             Match="NavLinkMatch.All"
+                             href="/google-test" 
+                             @onclick="CerrarMobileMenuAsync">
+                        <i class="bi bi-globe2 me-2"></i> Google
+                         </NavLink>
+
+                    <NavLink class="nav-link px-3 py-2 text-light"
+                             Match="NavLinkMatch.All"
+                             href="/agendas"
+                             @onclick="CerrarMobileMenuAsync">
+                        <i class="bi bi-calendar-week me-2"></i> Agenda
+                    </NavLink>                  
+                    
+
+
+
+                  
+            
+                </div>
+
+                <hr class="border-secondary my-2" />
+
+
+                <!-- Acordeón -->
+                <div class="accordion accordion-flush" id="mobileMenuAccordion">
+
+
+                    <!-- PERSONAS -->
+                    <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+    @*                         <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#personasCollapse">
+                                👥 Personas
+                            </button> *@
+
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#personasCollapse">
+                                <i class="bi bi-people me-2"></i> Personas
+                            </button>
+
+                        </h2>
+
+                        <div id="personasCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/personas"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    👥 Personas
+                                </NavLink>
+
+                                <PermisoView Permiso="@Permisos.ClasificacionPersonas.Ver">
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/clasificacionpersona"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📝 Clasificación
+                                </NavLink>
+                                </PermisoView>
+
+                                <PermisoView Permiso="@Permisos.CaracteresIntervencion.Ver">
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/caracteresintervencion"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🙋 Caracteres Intervención
+                                </NavLink>
+                                </PermisoView>
+
+                                <PermisoView Permiso="@Permisos.Domicilios.Ver">
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/domicilios"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📍 Domicilios
+                                </NavLink>
+                                </PermisoView>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- FACTURACIÓN AFIP -->
+                    <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+   @*                          <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#facturacionCollapse">
+                                💰 Facturación AFIP
+                            </button> *@
+
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#facturacionCollapse">
+                                <i class="bi bi-receipt me-2"></i> Facturación
+                            </button>
+                        </h2>
+
+                        <div id="facturacionCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/afip-auth"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🔐 AFIP Auth
+                                </NavLink>
+
+                                <PermisoView Permiso="@Permisos.Facturas.Ver">
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/facturas"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🧾 Facturas
+                                </NavLink>
+                                </PermisoView>
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/tipo-comprobantes"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📑 Tipos Comprobante
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/puntos-venta"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🏷 Puntos de Venta
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/ivaalicuotas"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    💰 IVA Alícuotas
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/condicioniva"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    💼 Condición IVA
+                                </NavLink>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--CAJA-->
+
+                     <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+   @*                          <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cajaCollapse">
+                                💲 Caja
+                            </button> *@
+
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#cajaCollapse">
+                                <i class="bi bi-cash-coin me-2"></i> Caja
+                            </button>
+                        </h2>
+
+                        <div id="cajaCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+
+        
+                                <NavLink class="nav-link px-4 py-2 text-light" href="/rubros" @onclick="CerrarMobileMenuAsync">💼 Rubros</NavLink>
+                                <NavLink class="nav-link px-4 py-2 text-light" href="/medios-pago" @onclick="CerrarMobileMenuAsync">💳 Medios de Pago</NavLink>
+                                <NavLink class="nav-link px-4 py-2 text-light" href="/centros-costo" @onclick="CerrarMobileMenuAsync">💼 Centros Costo</NavLink>
+                                <NavLink class="nav-link px-4 py-2 text-light" href="/gruposgestion" @onclick="CerrarMobileMenuAsync">🖋 Grupo Gestion</NavLink>
+                            </div>
+                       </div>
+                    </div>
+
+
+                    <!-- PRESUPUESTOS -->
+                    <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+         @*                    <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#presupuestosCollapse">
+                                🧾 Presupuestos
+                            </button> *@
+
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#presupuestosCollapse">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i> Presupuestos
+                            </button>
+                        </h2>
+
+                        <div id="presupuestosCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/distribucion-honorarios"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    💼 Distribución Honorarios
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/presupuestos"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🧾 Presupuestos
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/ajustes-variables"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    💲 Ajustes Variables
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/informes/honorarios"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📊 Informes de Honorarios
+                                </NavLink>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- GESTIONES -->
+                    <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+        @*                     <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#gestionesCollapse">
+                                🗄️ Gestiones
+                            </button> *@
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#gestionesCollapse">
+                                <i class="bi bi-briefcase me-2"></i> Gestiones
+                            </button>
+
+                        </h2>
+
+                        <div id="gestionesCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/gestiones"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🗄️ Gestiones
+                                </NavLink>
+
+                                
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/procesos/listado"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🗄️ Listados
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/escritos"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📂 Escritos
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/editor?origen=navbar"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📝 Editor
+                                </NavLink>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- PARÁMETROS -->
+                    <div class="accordion-item bg-transparent text-light">
+                        <h2 class="accordion-header">
+              @*               <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#parametrosCollapse">
+                                ⚙️ Parámetros
+                            </button> *@
+                            <button class="accordion-button collapsed bg-transparent text-light"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#parametrosCollapse">
+                                <i class="bi bi-sliders me-2"></i> Parámetros
+                            </button>
+
+                        </h2>
+
+                        <div id="parametrosCollapse"
+                             class="accordion-collapse collapse"
+                             data-bs-parent="#mobileMenuAccordion">
+
+                            <div class="accordion-body py-2 px-0">
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/usuarios"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    👤 Usuarios
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/jurisdicciones"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🏛 Jurisdicciones
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/circunscripciones"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    📌 Circunscripciones
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/juzgados"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    ⚖️ Juzgados
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/secretarias"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🖋 Secretarías
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/tiposproceso"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🖋 Tipos de Proceso
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/tiposestadoproceso"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🖋 Tipos Estado de Proceso
+                                </NavLink>
+
+                                <NavLink class="nav-link px-4 py-2 text-light"
+                                         href="/tipo-agendamiento"
+                                         @onclick="CerrarMobileMenuAsync">
+                                    🖋 Tipo Agendamiento
+                                </NavLink>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    }
+
+
+
+
+    <!-- Contenedor principal -->
+    <div class="flex-grow-1 d-flex">
+        <!-- Sidebar solo en escritorio -->
+        <nav class="sidebar bg-dark text-light shadow d-none d-md-flex flex-column justify-content-between no-print" >
+            <div>
+                <div class="sidebar-header p-3 text-center border-bottom">
+@*                     <button class="btn btn-outline-light btn-sm"
+                            style="margin-top:5px; margin-bottom:5px"
+
+                            @onclick="CerrarSesion">
+                            
+                                                   <i class="bi bi-power"></i> Cerrar sesión
+
+                    </button>*@
+
+
+
+                        <button class="btn btn-outline-light btn-sm"
+                                style="margin-top:5px; margin-bottom:5px"
+                                
+                                @onclick="async () => await CerrarSesion()">
+
+                        <i class="bi bi-power"></i> Cerrar sesión
+                            
+                        </button>
+
+
+  
+@*                     <p class="mb-1">👋 Bienvenido,</p>
+                    <h6 class="fw-bold">@UsuarioNombre</h6>
+                    <small>@FechaActual</small> *@
+
+                </div>
+
+
+                <ul class="nav flex-column px-2 mt-3">
+
+                    <li><NavLink class="nav-link text-light" href="/main"><i class="bi bi-house-door me-2"></i> Inicio</NavLink></li>
+
+                    <PermisoView Permiso="@Permisos.Usuarios.Ver">
+
+                        <li><NavLink class="nav-link text-light" href="/usuarios"><i class="bi bi-people me-2"></i> Usuarios</NavLink></li>
+
+                    </PermisoView>
+
+                   @*  <li><NavLink class="nav-link text-light" href="/admin/roles"><i class="bi bi-shield-lock"></i> Permisos</NavLink></li> *@
+
+                    <PermisoView Permiso="@Permisos.Roles.Ver">
+                        
+                        <li><NavLink class="nav-link text-light" href="/admin/roles">
+                                <i class="bi bi-shield-lock me-2"></i> Permisos
+                        </NavLink></li>
+                        
+                    </PermisoView>
+
+                    <li><NavLink class="nav-link text-light" href="/google-test"><i class="bi-globe2 me-2"></i> Google</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/agendas"><i class="bi-calendar-week me-2"></i> Agenda</NavLink></li>
+
+
+  
+                    <hr class="border-secondary my-2" />
+
+                    <!-- Grupo: Personas -->
+                    <li class="nav-item">
+                        <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#grpPersonas"
+                                aria-expanded="@(IsGroupActive("/personas", "/clasificacionpersona", "/caracteresintervencion", "/domicilios"))">
+
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-people-fill me-2"></i>
+                                <span>Personas</span>
+                            </span>
+
+                            <i class="bi bi-chevron-down caret"></i>
+                        </button>
+
+
+                        <div class="collapse @(IsGroupActive("/personas", "/clasificacionpersona", "/caracteresintervencion", "/domicilios") ? "show" : "")"
+                             id="grpPersonas">
+                            <ul class="nav flex-column sub-menu ms-2">
+                                <li><NavLink class="nav-link text-light sub-link" href="/personas">👤 Personas</NavLink></li>
+                                <PermisoView Permiso="@Permisos.ClasificacionPersonas.Ver">
+                                <li><NavLink class="nav-link text-light sub-link" href="/clasificacionpersona">📝 Clasificacion</NavLink></li>
+                                </PermisoView>
+                                <PermisoView Permiso="@Permisos.CaracteresIntervencion.Ver">
+                                <li><NavLink class="nav-link text-light sub-link" href="/caracteresintervencion">🙋 Caracteres Intervencion</NavLink></li>
+                                </PermisoView>
+                                <PermisoView Permiso="@Permisos.Domicilios.Ver">
+                                <li><NavLink class="nav-link text-light sub-link" href="/domicilios">📍 Domicilios</NavLink></li>
+                                </PermisoView>
+                            </ul>
+                        </div>
+                    </li>
+
+
+                 <!-- Grupo: Facturación AFIP -->
+                <li class="nav-item">
+                    <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#grpFacturacion"
+                                aria-expanded="@(IsGroupActive("/afip-auth", "/facturas", "/tipo-comprobantes", "/puntos-venta", "/ivaalicuotas", "/condicioniva"))">
+
+
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-receipt me-2"></i>
+                                <span>Facturación</span>
+                            </span>
+                            @* <i class="bi bi-receipt me-2"></i> Facturación  *@
+                        <i class="bi bi-chevron-down caret"></i>
+                    </button>
+
+
+
+                        <div class="collapse @(IsGroupActive("/afip-auth", "/facturas", "/tipo-comprobantes", "/puntos-venta", "/ivaalicuotas", "/condicioniva") ? "show" : "")"
+                         id="grpFacturacion">
+                        <ul class="nav flex-column sub-menu ms-2">
+                            <li><NavLink class="nav-link text-light sub-link" href="/afip-auth">🔐 AFIP Auth</NavLink></li>
+                            
+                            <PermisoView Permiso="@Permisos.Facturas.Ver">
+                            <li><NavLink class="nav-link text-light sub-link" href="/facturas">🧾 Facturas</NavLink></li>
+                            </PermisoView>
+
+                            <li><NavLink class="nav-link text-light sub-link" href="/tipo-comprobantes">📑 Tipos Comprobante</NavLink></li>
+                            <li><NavLink class="nav-link text-light sub-link" href="/puntos-venta">🏷 Puntos de Venta</NavLink></li>
+                            <li><NavLink class="nav-link text-light sub-link" href="/ivaalicuotas">💰 Iva Alicuotas</NavLink></li>
+                            <li><NavLink class="nav-link text-light sub-link" href="/condicioniva">💼 Condicion IVA</NavLink></li>
+                        </ul>
+                    </div>
+                </li>
+
+
+                    <!-- Grupo: Caja -->
+                    <li class="nav-item">
+                        <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#grpCaja"
+                                aria-expanded="@(IsGroupActive("/rubros", "/medios-pago", "/gruposgestion", "/centros-costo"))">
+                            
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-cash-coin me-2"></i>
+                                <span>Caja</span>
+                            </span>
+                                
+                                
+                                
+                                @* <i class="bi bi-cash-coin me-2"></i> Caja *@
+                            <i class="bi bi-chevron-down caret"></i>
+                        </button>
+
+                        <div class="collapse @(IsGroupActive("/rubros", "/medios-pago", "/gruposgestion", "/centros-costo") ? "show" : "")"
+                             id="grpCaja">
+                            <ul class="nav flex-column sub-menu ms-2">
+                                <li><NavLink class="nav-link text-light sub-link" href="/rubros">💼 Rubros</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/medios-pago">💳 Medios de Pago</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/gruposgestion">🖋 Grupo Gestion</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/centros-costo">💼 Centros Costo</NavLink></li>
+
+                            </ul>
+                        </div>
+                    </li>
+
+
+                    <!-- Grupo: Presupuestos -->
+                    <li class="nav-item">
+                        <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#grpPresupuestos"
+                                aria-expanded="@(IsGroupActive("/presupuestos", "/distribucion-honorarios", "/ajustes-variables"))">
+
+
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                                <span>Presupuestos</span>
+                            </span>
+
+                            @* 🧾 Presupuestos *@
+                            <i class="bi bi-chevron-down caret"></i>
+                        </button>
+
+                        <div class="collapse @(IsGroupActive("/presupuestos", "/distribucion-honorarios", "/ajustes-variables") ? "show" : "")"
+                             id="grpPresupuestos">
+                            <ul class="nav flex-column sub-menu ms-2">
+                                <li><NavLink class="nav-link text-light sub-link" href="/presupuestos">🧾 Presupuestos</NavLink></li>
+                                <li><NavLink class="nav-link text-light" href="/distribucion-honorarios"> % Distribucion</NavLink></li>
+                                <li><NavLink class="nav-link text-light" href="/ajustes-variables">💲 Ajustes Variables</NavLink></li>
+                                <li><NavLink class="nav-link text-light" href="/informes/honorarios">🧾 Informes</NavLink></li>
+
+                            </ul>
+                        </div>
+                    </li>
+
+
+                    <!-- Grupo: Gestiones -->
+                    <li class="nav-item">
+                        <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#grpGestiones"
+                                aria-expanded="@(IsGroupActive("/gestiones", "/escritos", "/editor?origen=navbar"))">
+
+
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-briefcase me-2"></i>
+                                <span>Gestiones</span>
+                            </span>
+                            @* 🗄️ Gestiones *@
+                            <i class="bi bi-chevron-down caret"></i>
+                        </button>
+
+                        <div class="collapse @(IsGroupActive("/gestiones", "/escritos", "/editor?origen=navbar") ? "show" : "")"
+                             id="grpGestiones">
+                            <ul class="nav flex-column sub-menu ms-2">
+                                <li><NavLink class="nav-link text-light sub-link" href="/gestiones">🗄️ Gestiones</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/procesos/listado">🗄️ Listados</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/escritos">📂 Escritos</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/editor?origen=navbar">📝 Editor</NavLink></li>
+                                @* <li><NavLink class="nav-link text-light sub-link" href="/ia/demandas/apremio">📝 Demanda IA</NavLink></li> *@
+                                
+                            </ul>
+                        </div>
+                    </li>
+
+
+
+                    <!-- Grupo: Parametros -->
+                    <li class="nav-item">
+                        <button class="nav-link text-light d-flex justify-content-between align-items-center w-100 group-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#grpParametros"
+                                aria-expanded="@(IsGroupActive("/jurisdicciones", "/circunscripciones", "/Juzgados", "/Secretarias", "/tiposproceso", "/tiposestadoproceso", "/tipo-agendamiento"))">
+
+                            <span class="d-flex align-items-center gap-2">
+                                <i class="bi bi-sliders me-2"></i>
+                                <span>Parametros</span>
+                            </span>
+                            @* ⚙️ Parametros *@
+                            <i class="bi bi-chevron-down caret"></i>
+                        </button>
+
+                        <div class="collapse @(IsGroupActive("/jurisdicciones", "/circunscripciones", "/Juzgados", "/Secretarias", "/tiposproceso", "/tiposestadoproceso", "/tipo-agendamiento") ? "show" : "")"
+                             id="grpParametros">
+                            <ul class="nav flex-column sub-menu ms-2">                                
+                                <li><NavLink class="nav-link text-light sub-link" href="/jurisdicciones">🏛 Jurisdicciones</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/circunscripciones">📌 Circunscripciones</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/Juzgados">⚖️ Juzgados</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/Secretarias">🖋 Secretarias</NavLink></li>                                
+                                <li><NavLink class="nav-link text-light sub-link" href="/tiposproceso">🖋 Tipo Proceso</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/tiposestadoproceso">🖋 Tipos Estado Proceso</NavLink></li>
+                                <li><NavLink class="nav-link text-light sub-link" href="/tipo-agendamiento">🖋 Tipo Agendamiento</NavLink></li>
+                            </ul>
+                        </div>
+                    </li>
+
+
+                    
+                   
+
+
+
+
+
+@*                     <li><NavLink class="nav-link text-light" href="/escritos">📂 Escritos</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/editor?origen=navbar">🖺 Editor</NavLink></li> *@
+                    
+@*                     <li><NavLink class="nav-link text-light" href="/distribucion-honorarios">% Distribucion</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/presupuestos">🧾 Presupuestos</NavLink></li> *@
+
+
+
+                    @* <li><NavLink class="nav-link text-light" href="/afip-auth">💰 AfipAuth</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/facturas">🧾 Factura</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/tipo-comprobantes">🖺 Tipos Comprobante</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/puntos-venta">🏠 Puntos de Ventas</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/ivaalicuotas">💰 Iva Alicuotas</NavLink></li> 
+                    <li><NavLink class="nav-link text-light" href="/condicioniva">💼 Condicion IVA</NavLink></li>*@
+
+                    @* <li><NavLink class="nav-link text-light" href="/jurisdicciones">🏛 Jurisdicciones</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/circunscripciones">📌 Circunscripciones</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/Juzgados">⚖️ Juzgados</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/Secretarias">🖋 Secretarias</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/gruposgestion">🖋 Grupo Gestion</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/tiposproceso">🖋 Tipo Proceso</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/tiposestadoproceso">🖋 Tipos Estado Proceso</NavLink></li>
+                    <li><NavLink class="nav-link text-light" href="/tipo-agendamiento">🖋 Tipo Agendamiento</NavLink></li> *@
+                                                     
+                    
+
+
+                </ul>
+            </div>
+            <div class="p-3 border-top text-center">
+                <h5 class="fw-bold mb-2">XurLex</h5>
+            </div>
+        </nav>
+
+        <!-- Contenido -->
+        <main class="main-content p-3">
+            <!-- body-start -->
+            @Body
+            <!-- body-end -->
+        </main>
+    </div>
+</div>
+
+@code {
+    @using IurixBlazor.Services.Auth
+
+    
+    private bool menuVisible = false;
+    private bool esMovil = false;
+    private string UsuarioNombre = "Usuario";
+    private string FechaActual => TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time")
+        ).ToString("dddd dd 'de' MMMM yyyy");
+
+    [Inject] NavigationManager Navigation { get; set; } = default!;
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    [Inject]
+    public ITokenStore? TokenStore { get; set; }
+
+[Inject]
+public UsuarioActualService? UsuarioActualService { get; set; }
+
+
+    [Inject]
+    public AuthenticationStateProvider? AuthStateProvider { get; set; } = default!;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        UsuarioNombre = await JS.InvokeAsync<string>("localStorage.getItem", "usuario_nombre") ?? "Usuario";
+        esMovil = (await JS.InvokeAsync<int>("blazorHelpers.getWidth")) < 768;
+
+        // SesionInterop.OnCerrarSesionSolicitada = CerrarSesion;
+        SesionInterop.OnCerrarSesionSolicitada = async () => await CerrarSesion();
+
+    }
+
+    private void ToggleMenu() => menuVisible = !menuVisible;
+    private void CloseMenu() => menuVisible = false;
+
+    private async Task CerrarMobileMenuAsync()
+    {
+        await JS.InvokeVoidAsync("cerrarMobileMenu");
+    }
+
+
+    // private async Task CerrarSesion()
+    // {
+    //     try
+    //     {
+    //         // Obtener datos necesarios de localStorage
+    //         var claveLicencia = await JS.InvokeAsync<string>("localStorage.getItem", "clave_licencia");
+    //         var dispositivoSesionId = await JS.InvokeAsync<string>("localStorage.getItem", "dispositivo_sesion_id");
+    //         var token = await JS.InvokeAsync<string>("localStorage.getItem", "token");
+    //         System.Diagnostics.Debug.WriteLine($"⚠️ Datos para cerrar sesión - clave {claveLicencia}, dispositivo {dispositivoSesionId}, token {token}");
+    //         // Validar que existan
+    //         if (string.IsNullOrEmpty(claveLicencia) || string.IsNullOrEmpty(dispositivoSesionId) || string.IsNullOrEmpty(token))
+    //         {
+    //             System.Diagnostics.Debug.WriteLine("⚠️ Datos insuficientes para cerrar sesión en backend. Procediendo con limpieza local.");
+    //         }
+    //         else
+    //         {
+    //             // Llamar API de cierre de sesión
+    //             bool cerrado = await sesionService.CerrarSesionAsync(claveLicencia, dispositivoSesionId, token);
+
+    //             if (!cerrado)
+    //             {
+    //                 Console.WriteLine("⚠️ No se pudo cerrar la sesión en el backend.");
+    //             }
+    //             else
+    //             {
+    //                 Console.WriteLine("✅ Sesión cerrada en el backend correctamente.");
+    //             }
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"❌ Error al cerrar sesión: {ex.Message}");
+    //     }
+
+    //     // Limpiar datos locales y redirigir
+        
+
+    //     await JS.InvokeVoidAsync("localStorage.clear");
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", "token");
+
+
+    //     if (TokenStore is not null)
+    //         await TokenStore.ClearAsync();
+
+    //     if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+    //         customProvider.NotifyUserLogout();
+
+
+    //     Nav.NavigateTo("/login", forceLoad: true);
+    // }
+
+
+// private async Task CerrarSesion(string? claveLicencia = null, string? dispositivoSesionId = null, string? token = null)
+// {
+//     try
+//     {
+//         // Si no se pasaron los datos, intentar obtenerlos desde localStorage
+//         claveLicencia ??= await JS.InvokeAsync<string>("localStorage.getItem", "clave_licencia");
+//         dispositivoSesionId ??= await JS.InvokeAsync<string>("localStorage.getItem", "dispositivo_sesion_id");
+//         token ??= await JS.InvokeAsync<string>("localStorage.getItem", "token");
+
+//         System.Diagnostics.Debug.WriteLine($"⚠️ Datos para cerrar sesión - clave {claveLicencia}, dispositivo {dispositivoSesionId}, token {token}");
+
+//         if (!string.IsNullOrEmpty(claveLicencia) && !string.IsNullOrEmpty(dispositivoSesionId) && !string.IsNullOrEmpty(token))
+//         {
+//             await JS.InvokeVoidAsync("console.log", $"📤 Intentando cerrar sesión con claveLicencia: {claveLicencia}, dispositivoSesionId: {dispositivoSesionId}, token: {token}");
+
+//             System.Diagnostics.Debug.WriteLine("📡 Llamando a sesionService.CerrarSesionAsync...");
+//             bool cerrado = await sesionService.CerrarSesionAsync(claveLicencia, dispositivoSesionId, token);
+
+//             await JS.InvokeVoidAsync("console.log", $"📬 Resultado del cierre: {(cerrado ? "Éxito" : "Fallo")}");
+
+
+//             if (cerrado || string.IsNullOrEmpty(claveLicencia) || string.IsNullOrEmpty(dispositivoSesionId) || string.IsNullOrEmpty(token))
+//             {
+//                 await JS.InvokeVoidAsync("localStorage.clear");
+//             }
+
+
+//             if (!cerrado)
+//                 Console.WriteLine("⚠️ No se pudo cerrar la sesión en el backend.");
+//             else
+//                 Console.WriteLine("✅ Sesión cerrada en el backend correctamente.");
+//         }
+//         else
+//         {
+//             Console.WriteLine("⚠️ Datos insuficientes para cerrar sesión en backend. Procediendo con limpieza local.");
+//         }
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"❌ Error al cerrar sesión: {ex.Message}");
+//     }
+
+
+
+//     Nav.NavigateTo("/logout", forceLoad: true);
+// }
+
+
+
+// private async Task CerrarSesion(string? claveLicencia = null, string? dispositivoSesionId = null, string? token = null)
+// {
+//     try
+//     {
+//         // 1) Si no se pasaron los datos, intentar obtenerlos desde localStorage
+//         claveLicencia ??= await JS.InvokeAsync<string>("localStorage.getItem", "clave_licencia");
+//         dispositivoSesionId ??= await JS.InvokeAsync<string>("localStorage.getItem", "dispositivo_sesion_id");
+//         token ??= await JS.InvokeAsync<string>("localStorage.getItem", "token");
+
+//         // System.Diagnostics.Debug.WriteLine(
+//         //     $"⚠️ Datos para cerrar sesión - clave {claveLicencia}, dispositivo {dispositivoSesionId}, token {token}");
+
+//         // 2) Intentar cerrar sesión en el backend (si tenemos todos los datos)
+//         if (!string.IsNullOrEmpty(claveLicencia) &&
+//             !string.IsNullOrEmpty(dispositivoSesionId) &&
+//             !string.IsNullOrEmpty(token))
+//         {
+//             // await JS.InvokeVoidAsync("console.log",
+//             //     $"📤 Intentando cerrar sesión con claveLicencia: {claveLicencia}, dispositivoSesionId: {dispositivoSesionId}");
+
+//             // System.Diagnostics.Debug.WriteLine("📡 Llamando a sesionService.CerrarSesionAsync...");
+//             bool cerrado = await sesionService.CerrarSesionAsync(claveLicencia, dispositivoSesionId, token);
+
+//             // await JS.InvokeVoidAsync("console.log", $"📬 Resultado del cierre: {(cerrado ? "Éxito" : "Fallo")}");
+
+//             if (!cerrado)
+//                 Console.WriteLine("⚠️ No se pudo cerrar la sesión en el backend.");
+//             else
+//                 Console.WriteLine("✅ Sesión cerrada en el backend correctamente.");
+//         }
+//         else
+//         {
+//             Console.WriteLine("⚠️ Datos insuficientes para cerrar sesión en backend. Procediendo con limpieza local.");
+//         }
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"❌ Error al cerrar sesión en backend: {ex.Message}");
+//     }
+
+//     // 3) Pase lo que pase con el backend, LIMPIAR SIEMPRE el cliente
+//     try
+//     {
+//         await JS.InvokeVoidAsync("localStorage.clear");
+//         // Si preferís, acá podrías ser selectivo con removeItem, pero clear va bien
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"❌ Error limpiando localStorage: {ex.Message}");
+//     }
+
+//     // 4) Limpiar TokenStore y usuario actual en memoria
+//     try
+//     {
+//         await TokenStore.ClearAsync();
+
+//         // Si tenés un método específico (UsuarioActualService.Clear()) mejor;
+//         // mientras tanto:
+//         UsuarioActualService.SetUsuario(null!);
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"❌ Error limpiando estado de usuario: {ex.Message}");
+//     }
+
+//     // 5) Avisar al AuthenticationStateProvider que ya no hay usuario logueado
+//     if (AuthStateProvider is CustomAuthenticationStateProvider customAuth)
+//     {
+//         // usando la versión async que vimos antes
+//         await customAuth.NotifyUserLogout();
+//         // (si tu método se llama distinto, ajustá el nombre)
+//     }
+
+//     // 6) Navegar a /logout para mostrar la vista "Cerrando sesión..."
+//     Nav.NavigateTo("/logout", forceLoad: true);
+// }
+
+private async Task CerrarSesion(string? claveLicencia = null, string? dispositivoSesionId = null, string? token = null)
+{
+    try
+    {
+        // 1) Obtener datos desde localStorage si no vinieron
+        claveLicencia ??= await JS.InvokeAsync<string>("localStorage.getItem", "clave_licencia");
+        dispositivoSesionId ??= await JS.InvokeAsync<string>("localStorage.getItem", "dispositivo_sesion_id");
+        token ??= await JS.InvokeAsync<string>("localStorage.getItem", "token");
+
+        // 2) Intentar cerrar sesión en el backend (si tenemos todos los datos)
+        if (!string.IsNullOrEmpty(claveLicencia) &&
+            !string.IsNullOrEmpty(dispositivoSesionId) &&
+            !string.IsNullOrEmpty(token))
+        {
+            bool cerrado = await sesionService.CerrarSesionAsync(claveLicencia, dispositivoSesionId, token);
+
+            if (!cerrado)
+                Console.WriteLine("⚠️ No se pudo cerrar la sesión en el backend.");
+            else
+                Console.WriteLine("✅ Sesión cerrada en el backend correctamente.");
+        }
+        else
+        {
+            Console.WriteLine("⚠️ Datos insuficientes para cerrar sesión en backend. Procediendo igual al logout.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error al cerrar sesión en backend: {ex.Message}");
+    }
+
+    // 3) Ir a la página de "Cerrando sesión..."
+    Nav.NavigateTo("/logout", forceLoad: true);
+}
+
+
+
+
+    private bool IsGroupActive(params string[] paths)
+    => paths.Any(p => Navigation.Uri.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+}
+
+<style>
+
+    .sidebar {
+        width: 260px;
+        height: 100vh; /* Ocupa todo el alto de la pantalla */
+        position: fixed; /* Fija la barra en la izquierda */
+        top: 0;
+        left: 0;
+        z-index: 2000;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        max-height: 100vh;
+    }
+
+
+
+    /* --- Offcanvas Dark Accordion (Bootstrap 5) --- */
+    .offcanvas.text-bg-dark .accordion-item {
+        background: transparent;
+        border: 0;
+    }
+
+    .offcanvas.text-bg-dark .accordion-button {
+        background: transparent !important;
+        color: #f8f9fa !important;
+        border-radius: .6rem;
+        box-shadow: none !important;
+        padding: .85rem 1rem;
+    }
+
+        /* Estado ABIERTO: se distingue fuerte */
+        .offcanvas.text-bg-dark .accordion-button:not(.collapsed) {
+            background: rgba(255,255,255,.12) !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.18) !important;
+            font-weight: 600;
+        }
+
+        /* Quitar la línea azul / focus ring */
+        .offcanvas.text-bg-dark .accordion-button:focus {
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+
+        /* Flechita (chevron) blanca: reemplazamos el SVG */
+        .offcanvas.text-bg-dark .accordion-button::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+            transform: rotate(-90deg); /* cerrado: hacia la derecha (opcional) */
+            transition: transform .2s ease;
+            opacity: .9;
+        }
+
+        /* Abierto: flecha hacia abajo */
+        .offcanvas.text-bg-dark .accordion-button:not(.collapsed)::after {
+            transform: rotate(0deg);
+        }
+
+    /* Links internos */
+    .offcanvas.text-bg-dark .accordion-body {
+        padding: .25rem 0 .5rem 0;
+    }
+
+        .offcanvas.text-bg-dark .accordion-body .nav-link {
+            color: #f8f9fa;
+            border-radius: .45rem;
+            margin: .15rem .75rem;
+        }
+
+            .offcanvas.text-bg-dark .accordion-body .nav-link.active {
+                background: rgba(255,255,255,.12);
+                font-weight: 600;
+                border-left: 3px solid rgba(255,255,255,.5);
+            }
+
+</style>

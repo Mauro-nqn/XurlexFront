@@ -1,0 +1,91 @@
+﻿@attribute [Authorize]
+
+@page "/google-test"
+@layout AdminLayout
+@inherits GoogleTestBase
+
+<div class="container mt-4 google-test">
+    <h3 class="mb-4">🔗 Integración con Google</h3>
+
+    <!-- Selección de usuario -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">Seleccionar usuario:</label>
+        <select class="form-select" @onchange="OnUsuarioSeleccionado">
+            <option value="">Seleccione...</option>
+            @foreach (var user in Usuarios)
+            {
+                <option value="@user.Id">@user.NombreUsuario</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-info me-2" @onclick="ConsultarEmail">Consultar cuenta vinculada</button>
+        <span class="fw-bold">@EmailVinculado</span>
+    </div>
+
+    <hr />
+
+    <!-- Crear evento -->
+    <h5 class="mt-4">📅 Crear evento en Google Calendar</h5>
+    <div class="row">
+        <div class="col-md-6 mb-2">
+            <input type="text" class="form-control" placeholder="Título" @bind="TituloEvento" />
+        </div>
+        <div class="col-md-6 mb-2">
+            <input type="text" class="form-control" placeholder="Descripción" @bind="DescripcionEvento" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-2">
+            <label class="form-label">Inicio</label>
+            <InputDate @bind-Value="FechaInicio" class="form-control" />
+            <input type="time" class="form-control mt-1"
+                   @bind-value="HoraInicio" @bind-value:event="oninput" />
+        </div>
+        <div class="col-md-6 mb-2">
+            <label class="form-label">Fin</label>
+            <InputDate @bind-Value="FechaFin" class="form-control" />
+            <input type="time" class="form-control mt-1"
+                   @bind-value="HoraFin" @bind-value:event="oninput" />
+        </div>
+    </div>
+
+    @if (!EsFechaValida)
+    {
+        <div class="text-danger mt-1">
+            La fecha/hora de fin debe ser posterior a la de inicio.
+        </div>
+    }
+
+    <button class="btn btn-primary mt-2" @onclick="CrearEvento" disabled="@(!EsFechaValida)">
+        📅 Crear evento
+    </button>
+
+
+
+
+
+    <hr />
+
+    <!-- Enviar correo -->
+    <h5 class="mt-4">📧 Enviar correo con Gmail</h5>
+    <div class="mb-2">
+        <input type="email" class="form-control" placeholder="Destinatario" @bind="Destinatario" />
+    </div>
+    <div class="mb-2">
+        <input type="text" class="form-control" placeholder="Asunto" @bind="AsuntoCorreo" />
+    </div>
+    <div class="mb-2">
+        <textarea class="form-control" placeholder="Cuerpo del mensaje" rows="4" @bind="CuerpoCorreo"></textarea>
+    </div>
+    <button class="btn btn-success" @onclick="EnviarCorreo">📧 Enviar correo</button>
+
+    <hr />
+
+    <!-- Subir archivo -->
+    <h5 class="mt-4">📁 Subir archivo a Google Drive</h5>
+    <InputFile OnChange="OnArchivoSeleccionado" />
+    <button class="btn btn-warning mt-2" @onclick="SubirArchivo">📤 Subir archivo</button>
+</div>

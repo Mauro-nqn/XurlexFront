@@ -1,0 +1,64 @@
+﻿@attribute [Authorize]
+
+@page "/escritos"
+@inherits EscritosBase
+@layout AdminLayout
+
+
+<div class="container escritos-container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold">📝 Escritos Guardados</h3>
+        <button class="btn btn-primary" @onclick="NuevoEscrito">➕ Nuevo Escrito</button>
+    </div>
+
+    <!-- Buscador -->
+    @* <input type="text" class="form-control mb-3" placeholder="Buscar por título..." @bind="FiltroActual" @bind:event="oninput" /> *@
+
+
+    <input type="text" class="form-control mb-3" placeholder="Buscar por título..."
+           value="@FiltroActual" @oninput="OnFiltroChanged" />
+
+
+    <p class="text-muted">Escritos encontrados: @Escritos.Count</p>
+
+    @if (IsLoading)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-3">Cargando escritos...</p>
+        </div>
+    }
+    else if (!Escritos.Any())
+    {
+        <p class="text-center text-muted mt-4">No hay escritos guardados.</p>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            @foreach (var escrito in Escritos)
+            {
+                <div class="col">
+                    <div class="card shadow-sm escrito-card">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="fw-bold">@escrito.Titulo</h5>
+                                <small class="text-muted">Creado: @escrito.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => AbrirEscrito(escrito.Id)">✏️ Abrir</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEscrito(escrito.Id)">🗑️ Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (PuedeCargarMas)
+        {
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-primary" @onclick="CargarMas">Cargar más</button>
+            </div>
+        }
+    }
+</div>

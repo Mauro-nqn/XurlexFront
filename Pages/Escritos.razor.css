@@ -1,0 +1,13 @@
+﻿.escritos-container {
+    max-width: 900px;
+}
+
+.escrito-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+    .escrito-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }

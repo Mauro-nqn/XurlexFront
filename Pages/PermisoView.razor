@@ -1,0 +1,49 @@
+﻿
+@* @using IurixBlazor.Services
+@inject UsuarioActualService UsuarioActual
+
+@if (UsuarioActual.TienePermiso(Permiso))
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public string Permiso { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+} *@
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+
+@if (_tienePermiso)
+{
+    @ChildContent
+}
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    [Parameter]
+    public string Permiso { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _tienePermiso;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            _tienePermiso = false;
+            return;
+        }
+
+        _tienePermiso = user.HasClaim("Permiso", Permiso);
+    }
+}
+

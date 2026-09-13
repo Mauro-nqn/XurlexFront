@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Editor WebView2</title>
+    <script src="ckeditor/ckeditor.js"></script>
+</head>
+<body>
+    <textarea id="editor1"></textarea>
+
+    <script>
+        // ✅ Crear el editor
+        const editor = CKEDITOR.replace('editor1', {
+            language: 'es',
+            removePlugins: 'exportpdf',
+            versionCheck: false
+        });
+
+        // ✅ Al estar listo, definimos los métodos que MAUI puede llamar
+        editor.on('instanceReady', function () {
+            console.log("🟢 CKEditor listo");
+
+            // ⬇️ Esta función recibe HTML directamente
+            window.setEditorContent = function (html) {
+                console.log("📝 setEditorContent llamado con:", html);
+                editor.setData(html, function () {
+                    console.log("✅ Contenido insertado");
+                });
+            };
+
+            // ⬇️ Esta función recibe HTML codificado en base64 desde MAUI
+            window.setEditorContentFromBase64 = function (base64) {
+                try {
+                    const decoded = decodeURIComponent(escape(window.atob(base64)));
+                    console.log("📥 HTML decodificado:", decoded);
+                    window.setEditorContent(decoded);
+                } catch (err) {
+                    console.error("❌ Error decodificando Base64:", err);
+                }
+            };
+
+            // ✅ Notificamos a MAUI que estamos listos
+            if (window.chrome?.webview?.postMessage) {
+                
+                window.chrome.webview.postMessage("__ready__");
+            }
+        });
+    </script>
+</body>
+</html>

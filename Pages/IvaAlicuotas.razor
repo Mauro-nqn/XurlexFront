@@ -1,0 +1,46 @@
+﻿@attribute [Authorize]
+
+@page "/ivaalicuotas"
+@inherits IvaAlicuotaBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>📊 IVA Alícuotas</h3>
+    <button class="btn btn-success mb-3" @onclick="NuevaAlicuota">➕ Nueva Alícuota</button>
+
+    @if (Alicuotas == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Alicuotas.Any())
+    {
+        <p>No hay alícuotas registradas.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Porcentaje (%)</th>
+                    <th>Codigo AFIP</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Alicuotas)
+                {
+                    <tr>
+                        <td>@a.Nombre</td>
+                        <td>@a.Porcentaje.ToString("F2")%</td>
+                        <td>@a.CodigoAfip</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => EditarAlicuota(a.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => EliminarAlicuota(a.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

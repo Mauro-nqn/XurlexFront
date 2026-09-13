@@ -1,0 +1,46 @@
+﻿@attribute [Authorize]
+
+@page "/juzgados"
+@inherits JuzgadoBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>⚖️ Juzgados</h3>
+    <button class="btn btn-success mb-3" @onclick="Nuevo">➕ Nuevo Juzgado</button>
+
+    @if (Juzgados == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Juzgados.Any())
+    {
+        <p>No hay juzgados registrados.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Circunscripción</th>
+                    <th>Fuero</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var j in Juzgados)
+                {
+                    <tr>
+                        <td>@j.Nombre</td>
+                        <td>@j.CircunscripcionNombre</td>
+                        <td>@j.Fuero</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(j.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(j.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

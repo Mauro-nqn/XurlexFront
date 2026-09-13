@@ -1,0 +1,73 @@
+﻿/* Ancho razonable y altura acotada con scroll */
+#modalEventosDia .modal-dialog {
+    max-width: 640px;
+}
+/* ~modal-md */
+#modalEventosDia .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/*Header del modal del evento*/
+
+/*.modal-header.evento-header {
+    background-color: #007bff;
+    color: white;
+}*/
+
+
+.modal-header.evento-header {
+    color: #fff;
+    border-bottom: none;
+}
+
+    .modal-header.evento-header[data-estado="pendiente"] {
+        background: #dc3545;
+    }
+
+    .modal-header.evento-header[data-estado="realizado"] {
+        background: #198754;
+    }
+
+    .modal-header.evento-header[data-estado="cancelado"] {
+        background: #6c757d;
+    }
+
+    .modal-header.evento-header[data-estado="reprogramado"] {
+        background: #fd7e14;
+    }
+
+    .modal-header.evento-header[data-estado="desconocido"] {
+        background: #343a40;
+    }
+
+
+
+
+/* Si querés aún más compacto en mobile */
+@media (max-width: 576px) {
+    #modalEventosDia .modal-dialog {
+        max-width: 95vw;
+        margin: 0 auto;
+    }
+
+    #modalEventosDia .modal-body {
+        max-height: 60vh;
+    }
+}
+
+
+
+/* Mano en TODO el evento y sus hijos */
+.fc .fc-daygrid-event,
+.fc .fc-daygrid-event *,
+.fc .fc-timegrid-event,
+.fc .fc-timegrid-event *,
+.fc .fc-list-event,
+.fc .fc-list-event *,
+.fc .fc-event,
+.fc .fc-event * {
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}

@@ -1,0 +1,25 @@
+﻿.facturas-container h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.table-sm input, .table-sm select {
+    font-size: 0.9rem;
+    padding: 4px;
+}
+
+.contenido-principal {
+    margin-left: 250px; /* mismo ancho que el navbar lateral */
+    padding: 20px;
+}
+
+.mensaje-alerta {
+    max-width: 800px; /* limitar ancho para que no ocupe toda la pantalla */
+    margin: 0 auto; /* centrar dentro del contenido */
+}
+
+div#datos-emisor {
+    margin-top: 10px !important;
+}
+
+

@@ -1,0 +1,126 @@
+﻿@attribute [Authorize]
+
+@page "/juzgados/crear-editar/{Id:int?}"
+@inherits CrearEditarJuzgadoBase
+@layout AdminLayout
+@using IurixBlazor.Shared.Enums;
+
+<div class="container mt-4 juzgado-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Juzgado" : "➕ Nuevo Juzgado")</h3>
+
+    <EditForm Model="@CrearJuzgadoDto" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" @bind-Value="CrearJuzgadoDto.Nombre" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Fuero</label>
+            <InputText class="form-control" @bind-Value="CrearJuzgadoDto.Fuero" />
+        </div>
+
+
+
+        <!-- Jurisdicción -->
+        <div class="mb-3">
+            <label class="form-label">Jurisdicción</label>
+            <InputSelect class="form-select"
+                         @bind-Value="JurisdiccionSeleccionada"
+                         >
+                <option value="">Seleccione una jurisdicción</option>
+                @foreach (var j in Jurisdicciones)
+                {
+                    <option value="@j.Id">@j.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+
+
+
+
+
+
+        <!-- Circunscripción filtrada -->
+        <div class="mb-3">
+            <label class="form-label">Circunscripción</label>
+@*             <InputSelect class="form-select"
+                         @bind-Value="CrearJuzgadoDto.CircunscripcionId"
+                         @key="JurisdiccionSeleccionada"
+                         disabled="@(CargandoCirc || !Circunscripciones.Any())">
+                <option value="@((int?)null)">
+                    @(CargandoCirc ? "Cargando..." : "Seleccione una circunscripción")
+                </option>
+                @foreach (var c in Circunscripciones)
+                {
+                    <option value="@c.Id" @key="c.Id">@c.Nombre</option>
+                }
+            </InputSelect> *@
+
+            <InputSelect class="form-select"
+                         @bind-Value="CrearJuzgadoDto.CircunscripcionId"
+                         @bind-Value:after="() => ValidarAplicacionDextraActual()"
+                         @key="JurisdiccionSeleccionada"
+                         disabled="@(CargandoCirc || !Circunscripciones.Any())"
+                         TValue="int?">
+                <option value="@((int?)null)">
+                    @(CargandoCirc ? "Cargando..." : "Seleccione una circunscripción")
+                </option>
+                @foreach (var c in Circunscripciones)
+                {
+                    <option value="@c.Id" @key="c.Id">@c.Nombre</option>
+                }
+            </InputSelect>
+        </div>
+
+
+@*         @if (EsNeuquen)
+        {
+            <div class="mb-3">
+                <label class="form-label">Juzgado/Aplicación Dextra</label>
+                <InputSelect class="form-select" @bind-Value="CrearJuzgadoDto.AplicacionDextra">
+                    <option value="">Seleccione</option>
+                    @foreach (var e in Enum.GetValues<AplicacionDextra>())
+                    {
+                        <option value="@e">@e.ToExactString()</option>
+                    }
+                </InputSelect>
+            </div>
+        } *@
+
+        @if (EsNeuquen @* || OpcionesAplicacionDextraEnumSafe.Any() *@)
+        {
+        <div class="mb-3">
+            <label class="form-label">Juzgado/Aplicación DEXTRA</label>
+@*                 <InputSelect class="form-select"
+                             @bind-Value="CrearJuzgadoDto.AplicacionDextra"
+                             TValue="AplicacionDextra?"
+                             disabled="@(!OpcionesAplicacionDextraEnumSafe.Any())">
+                    <option value="">Seleccione</option>
+                    @foreach (var e in OpcionesAplicacionDextraEnumSafe)
+                    {
+                        <option value="@e">@e.ToExactString()</option>
+                    }
+                </InputSelect> *@
+                <InputSelect class="form-select"
+                             @bind-Value="CrearJuzgadoDto.AplicacionDextraId"
+                             TValue="int?">
+                    <option value="@((int?)null)">Seleccione</option>
+                    @foreach (var e in OpcionesAplicacionDextraEnumSafe)
+                    {
+                        <option value="@((int)e)">@e.ToExactString()</option>
+                    }
+                </InputSelect>
+        </div>
+    }
+
+        <button class="btn btn-primary me-2" type="submit">💾 Guardar</button>
+        @if (Id.HasValue)
+        {
+            <button class="btn btn-danger" type="button" @onclick="Eliminar">🗑️ Eliminar</button>
+        }
+        <button class="btn btn-secondary ms-2" type="button" @onclick="Cancelar">Cancelar</button>
+    </EditForm>
+</div>

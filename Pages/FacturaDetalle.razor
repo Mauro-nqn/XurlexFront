@@ -1,0 +1,106 @@
+﻿@attribute [Authorize]
+
+@page "/facturas/detalle/{Id:int}"
+@inherits FacturaDetalleBase
+@using IurixBlazor.Shared.Dtos
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>🔍 Detalle Administrativo de Factura</h3>
+    <button class="btn btn-secondary" @onclick="Volver">← Volver</button>
+</div>
+
+@if (factura == null)
+{
+    <p><em>Cargando factura...</em></p>
+}
+else
+
+    {
+   <div class="container d-flex justify-content-center">
+    <div class="card p-4 shadow-sm factura-detalle" style="max-width: 800px;">
+     @*    <div class="factura-encabezado d-flex justify-content-between align-items-center">
+            <div>
+                <h4>@factura.TipoComprobanteDescripcion N° @factura.PuntoVentaNumero-@factura.Numero</h4>
+                <p><strong>Fecha:</strong> @factura.Fecha.ToString("dd/MM/yyyy")</p>
+            </div>
+            <div class="factura-letra">
+                @factura.TipoComprobanteLetra
+            </div>
+        </div> *@
+
+        <div class="factura-encabezado text-center">
+            <div class="factura-letra mx-auto">
+                @factura.TipoComprobanteLetra
+            </div>
+            <div class="mt-2">
+                <h4>@factura.TipoComprobanteDescripcion N° @factura.PuntoVentaNumero-@factura.Numero</h4>
+                <p><strong>Fecha:</strong> @factura.Fecha.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+
+        <hr />
+
+        <h5>Cliente</h5>
+        <p>
+            <strong>Nombre:</strong>
+
+            @(!string.IsNullOrWhiteSpace(factura.PersonaRazonSocial)
+                    ? factura.PersonaRazonSocial
+                    : $"{factura.PersonaApellido} {factura.PersonaNombre}") <br />
+            <strong>CUIT/DNI:</strong> @factura.DocNro <br />
+            <strong>Condición IVA:</strong> @factura.CondicionIVAReceptorId
+        </p>
+
+        <hr />
+
+        <h5>Detalles</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unit.</th>
+                    <th>IVA</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in factura.Detalles)
+                {
+                    <tr>
+                        <td>@d.Descripcion</td>
+                        <td>@d.Cantidad</td>
+                        <td>@d.PrecioUnitario.ToString("C")</td>
+                        <td>@ObtenerPorcentajeIva(d.IvaAlicuotaId)%</td>
+                        <td>@((d.Cantidad * d.PrecioUnitario).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-AR")))</td>
+
+                    </tr>
+                }
+        </tbody>
+    </table>
+
+    <hr />
+
+    <h5>IVA Discriminado</h5>
+    <ul>
+        @foreach (var iva in factura.IvaDiscriminado)
+        {
+            <li>@ObtenerPorcentajeIva(iva.AlicuotaId)% - Base: @iva.BaseImp.ToString("C") - Importe: @iva.Importe.ToString("C")</li>
+        }
+    </ul>
+
+    <hr />
+
+    <h5>Totales</h5>
+    <p>
+        <strong>Neto:</strong> @factura.Neto.ToString("C") <br />
+        <strong>IVA:</strong> @factura.Iva.ToString("C") <br />
+        <strong>Total:</strong> @factura.Total.ToString("C")
+    </p>
+
+        
+</div>
+</div>
+
+
+}

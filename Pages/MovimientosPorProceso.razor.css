@@ -1,0 +1,30 @@
+﻿.mic-hint {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.mic-text {
+    line-height: 1.2;
+}
+
+.mic-btn {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+
+@media (max-width: 576px) {
+    .mic-hint {
+        font-size: 0.8rem;
+        padding: 5px 8px;
+    }
+
+    .mic-btn {
+        font-size: 0.7rem;
+    }
+}

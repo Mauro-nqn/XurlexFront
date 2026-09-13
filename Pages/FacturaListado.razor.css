@@ -1,0 +1,68 @@
+﻿.facturas-container {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    min-width: 80px;
+}
+
+
+.facturas-container h3 {
+    margin-bottom: 1rem;
+}
+
+/* Card en mobile */
+.factura-card {
+    border-left: 4px solid #0d6efd;
+}
+
+.factura-numero {
+    font-size: 0.95rem;
+}
+
+.factura-total {
+    font-size: 1rem;
+}
+
+
+.acciones-cell {
+    white-space: nowrap;
+    width: 1%;
+}
+
+
+.accion-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    margin-right: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ajustes para pantallas chicas */
+@media (max-width: 768px) {
+    .facturas-container {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    .factura-card .card-body {
+        padding: 0.75rem 0.9rem;
+    }
+
+    .factura-numero {
+        font-size: 0.9rem;
+    }
+
+    .factura-total {
+        font-size: 0.95rem;
+    }
+}
+

@@ -1,0 +1,45 @@
+﻿@attribute [Authorize]
+
+@page "/distribucion-honorarios"
+@inherits DistribucionHonorariosBase
+@layout AdminLayout
+
+<div class="container mt-4 distribucion-honorarios">
+    <h3>📂 Distribución de Honorarios</h3>
+
+    <button class="btn btn-primary mb-3" @onclick="CrearNueva">➕ Nueva Distribución</button>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha Creación</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Distribuciones.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="text-center">No hay distribuciones registradas.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var dist in Distribuciones)
+                {
+                    <tr>
+                        <td>@dist.Nombre</td>
+                        <td>@dist.Descripcion</td>
+                        <td>@dist.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(dist.Id)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(dist.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

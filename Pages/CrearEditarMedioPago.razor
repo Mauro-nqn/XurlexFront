@@ -1,0 +1,32 @@
+﻿@attribute [Authorize]
+
+@page "/medios-pago/editar/{Id:int?}"
+@inherits CrearEditarMedioPagoBase
+@layout AdminLayout
+
+<EditForm Model="Medio" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container mt-4 form-page-container">
+        <h3>@(Id.HasValue ? "✏️ Editar Medio de Pago" : "➕ Nuevo Medio de Pago")</h3>
+
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label>Nombre</label>
+                <InputText class="form-control" @bind-Value="Medio.Nombre" />
+            </div>
+            <div class="col-md-4 mb-3 d-flex align-items-center">
+                <div class="form-check mt-3">
+                    <InputCheckbox id="activo" class="form-check-input" @bind-Value="Medio.Activo" />
+                    <label for="activo" class="form-check-label ms-2">Activo</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-success">💾 Guardar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">↩️ Cancelar</button>
+        </div>
+    </div>
+</EditForm>

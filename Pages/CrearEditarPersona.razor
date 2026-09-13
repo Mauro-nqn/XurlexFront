@@ -1,0 +1,215 @@
+﻿@attribute [Authorize]
+
+@page "/personas/editar/{Id:int?}"
+@inherits CrearEditarPersonaBase
+@layout AdminLayout
+
+@using IurixBlazor.Shared.Enums 
+@using Microsoft.AspNetCore.Components.Routing
+
+
+<NavigationLock OnBeforeInternalNavigation="ConfirmarSalida" />
+
+<div class="container mt-4 persona-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Persona" : "➕ Nueva Persona")</h3>
+
+    <EditForm EditContext="@EditContext" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger"
+                           style="margin-top:10px; margin-bottom:10px" />
+
+        <!-- Tipo de Persona -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Tipo de Persona</label>
+                <InputSelect class="form-control" @bind-Value="Form.Tipo">
+                    @foreach (var tipo in Enum.GetValues<TipoPersona>())
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Clasificación</label>
+                <InputSelect class="form-control" @bind-Value="Form.ClasificacionId">
+                    @foreach (var clas in Clasificaciones)
+                    {
+                        <option value="@clas.Id">@clas.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <!-- Campos dinámicos según tipo -->
+        @if (Persona.Tipo == TipoPersona.Fisica)
+        {
+            <!-- Física -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Nombre<span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Form.Nombre" />
+                    <ValidationMessage For="() => Form.Nombre" class="text-danger" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Apellido<span class="text-danger">*</span></label>
+                    <InputText class="form-control" @bind-Value="Form.Apellido" />
+                    <ValidationMessage For="() => Form.Apellido" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>DNI (obligatorio si no hay CUIT)</label>
+                    <InputText class="form-control"
+                               @bind-Value="Form.DNI"
+                               disabled="@DisableDNI"
+                               @oninput="OnDniChanged" />
+                    <ValidationMessage For="() => Form.DNI" class="text-danger" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label>CUIT (obligatorio si no hay DNI)</label>
+                    <div class="input-group">
+                        <InputText class="form-control"
+                                   @bind-Value="Form.CUIT"
+                                   disabled="@DisableCUIT"
+                                   @oninput="HandleCuitInput"
+                                   @onblur="ValidarCuit" />
+                        <button class="btn btn-info" type="button" @onclick="ConsultarAfip">🔍 Consultar AFIP</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(CuitError))
+                    {
+                        <div class="text-danger">@CuitError</div>
+                    }
+                    <ValidationMessage For="() => Form.CUIT" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Fecha de Nacimiento</label>
+                    <InputDate class="form-control" @bind-Value="Form.FechaNacimiento" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Nacionalidad</label>
+                    <InputText class="form-control" @bind-Value="Form.Nacionalidad" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label>Estado Civil</label>
+                <InputText class="form-control" @bind-Value="Form.EstadoCivil" />
+            </div>
+        }
+        else if (Persona.Tipo == TipoPersona.Juridica)
+        {
+            <!-- Jurídica -->
+            <div class="mb-3">
+                <label>Razón Social <span class="text-danger">*</span></label>
+                <InputText class="form-control" @bind-Value="Form.RazonSocial" />
+                <ValidationMessage For="() => Form.RazonSocial" class="text-danger" />
+            </div>
+
+@*             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Responsable - Nombre</label>
+                    <InputText class="form-control" @bind-Value="Persona.Nombre" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Responsable - Apellido</label>
+                    <InputText class="form-control" @bind-Value="Persona.Apellido" />
+                </div>
+            </div> *@
+
+            <div class="mb-3">
+                <label>CUIT <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <InputText class="form-control"
+                               @bind-Value="Form.CUIT"
+                               @oninput="FormatearCuitEnTiempoReal"
+                               @onblur="ValidarCuit" />
+                    <button class="btn btn-info" type="button" @onclick="ConsultarAfip">🔍 Consultar AFIP</button>
+                </div>
+                @if (!string.IsNullOrEmpty(CuitError))
+                {
+                    <div class="text-danger">@CuitError</div>
+                }
+                <ValidationMessage For="() => Form.CUIT" class="text-danger" />
+            </div>
+        }
+
+        <!-- Campos comunes -->
+        <div class="mb-3">
+            <label>
+                Condición IVA
+                @if (DebeCondicionIva)
+                {
+                    <span class="text-danger">*</span>
+                }
+            </label>
+            <InputSelect class="form-control" @bind-Value="Form.CondicionIVAId">
+                <option value="">-- Seleccione --</option>
+                @foreach (var cond in CondicionesIVA)
+                {
+                    <option value="@cond.Id">@cond.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.CondicionIVAId" class="text-danger" />
+        </div>
+
+        <div class="row">
+            <div class="mb-3">
+                <label>Domicilio</label>
+                <InputText class="form-control" @bind-Value="Form.Domicilio" />
+            </div>
+
+
+            <div class="col-md-6 mb-3">
+                <label>Ciudad</label>
+                <InputText class="form-control" @bind-Value="Form.Ciudad" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Código Postal</label>
+                <InputText class="form-control" @bind-Value="Form.CodigoPostal" />
+            </div>
+
+
+            <div class="mb-3">
+                <label>Provincia</label>
+                <InputText class="form-control" @bind-Value="Form.Provincia" />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="mb-3">
+                <label>Teléfono</label>
+                <InputText class="form-control" @bind-Value="Form.Telefono" />
+            </div>
+
+            <div class="mb-3">
+                <label>Celular</label>
+                <InputText class="form-control" @bind-Value="Form.Celular" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <InputText class="form-control" type="email" @bind-Value="Form.Email" />
+            <ValidationMessage For="() => Form.Email" class="invalid-feedback d-block" />
+        </div>
+
+
+        <div class="mb-3">
+            <label>Observaciones</label>
+            <InputText class="form-control" @bind-Value="Form.Observacion" />
+        </div>
+
+
+
+        <button class="btn btn-primary me-2" type="submit">💾 Guardar</button>
+        <button class="btn btn-secondary" type="button" @onclick="Cancelar">Cancelar</button>
+
+    </EditForm>
+</div>

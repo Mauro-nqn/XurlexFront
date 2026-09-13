@@ -1,0 +1,12 @@
+﻿.tipo-comprobantes-container h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.text-muted {
+    font-style: italic;
+}

@@ -1,0 +1,154 @@
+﻿@attribute [Authorize]
+
+@page "/usuarios/nuevo"
+@inherits UsuariosCrearBase
+@layout AdminLayout
+
+@using IurixBlazor.Shared.Enums
+@using IurixBlazor.Shared.Helpers
+
+<div class="container mt-4 usuario-form">
+    <h3 class="mb-4">➕ Crear Usuario</h3>
+
+    <EditForm Model="@usuario" OnValidSubmit="GuardarUsuario">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <!-- Usuario y Password -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Usuario</label>
+                <InputText class="form-control" @bind-Value="usuario.NombreUsuario" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Password</label>
+                <InputText class="form-control" @bind-Value="usuario.Password" type="password" />
+            </div>
+        </div>
+
+        <!-- Nombre y Apellido -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Nombre</label>
+                <InputText class="form-control" @bind-Value="usuario.Nombre" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Apellido</label>
+                <InputText class="form-control" @bind-Value="usuario.Apellido" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>DNI</label>
+                <InputText class="form-control" @bind-Value="usuario.DNI" />
+            </div>
+        </div>
+
+        <!-- CUIT y Condicion Iva - si corresponde -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>RAZON SOCIAL</label>
+                <InputText class="form-control" @bind-Value="usuario.RazonSocial" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>CUIT</label>
+                <InputText class="form-control" @bind-Value="usuario.CUIT" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>IIBB</label>
+                <InputText class="form-control" @bind-Value="usuario.IIBB" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Condicion Iva</label>
+                <InputSelect class="form-control" @bind-Value="usuario.CondicionIvaId">
+                    <option value="">Seleccione...</option>
+                    @foreach (var condicionIva in CondicionIvas)
+                    {
+                        <option value="@condicionIva.Id">@condicionIva.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <!-- Datos para Factura Domicilio Fiscal, Provincia, Inicio Actividades (AFIP)  -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Domicilio Fiscal</label>
+                <InputText class="form-control" @bind-Value="usuario.DomicilioFiscal" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Provincia</label>
+                <InputText class="form-control" @bind-Value="usuario.Provincia" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Inicio Actividades</label>
+                <InputDate class="form-control" @bind-Value="usuario.InicioActividades" />
+            </div>
+        </div>
+
+
+        <!-- Rol y Cargo -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Rol</label>
+                <InputSelect class="form-control" @bind-Value="usuario.RolId">
+                    <option value="">Seleccione...</option>
+                    @foreach (var rol in Roles)
+                    {
+                        <option value="@rol.Id">@rol.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Cargo</label>
+                <InputSelect class="form-control" @bind-Value="usuario.Cargo">
+                    @foreach (var cargo in CargoEnumHelper.Cargos)
+                    {
+                        <option value="@cargo">@cargo</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+
+        <!-- Matrículas -->
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label>Matrícula</label>
+                <InputText class="form-control" @bind-Value="usuario.Matricula" />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Matrícula 1</label>
+                <InputText class="form-control" @bind-Value="usuario.Matricula1" />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Matrícula 2</label>
+                <InputText class="form-control" @bind-Value="usuario.Matricula2" />
+            </div>
+            <div class="col-md-3 mb-3">
+                <label>Matrícula 3</label>
+                <InputText class="form-control" @bind-Value="usuario.Matricula3" />
+            </div>
+        </div>
+
+        <!-- Email, Teléfono y Celular -->
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label>Email</label>
+                <InputText class="form-control" @bind-Value="usuario.email" type="email" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Teléfono</label>
+                <InputText class="form-control" @bind-Value="usuario.Telefono" />
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Celular</label>
+                <InputText class="form-control" @bind-Value="usuario.Celular" />
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary me-2">Guardar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+        </div>
+    </EditForm>
+</div>
+

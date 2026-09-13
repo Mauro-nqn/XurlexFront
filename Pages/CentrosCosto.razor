@@ -1,0 +1,41 @@
+﻿@attribute [Authorize]
+
+@page "/centros-costo"
+@inherits CentrosCostoBase
+@layout AdminLayout
+
+<div class="container mt-4 list-page-container">
+    <h3>🏷️ Centros de Costo</h3>
+
+    <button class="btn btn-primary mb-3" @onclick="Nuevo">➕ Nuevo Centro</button>
+
+    <table class="table table-striped table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Activo</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Centros.Count == 0)
+            {
+                <tr><td colspan="3" class="text-center text-muted">No hay centros de costo.</td></tr>
+            }
+            else
+            {
+                @foreach (var c in Centros)
+                {
+                    <tr>
+                        <td>@c.Nombre</td>
+                        <td>@(c.Activo == true ? "Sí" : "No")</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(c.Id)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(c.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

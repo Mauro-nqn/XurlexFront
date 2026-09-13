@@ -1,0 +1,30 @@
+﻿/* Agendas.razor.css */
+
+/* Cuadradito de estado */
+.estado-badge {
+    display: inline-flex;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: .4rem;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .9rem;
+    color: #fff;
+    vertical-align: middle;
+}
+
+/* Asegura que el buscador no quede apretado en mobile */
+@media (max-width: 576px) {
+    .agendas-page .table {
+        font-size: .9rem;
+    }
+
+    .agendas-page .btn {
+        white-space: nowrap;
+    }
+}
+
+
+
+

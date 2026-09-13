@@ -1,0 +1,29 @@
+﻿
+.auth-warning-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+    background-color: #f8f9fa;
+}
+
+.auth-warning-box {
+    text-align: center;
+    padding: 2rem 3rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+}
+
+    .auth-warning-box h4 {
+        color: #dc3545;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .auth-warning-box p {
+        font-size: 1.1rem;
+        color: #333;
+    }

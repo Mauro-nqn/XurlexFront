@@ -1,0 +1,180 @@
+﻿
+
+@page "/login"
+@using IurixBlazor.Shared.Dtos
+@using IurixBlazor.Shared.Config
+@using IurixBlazor.Services
+@using IurixBlazor.Services.Interfaces
+@using IurixBlazor.Services.Auth
+@using IurixBlazor.Shared.Helpers
+@using System.IdentityModel.Tokens.Jwt
+@using System.Text.Json
+
+@inject IApiSesionService SesionService
+@inject IHttpClientFactory HttpFactory
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ConfigService Config
+@inject ITokenStore TokenStore
+
+
+
+
+
+<div class="login-page" style="background-image: url('/images/fondos/@FondoSeleccionado');">
+    <!-- Logo inferior derecho con marco -->
+    <div class="logo-bottom-right">
+        <img src="images/xurlexconslogan.png" class="logo-frame" />
+    </div>
+
+    <!-- Logo inferior izquierdo -->
+    <img src="images/xurdevbn.png" class="logo-bottom-left" />
+
+    <!-- Contenedor centrado -->
+    <div class="login-container card shadow">
+        <h3 class="text-center mb-4" style="margin-top:10px">Inicio de Sesión</h3>
+
+        <input @bind="Usuario" @bind:event="oninput" placeholder="Nombre de Usuario" class="form-control mb-2" />
+        
+        @* <input @bind="Password" type="password" placeholder="Contraseña" class="form-control mb-3" @onkeydown="HandleEnter" /> *@
+
+
+        <div class="input-group mb-3">
+            <input @bind="Password"
+                   @bind:event="oninput"
+                   type="@PasswordInputType"
+                   placeholder="Contraseña"
+                   class="form-control"
+                   @onkeydown="HandleEnter" />
+
+            <button type="button" class="btn btn-outline-secondary" @onclick="TogglePasswordVisibility">
+                <i class="@EyeIconClass"></i>
+            </button>
+        </div>
+
+
+@* 
+        @if (LicenciaEstudioVisible)
+        {
+            <label class="d-block text-center fw-bold" style="margin-top:5px">@LicenciaEstudioTexto</label>
+            @* <label class="d-block text-center fw-bold" style="margin-top:5px">@LicenciaEstado</label> *@
+        @*       }
+        @if (LicenciaInfoVisible)
+        {
+            <label class="d-block text-center fw-bold" style="color:@LicenciaInfoColor">@LicenciaInfoTexto</label>
+            
+        }
+
+        <div class="mt-4">
+
+            <button class="btn btn-primary w-100 mt-3" 
+            style="margin-top:20px" 
+            @onclick="OnLoginClicked"
+            disabled="@(!PuedeIniciarSesion)">
+            
+            Iniciar Sesión
+
+
+            </button>
+            </div>
+        
+            <div class="text-danger text-center mt-2">@Mensaje</div>
+
+
+        
+        @* <InputFile OnChange="OnLicenciaSeleccionada" accept=".lic" />
+        @if (!string.IsNullOrEmpty(LicenciaUploadMensaje))
+        {
+            <div class="text-center mt-2">@LicenciaUploadMensaje</div>
+        } *@
+
+        @*      @if (MostrarUploaderLicencia)
+{
+    <div class="mt-3 text-center">
+        <p>Seleccione el archivo de licencia (.lic) para registrar o renovar la licencia:</p>
+        <InputFile OnChange="OnLicenciaSeleccionada" accept=".lic" />
+        @if (!string.IsNullOrEmpty(LicenciaUploadMensaje))
+        {
+            <div class="text-center mt-2">@LicenciaUploadMensaje</div>
+        }
+    </div>
+} *@
+
+
+
+        @if (LicenciaCargando)
+        {
+            <div class="text-center mt-2">
+                Verificando licencia…
+            </div>
+        }
+        else
+        {
+            @* Info de la licencia *@
+            @if (LicenciaEstudioVisible)
+            {
+                <label class="d-block text-center fw-bold" style="margin-top:5px">
+                    @LicenciaEstudioTexto
+                </label>
+            }
+
+            @if (LicenciaInfoVisible)
+            {
+                <label class="d-block text-center fw-bold" style="color:@LicenciaInfoColor">
+                    @LicenciaInfoTexto
+                </label>
+            }
+
+            <div class="mt-4">
+                <button class="btn btn-primary w-100 mt-3"
+                        style="margin-top:20px"
+                        @onclick="OnLoginClicked"
+                        disabled="@(!PuedeIniciarSesion)">
+                    Iniciar Sesión
+                </button>
+            </div>
+
+            <div class="text-danger text-center mt-2">@Mensaje</div>
+
+            @*  Botón para mostrar el uploader SOLO cuando la licencia está vigente/por vencer *@
+            @if (!MostrarUploaderLicencia && !MostrarUploaderManual && PuedeIniciarSesion)
+            {
+                <div class="text-center mt-3">
+                    <button class="btn btn-link text-decoration-none"
+                            style="font-size: 0.9rem"
+                            @onclick="() => MostrarUploaderManual = true">
+                        <i class="bi bi-lock-fill"></i> Cargar nueva licencia
+                    </button>
+                </div>
+            }
+
+            @* Uploader: se muestra si la licencia está vencida/sin licencia o si el usuario lo pidió manualmente *@
+            @if (MostrarUploaderLicencia || MostrarUploaderManual)
+            {
+                <div class="mt-3 text-center">
+                    <InputFile OnChange="OnLicenciaSeleccionada" accept=".lic" />
+
+                    @if (!string.IsNullOrEmpty(LicenciaUploadMensaje))
+                    {
+                        <div class="text-center mt-2">@LicenciaUploadMensaje</div>
+                    }
+
+                    @if (MostrarUploaderManual && PuedeIniciarSesion)
+                    {
+                        <button class="btn btn-sm btn-outline-secondary mt-2"
+                                @onclick="() => MostrarUploaderManual = false">
+                            Cancelar
+                        </button>
+                    }
+                </div>
+            }
+        }
+
+
+
+        
+    </div>
+</div>
+
+
+

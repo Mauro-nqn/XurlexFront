@@ -1,0 +1,497 @@
+﻿@attribute [Authorize]
+
+@page "/facturas/preview/{FacturaId:int}"
+@* @layout AdminLayout *@
+@inherits FacturaPreviewBase
+@using IurixBlazor.Shared.Dtos
+@using System.Globalization
+
+@if (factura == null)
+{
+    <p><em>Cargando factura para vista previa...</em></p>
+}
+else
+{
+    var ar = CultureInfo.GetCultureInfo("es-AR");
+    var letra = factura.TipoComprobanteLetra;
+    var cbte = factura.CbteTipo;
+    bool EsA = letra == "A" || cbte is 1 or 2 or 3;
+    bool EsB = letra == "B" || cbte is 6 or 7 or 8;
+
+    <div class="preview">
+
+
+        <div class="factura-container" style="margin-top:10px; background-color:white; padding:10px; border: 1px solid black">
+    <!-- Encabezado ORIGINAL -->
+    <div class="wrapper text-center bold text-20" style="width:100%;border-bottom: 0;">
+        ORIGINAL
+    </div>
+
+    <!-- Datos Emisor / Comprobante -->
+    <div class="flex relative">
+        <!-- Emisor -->
+        <div class="wrapper inline-block w50 flex" style="border-right: 0">
+            <h3 class="text-left" style="font-size:22px;margin-left:20px;margin-bottom: 10px; margin-top: 10px; width: 100%;">
+                @factura.NombreTitularEmisor
+            </h3>
+            <p style="font-size: 13px;line-height: 2;margin-left: 5px;margin-bottom: 10px;align-self: flex-end;">
+                <b>Razón Social:</b> @factura.NombreTitularEmisor <br>
+                <b>Domicilio Comercial:</b> @factura.DomicilioEmisor - @factura.ProvinciaEmisor <br>
+                <b>Condición frente al IVA:</b> @factura.CondicionFiscalEmisor
+            </p>
+        </div>
+
+        <!-- Comprobante -->
+        <div class="wrapper inline-block w50">
+            <h3 class="text-center" style="font-size:24px;margin-bottom: 3px">@factura.TipoComprobanteDescripcion</h3>
+            <p style="font-size: 13px;line-height: 1.5;margin-bottom: 0;margin-left:50px">
+                <b>Punto de Venta:</b> @factura.PuntoVentaNumero.ToString("D4")
+                <b>Comp. Nro:</b> @factura.Numero.ToString("D8") <br>
+                <b>Fecha de Emisión:</b> @factura.Fecha.ToString("dd/MM/yyyy") <br>
+                <b>CUIT:</b> @factura.CuitEmisor <br>
+                <b>Ingresos Brutos:</b> @factura.IIBBEmisor <br>
+                <b>Fecha de Inicio de Actividades:</b> @factura.InicioActividadesEmisor
+            </p>
+        </div>
+
+        <!-- Letra -->
+        <div class="wrapper floating-mid">
+            <h3 class="no-margin text-center" style="font-size: 36px; margin: 0">@factura.TipoComprobanteLetra</h3>
+                <h5 class="no-margin text-center" style="font-size: 12px; font-weight: bold; margin: 0">COD. @factura.CbteTipo</h5>
+        </div>
+    </div>
+
+    <!-- Cliente -->
+    <div class="wrapper" style="margin-top: 2px;font-size: 12px;">
+        <div class="flex" style="margin-bottom: 10px; margin-left:5px">
+            <span style="width:40%">
+                    @* <b>@(factura.DocTipo == 80 ? "CUIT:" : factura.DocTipo == 96 ? "DNI:" : "Doc:")</b> @factura.DocNro *@
+                    <b>@DocLabel(factura.DocTipo):</b> @FormatDoc(factura.DocTipo, factura.DocNro)
+            </span>
+            <span>
+                <b>Apellido y Nombre / Razón Social:</b>
+                @(string.IsNullOrWhiteSpace(factura.PersonaRazonSocial)
+                                ? $"{factura.PersonaNombre} {factura.PersonaApellido}"
+                                : factura.PersonaRazonSocial)
+            </span>
+        </div>
+        <div class="flex" style="margin-bottom: 5px; margin-left:5px">
+            <span style="width:50%">
+                <b>Condición frente al IVA:</b>
+                @(factura.CondicionIVAReceptorId == 1 ? "Responsable Inscripto" : "Consumidor Final")
+            </span>
+            <span><b>Domicilio:</b> @factura.PersonaDomicilio - @factura.PersonaProvincia</span>
+        </div>
+    </div>
+
+    <!-- Items -->
+@*     <div class="detalles-table">
+        <table style="margin-top: 5px;">
+            <thead>
+                <tr>
+                    <th class="text-left">Descripción</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-right">Precio Unit.</th>
+                    @* <th class="text-center">% IVA</th>                         
+                        <th class="text-center">
+                            @(EsA ? "%IVA" : " ")
+                        </th>
+                    <th class="text-right">Importe</th>
+                        <th class="text-right">
+                            @(EsA ? "Total" : "Subtotal ")
+                        </th>
+                </tr>
+            </thead> 
+               @foreach (var item in factura.Detalles)
+                {
+                    <tr>
+                        <td class="text-left">@item.Descripcion</td>
+                        <td class="text-center">@item.Cantidad</td>
+                        <td class="text-right">@item.PrecioUnitario.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))</td>
+                        <td class="text-center">@($"{item.IvaPorcentaje}%")</td>
+                        <td class="text-right">@((item.Cantidad * item.PrecioUnitario).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-AR")))</td>
+                    </tr>
+                }
+ 
+         @foreach (var item in factura.Detalles)
+                    {
+                        // suponiendo item.IvaPorcentaje existe en tu DTO de impresión
+                        var tasa = (item.IvaPorcentaje);
+
+                        decimal totalLinea;
+
+                        if (EsA)
+                        {
+                            var baseLinea = item.Cantidad * item.PrecioUnitario; // neto
+                            var ivaLinea = Math.Round(baseLinea * tasa, 2, MidpointRounding.AwayFromZero);
+                            totalLinea = baseLinea + ivaLinea;
+                        }
+                        else // B (y C si aplica)
+                        {
+                            totalLinea = item.Cantidad * item.PrecioUnitario; // final IVA incluido
+                        }
+
+                        <tr>
+                            @* <td class="text-left">@item.Codigo</td> 
+                            <td class="text-left">@item.Descripcion</td>
+                            <td class="text-center">@item.Cantidad</td>
+                            <td class="text-right">@item.PrecioUnitario.ToString("C", ar)</td>
+                            @* Si querés mostrar el % solo en A, descomentá la columna arriba y esta celda: 
+                            @if (EsA) { <td class="text-center">@($"{item.IvaPorcentaje:0.##}%")</td> }:{ <td class="text-center">@($"{item.IvaPorcentaje:0.##}%")</td>}
+                            <td class="text-right">@totalLinea.ToString("C", ar)</td>
+                        </tr>
+                    }
+            </tbody>
+        </table> *@
+
+            <div class="detalles-table">
+  <table style="margin-top: 5px;">
+    <thead>
+      <tr>
+        @* <th class="text-left" padding-left="5px">Descripción</th> *@
+        <th class="text-start ps-2">Descripción</th>
+        <th class="text-center">Cantidad</th>
+        <th class="text-right">Precio Unit.</th>
+        @if (EsA) { <th class="text-center">% IVA</th> }
+        @* <th class="text-right">Importe</th> *@
+        <th class="text-right">@((EsA) ? "Importe" : "Imp. Bonif")</th>
+        <th class="text-right">@((EsA) ? "Total" : "Subtotal")</th>
+      </tr>
+    </thead>
+            <tbody>
+
+
+                   @*  @foreach (var item in factura.Detalles)
+                    {
+                        var qty = item.Cantidad;
+                        var unit = item.PrecioUnitario;
+                        // si IvaPorcentaje es int? -> item.IvaPorcentaje.GetValueOrDefault() / 100m
+                        var tasa = (decimal)(item.IvaPorcentaje) / 100m;
+
+                        var baseLinea = qty * unit; // en A = neto; en B = final (ya con IVA)
+                        var totalLinea = EsA
+                        ? baseLinea + Math.Round(baseLinea * tasa, 2, MidpointRounding.AwayFromZero)
+                        : baseLinea; // en B el subtotal es igual al importe (final)
+
+                        <tr>
+                            <td class="text-left">@item.Descripcion</td>
+                            <td class="text-center">@qty</td>
+                            <td class="text-right">@unit.ToString("C", ar)</td>
+                            @if (EsA)
+                            {
+                                <td class="text-center">@($"{item.IvaPorcentaje:0.##}%")</td>
+                            }
+                            @if (EsA)
+                            {
+                                <td class="text-right">@baseLinea.ToString("C", ar)</td>
+                            } else { <td class="text-right">0,00</td>}
+                            
+                            <td class="text-right">@totalLinea.ToString("C", ar)</td>
+                        </tr>
+                    } *@
+
+                    @foreach (var item in factura.Detalles)
+                    {
+                        var qty = item.Cantidad;
+                        var unit = item.PrecioUnitario;           // SIEMPRE neto en el modelo
+                        var porc = (decimal)item.IvaPorcentaje;   // o item.IvaPorcentaje.GetValueOrDefault() si es nullable
+                        var tasa = porc > 0m ? (porc / 100m) : 0m;
+
+                        // B = no A y emisor RI (por letra/cbteTipo)
+                        var esB = EsB && EmisorEsRI;
+
+                        // Unitario que se muestra:
+                        //  A  → neto
+                        //  B  → final (neto * (1 + tasa))
+                        //  C  → neto
+                        var unitDisplay = EsA
+                        ? unit
+                        : (esB ? Math.Round(unit * (1m + tasa), 2, MidpointRounding.AwayFromZero)
+                        : unit);
+
+                        var baseNeta = qty * unit;
+                        var totalLinea = EsA
+                        ? baseNeta + Math.Round(baseNeta * tasa, 2, MidpointRounding.AwayFromZero)   // A: neto+IVA
+                        : (esB ? qty * unitDisplay                                                   // B: final
+                        : qty * unit);                                                        // C: neto
+
+                        <tr>
+                            <td class="text-left">@item.Descripcion</td>
+                            <td class="text-center">@qty</td>
+                            <td class="text-right">@unitDisplay.ToString("C", ar)</td>
+
+                            @if (EsA)
+                            {
+                                <td class="text-center">@($"{porc:0.##}%")</td>
+                                <td class="text-right">@baseNeta.ToString("C", ar)</td>
+               @* "Importe" = neto *@
+                            }
+                            else
+                            {
+                                <td class="text-right">0,00</td>                          @* "Imp. Bonif" en tu layout *@
+                            }
+
+                            <td class="text-right">@totalLinea.ToString("C", ar)</td>
+                        </tr>
+                    }
+
+
+
+
+
+                </tbody>
+            </table>
+
+    </div>
+
+        <!-- Espaciador dinámico -->
+    <div class="spacer"></div>
+
+    <!-- Totales -->
+    @* <div class="flex wrapper space-between" style="margin-top: 10px;">
+        <div style="width:55%">
+            <p class="bold">Otros tributos</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Detalle</th>
+                        <th class="text-right">Alíc. %</th>
+                        <th class="text-right">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Per./Ret. Ganancias</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                    <tr><td>Per./Ret. IVA</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                    <tr><td>Imp. Internos</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                    <tr><td>Imp. Municipales</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="width:40%;margin-top: 20px;" class="flex wrapper">
+            <span class="text-right" style="width:60%"><b>Importe Neto Gravado: $</b></span><span class="text-right" style="width:40%">@factura.Neto.ToString("N2")</span>
+            <span class="text-right" style="width:60%"><b>IVA: $</b></span><span class="text-right" style="width:40%">@factura.Iva.ToString("N2")</span>
+            <span class="text-right" style="width:60%"><b>Total: $</b></span><span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+        </div>
+    </div> *@
+
+
+
+
+
+        <!-- Totales -->
+        @if (EsA)
+        {
+            <div class="footer" style="margin-top: 350px;">
+            <div class="flex wrapper space-between" style="margin-top: 10px;">
+                <div style="width:55%">
+                    <p class="bold">Otros tributos</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Detalle</th>
+                                <th class="text-right">Alíc. %</th>
+                                <th class="text-right">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Per./Ret. Ganancias</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Per./Ret. IVA</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Imp. Internos</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Imp. Municipales</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <div style="width:40%;margin-top: 20px;" class="flex wrapper">
+                    <span class="text-right" style="width:60%"><b>Importe Neto Gravado: $</b></span>
+                    <span class="text-right" style="width:40%">@factura.Neto.ToString("N2")</span>
+
+                    <span class="text-right" style="width:60%"><b>Total IVA: $</b></span>
+                    <span class="text-right" style="width:40%">@factura.Iva.ToString("N2")</span>
+
+                    <span class="text-right" style="width:60%"><b>Total: $</b></span>
+                    <span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+                </div>
+            </div>
+            </div>
+        }
+        else if (EsB)
+        {
+           <div class="footer" style="margin-top: 300px;">
+            <div class="flex wrapper space-between" style="margin-top: 10px;">
+                <div style="width:55%">
+                    <p class="bold">Otros tributos</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Detalle</th>
+                                <th class="text-right">Alíc. %</th>
+                                <th class="text-right">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Per./Ret. Ganancias</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Per./Ret. IVA</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Imp. Internos</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            <tr><td>Imp. Municipales</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="width:40%;margin-top: 20px;" class="flex wrapper">
+                    <span class="text-right" style="width:60%"><b>Subtotal (IVA incl.): $</b></span>
+                    <span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+
+                    <span class="text-right" style="width:60%"><b>Otros Tributos: $</b></span>
+                    <span class="text-right" style="width:40%">0,00</span>
+
+                    <span class="text-right" style="width:60%"><b>Total: $</b></span>
+                    <span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+                </div>
+            </div>
+
+            <div class="alert alert-info" style="margin-top:8px;">
+                Régimen de Transparencia Fiscal al Consumidor (Ley 27.743) - 
+                IVA contenido:<b>$ @factura.Iva.ToString("N2")</b>
+            </div>
+            </div>
+        }
+
+        else if (EsC)
+        {
+            <div class="footer" style="margin-top: 300px;">
+                <div class="flex wrapper space-between" style="margin-top: 10px;">
+                    <div style="width:55%">
+                        <p class="bold">Otros tributos</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Detalle</th>
+                                    <th class="text-right">Alíc. %</th>
+                                    <th class="text-right">Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Per./Ret. Ganancias</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                                <tr><td>Per./Ret. IVA</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                                <tr><td>Imp. Internos</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                                <tr><td>Imp. Municipales</td><td></td><td></td><td class="text-right">0,00</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="width:40%;margin-top: 20px;" class="flex wrapper">
+                        <span class="text-right" style="width:60%"><b>Subtotal: $</b></span>
+                        <span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+
+                        <span class="text-right" style="width:60%"><b>Otros Tributos: $</b></span>
+                        <span class="text-right" style="width:40%">0,00</span>
+
+                        <span class="text-right" style="width:60%"><b>Total: $</b></span>
+                        <span class="text-right" style="width:40%">@factura.Total.ToString("N2")</span>
+                    </div>
+                </div>
+
+@*                 <div class="alert alert-info" style="margin-top:8px;">
+                    Régimen de Transparencia Fiscal al Consumidor (Ley 27.743) -
+                    IVA contenido:<b>$ @factura.Iva.ToString("N2")</b>
+                </div> *@
+            </div>
+        }
+
+
+
+
+
+    <!-- Pie: QR y CAE -->
+    <div class="flex relative" style="margin-top: 20px;">
+        <div class="qr-container" style="padding: 0 20px 20px 20px;width: 20%;">
+
+                @if (!string.IsNullOrWhiteSpace(factura.QRUrl))
+                {
+                    <img src="@factura.QRUrl" style="max-width: 100%;">
+                }
+
+        </div>
+        <div style="padding-left: 10px;width: 45%;">
+            <h4 class="italic bold">Comprobante Autorizado</h4>
+            <p class="small italic bold" style="font-size: 9px;">
+                Esta Administración Federal no se responsabiliza por los datos ingresados en el detalle de la operación
+            </p>
+        </div>
+        <div class="flex" style="align-self: flex-start;width: 35%;">
+            <span class="text-right" style="width:50%"><b>CAE N°:</b></span><span class="text-left" style="padding-left: 10px;">@factura.CAE</span>
+            <span class="text-right" style="width:50%"><b>Vto. CAE:</b></span><span class="text-left" style="padding-left: 10px;">@factura.CAEFchVto?.ToString("dd/MM/yyyy")</span>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+}
+
+
+@code{
+
+    protected bool EsA =>
+    factura != null &&
+    (string.Equals(factura.TipoComprobanteLetra, "A", StringComparison.OrdinalIgnoreCase) || factura.CbteTipo == 1);
+
+    protected bool EsB =>
+        factura != null &&
+        (string.Equals(factura.TipoComprobanteLetra, "B", StringComparison.OrdinalIgnoreCase) || factura.CbteTipo == 6);
+
+    protected bool EsC =>
+        factura != null &&
+        (string.Equals(factura.TipoComprobanteLetra, "C", StringComparison.OrdinalIgnoreCase) || factura.CbteTipo == 11);
+
+    // En Argentina: si la letra es A o B, el emisor es RI.
+    protected bool EmisorEsRI => EsA || EsB;
+
+
+
+
+
+    string DocLabel(int t) => t switch
+    {
+        80 => "CUIT",        
+        96 => "DNI",
+        _ => "Doc"
+    };
+
+    string FormatDoc(int t, string? nro)
+    {
+        if (string.IsNullOrWhiteSpace(nro)) return "";
+        // Formato XX-XXXXXXXX-X para CUIT/CUIL si tiene 11 dígitos
+        if (t is 80 or 86)
+        {
+            var digits = new string(nro.Where(char.IsDigit).ToArray());
+            if (digits.Length == 11)
+                return $"{digits.Substring(0, 2)}-{digits.Substring(2, 8)}-{digits.Substring(10, 1)}";
+        }
+        return nro!;
+    }
+
+
+    
+    
+
+}
+
+<style>
+
+.preview{
+        background-color:lightgray; 
+        
+        
+}
+
+@@media print {
+    padding: 0;
+}
+
+</style>

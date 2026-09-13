@@ -1,0 +1,17 @@
+﻿.clasificacion-persona {
+    max-width: 600px;
+}
+
+    .clasificacion-persona h3 {
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .clasificacion-persona .list-group-item {
+        cursor: default;
+        transition: background-color 0.2s ease-in-out;
+    }
+
+        .clasificacion-persona .list-group-item:hover {
+            background-color: #f8f9fa;
+        }

@@ -1,0 +1,44 @@
+﻿@attribute [Authorize]
+
+@page "/ajustes-variables/editar/{Id:int?}"
+@inherits CrearEditarAjusteVariableBase
+@layout AdminLayout
+
+
+<EditForm Model="@vm" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container mt-4 form-page-container">
+        <h3>@(Id.HasValue ? "✏️ Editar Variable" : "➕ Nueva Variable")</h3>
+
+        <div class="row">
+            <div class="col-md-3">
+                <label>Clave</label>
+                <InputText class="form-control" @bind-Value="vm.Clave" disabled="@Id.HasValue" />
+            </div>
+            <div class="col-md-5">
+                <label>Nombre</label>
+                <InputText class="form-control" @bind-Value="vm.Nombre" />
+            </div>
+            <div class="col-md-2">
+                <label>Valor Actual</label>
+                <InputNumber class="form-control" @bind-Value="vm.ValorActual" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="form-check">
+                    <InputCheckbox class="form-check-input" @bind-Value="vm.Activa" />
+                    <label class="form-check-label ms-2">Activa</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-success">💾 Guardar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">↩️ Cancelar</button>
+        </div>
+    </div>
+</EditForm>
+
+
+

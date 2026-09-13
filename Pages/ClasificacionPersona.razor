@@ -1,0 +1,47 @@
+﻿@attribute [Authorize]
+
+@page "/clasificacionpersona"
+@inherits ClasificacionPersonaBase
+@layout AdminLayout
+
+<div class="container mt-4 clasificacion-persona">
+    <h3>👤 Clasificación de Personas</h3>
+
+    <div class="mb-3">
+        <label class="form-label">Nombre de clasificación</label>
+        <input type="text" class="form-control" @bind="NombreClasificacion" placeholder="Ingrese un nombre..." />
+    </div>
+    <PermisoView Permiso="@Permisos.ClasificacionPersonas.Crear">
+    <button class="btn btn-primary me-2" @onclick="GuardarClasificacion">💾 Guardar</button>
+    </PermisoView>
+    @if (Seleccionada != null)
+    {
+        <PermisoView Permiso="@Permisos.ClasificacionPersonas.Eliminar">
+        <button class="btn btn-danger me-2" @onclick="EliminarClasificacion">🗑️ Eliminar seleccionada</button>
+        </PermisoView>
+    }
+
+    <button class="btn btn-secondary" @onclick="NuevaClasificacion">🧹 Limpiar</button>
+
+    <hr />
+
+    <h5>📋 Listado de Clasificaciones</h5>
+    <ul class="list-group mt-2">
+        @if (Clasificaciones.Any())
+        {
+            @foreach (var clas in Clasificaciones)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>@clas.Nombre</span>
+                    <PermisoView Permiso="@Permisos.ClasificacionPersonas.Editar">
+                    <button class="btn btn-sm btn-outline-primary" @onclick="@(() => SeleccionarClasificacion(clas))">✏️ Editar</button>
+                    </PermisoView>
+                </li>
+            }
+        }
+        else
+        {
+            <li class="list-group-item text-muted">No hay clasificaciones cargadas.</li>
+        }
+    </ul>
+</div>

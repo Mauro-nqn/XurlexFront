@@ -1,0 +1,168 @@
+﻿@page "/interact-lab"
+@inject IJSRuntime JS
+
+<h3>Interact Lab (Android + Desktop)</h3>
+
+<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center">
+    <button class="btn" @onclick="OpenWin">Abrir ventana</button>
+    <button class="btn" @onclick="ToggleHud">@(hudOn ? "HUD: ON" : "HUD: OFF")</button>
+</div>
+
+<div class="lab-win" @ref="_root">
+    <div class="lab-title" @ref="_handle">
+        <span>Ventana de prueba</span>
+        <div class="win-actions">
+            <button class="btn-win"
+                    @onpointerdown="Minimize"
+                    @onpointerdown:preventDefault
+                    @onpointerdown:stopPropagation>
+                —
+            </button>
+
+            <button class="btn-win"
+                    @onpointerdown="ToggleMax"
+                    @onpointerdown:preventDefault
+                    @onpointerdown:stopPropagation>
+                □
+            </button>
+
+            <button class="btn-win close"
+                    @onpointerdown="Close"
+                    @onpointerdown:preventDefault
+                    @onpointerdown:stopPropagation>
+                ✕
+            </button>
+        </div>
+    </div>
+    <div class="lab-content">
+        <p>Lab sin WindowService — solo Interact.js. Probá mover, redimensionar, minimizar, maximizar y cerrar/reabrir.</p>
+        <p>Si acá funciona bien en Android, el problema no es el input sino la integración de tu ventana real.</p>
+    </div>
+    <div class="lab-resize-grip" title="Resize"></div>
+</div>
+
+@code {
+    ElementReference _root, _handle;
+    bool hudOn;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Posición y tamaño iniciales
+        await JS.InvokeVoidAsync("eval", @"
+        (function(){
+          const el = document.querySelector('.lab-win');
+          el.style.left='120px'; el.style.top='100px';
+          el.style.width='360px'; el.style.height='260px';
+        })();
+      ");
+
+        // Adjuntar interacciones (wrapper seguro)
+        try { await JS.InvokeVoidAsync("interactWinAttachSafe", _root, _handle); } catch { }
+    }
+
+    async Task ToggleHud()
+    {
+        hudOn = !hudOn;
+        try { await JS.InvokeVoidAsync("interactWinHUD.enable", hudOn); } catch { }
+    }
+
+    // Controles
+    Task Minimize() => JS.InvokeVoidAsync("interactWin.minimize", _root).AsTask();
+    Task ToggleMax() => JS.InvokeVoidAsync("interactWin.toggleMaximize", _root).AsTask();
+    Task Close() => JS.InvokeVoidAsync("interactWin.close", _root).AsTask();
+    Task OpenWin() => JS.InvokeVoidAsync("interactWin.open", _root).AsTask();
+}
+
+<style>
+    .lab-win {
+        position: absolute;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.3);
+        overflow: hidden;
+        will-change: left, top, width, height, transform;
+    }
+
+    .lab-title {
+        position: relative;
+        height: 44px;
+        line-height: 44px;
+        padding: 0 12px;
+        background: #0f172a;
+        cursor: move;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+    }
+
+    .win-actions {
+        position: absolute;
+        right: 8px;
+        top: 6px;
+        display: inline-flex;
+        gap: 6px;
+        z-index: 2;
+    }
+
+    .btn-win {
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 6px;
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+        .btn-win.close {
+            background: #7f1d1d;
+        }
+
+    .lab-content {
+        padding: 12px;
+        height: calc(100% - 44px);
+        overflow: auto;
+    }
+
+    /* durante drag, que nada debajo capture eventos */
+    .lab-win.is-any-dragging .win-actions,
+    .lab-win.is-any-dragging .lab-content {
+        pointer-events: none !important;
+    }
+
+    /* Minimizada: solo barra de título visible */
+    .lab-win.minimized {
+        height: 44px !important;
+    }
+
+        .lab-win.minimized .lab-content,
+        .lab-win.minimized .lab-resize-grip {
+            display: none !important;
+        }
+
+    /* Grip visual (opcional) */
+    .lab-resize-grip {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
+        width: 12px;
+        height: 12px;
+        border-right: 2px solid #64748b;
+        border-bottom: 2px solid #64748b;
+        opacity: .7;
+        pointer-events: none; /* Interact usa bordes; esto es apenas decorativo */
+    }
+
+    .btn {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #334155;
+        background: #0b1220;
+        color: #cbd5e1;
+    }
+</style>
+
+

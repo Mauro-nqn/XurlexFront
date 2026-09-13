@@ -1,0 +1,349 @@
+﻿@attribute [Authorize]
+
+@page "/gestiones/crear-editar/{Id:int?}"
+@inherits CrearEditarGestionBase
+@layout AdminLayout
+
+<div class="container mt-4 gestion-form">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>@(Id.HasValue ? "✏️ Editar Gestión" : "➕ Nueva Gestión")</h3>
+
+
+        @if (Id.HasValue && Form.TipoGestion is "Judicial" or "Extrajudicial")
+        {
+            <button type="button"
+                    title="Ir a Partes"
+                    class="btn btn-secondary"
+                    @onclick="Cancelar">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </button>
+        }
+
+    @if (Id.HasValue && Form.TipoGestion is "Judicial" or "Extrajudicial")
+    {
+        <button type="button"
+                title="Ir a Partes"
+                class="btn btn-outline-secondary"
+                @onclick="AbrirModalPartes">
+            <i class="bi bi-people"></i> Partes
+        </button>
+    }
+
+        @if (Id.HasValue)
+        {
+            @if (Form.TipoGestion == "Judicial" && _procesoJudicialId.HasValue)
+            {
+                <button type="button" class="btn btn-outline-secondary"
+                        title="Ir a movimientos"
+                        @onclick="IrAMovimientosDesdeGestion">
+                    <i class="bi bi-book-half"></i> Movimientos
+                </button>
+            }
+            else if (Form.TipoGestion == "Extrajudicial" && _procesoExtrajudicialId.HasValue)
+            {
+                <button type="button" class="btn btn-outline-secondary"
+                        title="Ir a movimientos"
+                        @onclick="IrAMovimientosDesdeGestion">
+                    <i class="bi bi-book-half"></i> Movimientos
+                </button>
+            }
+        }
+
+
+
+    </div>
+
+
+
+
+
+
+
+
+
+    <EditForm Model="@Form" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger"
+                           style="margin-top:10px; margin-bottom:10px" />
+
+        <!-- Responsable -->
+        <div class="mb-3">
+            <label>Responsable <span class="text-danger"> *</span></label>
+            <InputSelect class="form-select" @bind-Value="Form.ResponsableId">
+                <option value="">Seleccione...</option>
+                @foreach (var r in Responsables)
+                {
+                    <option value="@r.Id">@r.Nombre @r.Apellido</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.ResponsableId" class="text-danger" />
+        </div>
+
+        
+        <!-- Cliente -->
+        <div class="mb-3">
+            <label>Cliente (Persona) <span class="text-danger"> *</span></label>
+            <InputSelect class="form-select" TValue="int?" @bind-Value="PersonaSeleccionada">
+                
+                <option value="">Sin cliente</option>
+                @foreach (var persona in Personas)
+                {
+                    <option value="@persona.Id">
+                        @(!string.IsNullOrEmpty(persona.RazonSocial) ? persona.RazonSocial : $"{persona.Apellido}, {persona.Nombre}")
+                    </option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PersonaId" class="text-danger" />
+
+
+        </div>
+
+
+
+        <!-- Presupuesto -->
+        <div class="mb-3">
+            <label>Presupuesto</label>
+            <InputSelect class="form-select" @bind-Value="Form.PresupuestoId" disabled="@PresupuestosDeshabilitado">
+                <option value="">Sin presupuesto</option>
+                @foreach (var p in PresupuestosFiltrados)
+                {
+                    <option value="@p.Id">@p.Nombre - $@p.Total</option>
+                }
+            </InputSelect>
+
+        </div>
+
+
+
+        <!-- Grupo -->
+        <div class="mb-3">
+            <label>Grupo</label>
+            <InputSelect class="form-select" TValue="int?" @bind-Value="Form.GrupoId">
+                <option value="">Seleccione...</option>
+                @foreach (var g in Grupos)
+                {
+                    <option value="@g.Id">@g.Nombre</option>
+                }
+            </InputSelect>
+
+        </div>
+
+        
+        <!-- Tipo Gestión -->
+        <div class="mb-3">
+            <label>Tipo Gestión <span class="text-danger"> *</span></label>
+            <InputSelect class="form-select" @bind-Value="Form.TipoGestion">
+                <option value="">Seleccione...</option>
+                <option value="Judicial">Judicial</option>
+                <option value="Extrajudicial">Extrajudicial</option>
+            </InputSelect>
+            <ValidationMessage For="() => Form.TipoGestion" class="text-danger"/>
+        </div>
+
+        <!-- Datos Judicial -->
+        @if (Form.TipoGestion == "Judicial")
+        {
+            <h5>⚖️ Datos Proceso Judicial</h5>
+            <label>Carátula<span class="text-danger"> *</span></label>
+            <InputText class="form-control mb-2" placeholder="Carátula" @bind-Value="Form.PJ_Caratula" />
+            <ValidationMessage For="() => Form.PJ_Caratula" class="text-danger"/>
+
+            <label>Número Expte.</label>
+            <InputText class="form-control mb-2" placeholder="Número de Expediente" @bind-Value="Form.PJ_NumeroExpediente" />
+            <ValidationMessage For="() => Form.PJ_NumeroExpediente" class="text-danger" />
+
+            <label>Tipo de Proceso<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.PJ_TipoProcesoId">
+                <option value="">Seleccione...</option>
+                @foreach (var tp in TiposProceso)
+                {
+                    <option value="@tp.Id">@tp.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_TipoProcesoId" class="text-danger" />
+
+            <label>Domicilio Procesal<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.PJ_DomicilioConstituidoId">
+                <option value="">Seleccione...</option>
+                @foreach (var d in DomiciliosConstituidos)
+                {
+                    <option value="@d.Id">@d.Descripcion</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_DomicilioConstituidoId" class="text-danger" />
+
+            <label>Domicilio Electronico<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.PJ_DomicilioElectronicoId">
+                <option value="">Seleccione...</option>
+                @foreach (var d in DomiciliosElectronicos)
+                {
+                    <option value="@d.Id">@d.Descripcion</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_DomicilioElectronicoId" class="text-danger" />
+
+
+
+            <!-- Jurisdicción -->
+@*             <label class="form-label">Jurisdicción<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="JurisdiccionSeleccionada">
+                <option value="">Seleccione...</option>
+                @foreach (var j in Jurisdicciones)
+                {
+                    <option value="@j.Id">@j.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_JurisdiccionId" class="text-danger" /> *@
+
+            
+            <!-- Jurisdicción -->
+            <label class="form-label">Jurisdicción<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="JurisdiccionSeleccionada">
+                <option value="">Seleccione...</option>
+                @foreach (var j in Jurisdicciones)
+                {
+                    <option value="@j.Id">@j.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_JurisdiccionId" class="text-danger" />
+
+            <!-- Circunscripción -->
+@*             <label class="form-label">Circunscripción</label>
+            <InputSelect class="form-select mb-2" @bind-Value="CircunscripcionSeleccionada" disabled="@(!(Circunscripciones?.Any() ?? false))">
+                <option value="">Seleccione...</option>
+                @foreach (var c in Circunscripciones)
+                {
+                    <option value="@c.Id">@c.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_CircunscripcionId" class="text-danger" /> *@
+
+
+            
+            <!-- Circunscripción -->
+            <label class="form-label">Circunscripción</label>
+            <InputSelect class="form-select mb-2"
+                         @bind-Value="CircunscripcionSeleccionada"
+                         disabled="@(!(Circunscripciones?.Any() ?? false))">
+                <option value="">Seleccione...</option>
+                @foreach (var c in Circunscripciones)
+                {
+                    <option value="@c.Id">@c.Nombre</option>
+                }
+            </InputSelect>
+
+            <!-- Juzgado -->
+@*             <label class="form-label">Juzgado</label>
+            <InputSelect class="form-select mb-2" @bind-Value="JuzgadoSeleccionado" disabled="@(!(Juzgados?.Any() ?? false))">
+                <option value="">Seleccione...</option>
+                @foreach (var j in Juzgados)
+                {
+                    <option value="@j.Id">@j.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_JuzgadoId" class="text-danger" /> *@
+
+
+            
+            <!-- Juzgado -->
+            <label class="form-label">Juzgado</label>
+            <InputSelect class="form-select mb-2"
+                         @bind-Value="JuzgadoSeleccionado"
+                         disabled="@(!(Juzgados?.Any() ?? false))">
+                <option value="">Seleccione...</option>
+                @foreach (var j in Juzgados)
+                {
+                    <option value="@j.Id">@j.Nombre</option>
+                }
+            </InputSelect>
+
+            <!-- Secretaría -->
+            <label class="form-label">Secretaría</label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.PJ_SecretariaId" disabled="@(!(Secretarias?.Any() ?? false))">
+                <option value="">Seleccione...</option>
+                @foreach (var s in Secretarias)
+                {
+                    <option value="@s.Id">@s.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_SecretariaId" class="text-danger" />
+
+
+            <label>Estado<span class="text-danger"> *</span></label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.PJ_EstadoId">
+                <option value="">Seleccione...</option>
+                @foreach (var e in EstadosJudiciales)
+                {
+                    <option value="@e.Id">@e.Nombre</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => Form.PJ_EstadoId" class="text-danger" />
+
+                //Nuevos datos // Solo si proceso judicial != null - solo al editar
+
+            if (_procesoJudicialId != null) {
+
+                if (Form.PJ_EsApremio)
+                {
+                    <label>N° Certificado </label>
+                    <InputText class="form-control mb-2" placeholder="N° Certificado" @bind-Value="Form.PJ_NumeroCertificadoDeuda" />
+
+
+                    <label>Fecha Emisión Certificado </label>
+                    <InputDate @bind-Value="Form.PJ_FechaEmisionCertificado"
+                    TValue="DateTime ?"
+                    class="form-control mb-2" />
+                }
+
+            <label>Monto Demanda </label>
+            <InputNumber @bind-Value="Form.PJ_MontoDemanda"
+                             TValue="decimal?"
+                             class="form-control mb-2"
+                             placeholder="Monto Demanda" />
+
+            <label>Fecha Liquidación</label>
+            <InputDate @bind-Value="Form.PJ_FechaLiquidacion"
+                       TValue="DateTime ?"
+                       class="form-control mb-2" />
+            
+            }
+
+        }
+        else if (Form.TipoGestion == "Extrajudicial")
+        {
+            <h5>📄 Datos Proceso Extrajudicial</h5>
+            <label>Tipo<span class="text-danger"> *</span></label>
+            <InputText class="form-control mb-2" placeholder="Tipo" @bind-Value="Form.EX_Tipo" />
+            <ValidationMessage For="() => Form.EX_Tipo" class="text-danger" />
+
+            <label>Materia<span class="text-danger"> *</span></label>
+            <InputText class="form-control mb-2" placeholder="Materia" @bind-Value="Form.EX_Materia" />
+            <ValidationMessage For="() => Form.EX_Materia" class="text-danger" />
+
+            <label>Estado</label>
+            <InputSelect class="form-select mb-2" @bind-Value="Form.EX_EstadoId">
+                <option value="">Seleccione...</option>
+                @foreach (var e in EstadosExtrajudiciales)
+                {
+                    <option value="@e.Id">@e.Nombre</option>
+                }
+            </InputSelect>
+            
+        }
+        <div style="margin-top:20px">
+        <button type="submit" class="btn btn-primary me-2"><i class="bi bi-floppy2"></i> Guardar</button>
+        <button type="button" class="btn btn-secondary me-2" @onclick="Cancelar"><i class="bi bi-x-circle"></i> Cancelar</button>
+        </div>
+    </EditForm>
+
+
+
+    @if (MostrarModalPartes)
+    {
+        <PartesModal ProcesoJudicialId="_procesoJudicialId"
+                     ProcesoExtrajudicialId="_procesoExtrajudicialId"
+                     TipoGestion="@Form.TipoGestion"
+                     OnClose="CerrarModalPartes" />
+    }
+</div>

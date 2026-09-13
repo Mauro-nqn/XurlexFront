@@ -1,0 +1,39 @@
+﻿@attribute [Authorize]
+
+@page "/tipo-agendamiento"
+@inherits TipoAgendamientoBase
+@layout AdminLayout
+
+<div class="container mt-4 tipo-agendamiento-container">
+    <h3>📅 Tipos de Agendamiento</h3>
+
+    <button class="btn btn-primary mb-3" @onclick="Nuevo">➕ Nuevo Tipo</button>
+
+    <table class="table table-striped table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Tipos.Count == 0)
+            {
+                <tr><td colspan="2" class="text-center text-muted">No hay tipos registrados.</td></tr>
+            }
+            else
+            {
+                @foreach (var tipo in Tipos)
+                {
+                    <tr>
+                        <td>@tipo.Nombre</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(tipo.Id)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(tipo.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

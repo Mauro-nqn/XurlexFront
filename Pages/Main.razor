@@ -1,0 +1,160 @@
+﻿@attribute [Authorize]
+
+@page "/main"
+@layout AdminLayout
+
+
+<!-- Contenedor principal -->
+<!-- Después -->
+<div class="main-container d-flex flex-column align-items-center
+            justify-content-center justify-content-lg-start
+            pt-5 pt-md-4 pt-lg-2">
+    <!-- Fondo -->
+    <div class="background"></div>
+
+    <!-- Contenido -->
+    <div class="content card shadow-lg p-4 rounded text-center container mt-lg-n2"
+         style="--bs-card-bg: rgba(255,255,255,.75); --bs-card-border-color: transparent;">
+    
+        <h4 class="mb-4 fw-semibold">@FechaHora</h4>
+
+        <!-- Botones para abrir/cerrar modal de Agenda -->
+        <div class="mb-3 d-flex gap-2 justify-content-center">
+            <button class="btn btn-primary" @onclick="OpenAgendaAsync">Abrir Agenda</button>
+            @* <button class="btn btn-outline-secondary" @onclick="CloseAgendaAsync">Cerrar Agenda</button> *@
+        </div>
+       
+
+
+        <!-- Grid de accesos -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+            <div class="col" @onclick="@(() => NavegarA("/usuarios"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">👤</div>
+                        <h6 class="card-title mt-2">Usuarios</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col" @onclick="@(() => NavegarA("/escritos"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">📂</div>
+                        <h6 class="card-title mt-2">Escritos</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col" @onclick="@(() => NavegarA("/editor"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">📝</div>
+                        <h6 class="card-title mt-2">Editor</h6>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col" @onclick="@(() => NavegarA("/personas"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">👥</div>
+                        <h6 class="card-title mt-2">Personas</h6>
+                    </div>
+                </div>
+            </div>
+@*             <div class="col" @onclick="@(() => NavegarA("/gestiones"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">⚙️</div>
+                        <h6 class="card-title mt-2">Gestiones</h6>
+                    </div>
+                </div>
+            </div> *@
+            <div class="col" @onclick="@(() => NavegarA("/agendas"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">📅</div>
+                        <h6 class="card-title mt-2">Agenda</h6>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="col" @onclick="@(() => NavegarA("/gestiones"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">🗄️</div>
+                        <h6 class="card-title mt-2">Gestiones</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col" @onclick="@(() => NavegarA("/domicilios"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">📍</div>
+                        <h6 class="card-title mt-2">Domicilios</h6>
+                    </div>
+                </div>
+            </div>
+
+            
+
+            <div class="col" @onclick="@(() => NavegarA("/config/estudio"))">
+                <div class="card h-100 btn-card">
+                    <div class="card-body d-flex flex-column align-items-center">
+                        <div class="icon display-4">⚙️</div>
+                        <h6 class="card-title mt-2">Config Estudio</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Agenda -->
+
+<div class="modal fade" id="modalAgenda" tabindex="-1" aria-labelledby="agendaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header agenda-header">
+                <h5 class="modal-title" id="agendaModalLabel">📅 Agenda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="calendar-wrapper">
+                    <AgendaCalendar />
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+@* <div class="modal fade" id="modalAgenda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+         style="--bs-modal-width: 960px;">
+        <!-- 👈 elegí el ancho -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📅 Agenda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Limita el ancho interno del calendario y centrado, también sin CSS extra -->
+                <div class="mx-auto" style="max-width: 900px;">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+ *@
+
+
+
+

@@ -1,0 +1,82 @@
+﻿/* Contenedor principal */
+.distribucion-honorarios {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 20px 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+    /* Título */
+    .distribucion-honorarios h3 {
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    /* Botón "Nueva Distribución" */
+    .distribucion-honorarios .btn-primary {
+        font-weight: bold;
+        padding: 8px 16px;
+        border-radius: 6px;
+    }
+
+    /* Tabla */
+    .distribucion-honorarios table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .distribucion-honorarios th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .distribucion-honorarios td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 0.95rem;
+    }
+
+    /* Botones de acciones */
+    .distribucion-honorarios .btn-sm {
+        font-size: 0.85rem;
+        padding: 4px 10px;
+        border-radius: 4px;
+    }
+
+    .distribucion-honorarios .btn-info {
+        background-color: #3498db;
+        border: none;
+        color: #fff;
+    }
+
+        .distribucion-honorarios .btn-info:hover {
+            background-color: #2980b9;
+        }
+
+    .distribucion-honorarios .btn-danger {
+        background-color: #e74c3c;
+        border: none;
+    }
+
+        .distribucion-honorarios .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+    /* Fila vacía (sin registros) */
+    .distribucion-honorarios td.text-center {
+        font-style: italic;
+        color: #6c757d;
+        padding: 20px;
+        background: #fafafa;
+        border-radius: 6px;
+    }

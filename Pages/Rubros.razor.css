@@ -1,0 +1,30 @@
+﻿/* wwwroot/css/finanzas-pages.css */
+.list-page-container h3,
+.form-page-container h3 {
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.form-page-container label {
+    font-weight: 500;
+}
+
+.form-page-container .form-control:focus,
+.form-page-container .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 4px rgba(13,110,253,.4);
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.text-muted {
+    font-style: italic;
+}
+
+.validation-summary-errors ul {
+    margin: 10px 0;
+    color: #dc3545;
+    list-style: none;
+}

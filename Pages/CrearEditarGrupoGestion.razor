@@ -1,0 +1,27 @@
+﻿@attribute [Authorize]
+
+@page "/gruposgestion/crear-editar/{Id:int?}"
+@inherits CrearEditarGrupoGestionBase
+@layout AdminLayout
+
+<div class="container mt-4 grupo-gestion-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Grupo de Gestión" : "➕ Nuevo Grupo de Gestión")</h3>
+
+    <EditForm Model="@Grupo" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" @bind-Value="Grupo.Nombre" />
+        </div>
+
+        <button class="btn btn-primary me-2" type="submit">💾 Guardar</button>
+        @if (Id.HasValue)
+        {
+            <button class="btn btn-danger" type="button" @onclick="Eliminar">🗑️ Eliminar</button>
+        }
+        <button class="btn btn-secondary ms-2" type="button" @onclick="Cancelar">Cancelar</button>
+    </EditForm>
+</div>
+

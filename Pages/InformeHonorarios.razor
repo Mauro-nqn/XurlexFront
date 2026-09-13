@@ -1,0 +1,333 @@
+﻿@attribute [Authorize]
+
+@page "/informes/honorarios"
+@inherits InformeHonorariosBase
+@layout AdminLayout
+
+@inject IJSRuntime JS
+
+@* <div class="container-xxl mt-4 honorarios-container">
+<h3>Informe de Honorarios</h3>
+
+    <div class="card mb-3">
+        <div class="card-body">
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label>Desde</label>
+        <InputDate @bind-Value="Filtro.FechaDesde" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label>Hasta</label>
+        <InputDate @bind-Value="Filtro.FechaHasta" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label>Incluir ingresos sin imputar</label><br />
+        <InputCheckbox @bind-Value="Filtro.IncluirIngresosSinImputar" />
+    </div>
+    <div class="col-md-3">
+        <label>&nbsp;</label><br />
+        <button class="btn btn-primary" @onclick="Buscar">Buscar</button>
+    </div>
+</div>
+
+</div>
+
+</div>
+
+@if (Lineas is null)
+{
+    <p>Complete los filtros y presione Buscar.</p>
+}
+else if (!Lineas.Any())
+{
+    <p>No se encontraron resultados.</p>
+}
+else
+{
+    <h5>Resumen por profesional</h5>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Profesional</th>
+                <th class="text-end">Total Honorarios</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var grupo in Lineas
+                    .Where(l => !l.EsIngresoSinImputar && !l.EsSinDistribucion && l.AbogadoId != null)
+                    .GroupBy(l => l.AbogadoNombre))
+            {
+                <tr>
+                    <td>@grupo.Key</td>
+                    <td class="text-end">@grupo.Sum(l => l.ImporteParaAbogado).ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h5>Detalle</h5>
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Crédito</th>
+                <th>Recibo</th>
+                <th>Cliente</th>
+                <th>Presupuesto</th>
+                <th>Profesional</th>
+                <th class="text-end">Crédito</th>
+                <th class="text-end">Imputado</th>
+                <th class="text-end">% Prof.</th>
+                <th class="text-end">Honorarios Prof.</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var l in Lineas.OrderBy(l => l.FechaCredito).ThenBy(l => l.MovimientoCreditoId))
+            {
+                <tr class="@(l.EsIngresoSinImputar ? "table-warning" : l.EsSinDistribucion ? "table-danger" : "")">
+                    <td>@l.FechaCredito.ToShortDateString()</td>
+                    <td>@l.MovimientoCreditoId</td>
+                    <td>@(l.ReciboId?.ToString() ?? "—")</td>
+                    <td>@l.ClienteNombre</td>
+                    <td>@(l.PresupuestoId?.ToString() ?? "—")</td>
+                    <td>@(l.AbogadoNombre ?? (l.EsIngresoSinImputar ? "Sin imputar" : l.EsSinDistribucion ? "Sin distribución" : "—"))</td>
+                    <td class="text-end">@l.ImporteCredito.ToString("N2")</td>
+                    <td class="text-end">@l.ImporteImputado.ToString("N2")</td>
+                    <td class="text-end">@((l.PorcentajeAbogado ?? 0).ToString("N2"))</td>
+                    <td class="text-end">@l.ImporteParaAbogado.ToString("N2")</td>
+                    <td>
+                        @(l.EsIngresoSinImputar ? "Ingreso sin imputar" :
+                                        l.EsSinDistribucion ? "Sin distribución de honorarios" : "")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+</div> *@
+
+
+
+@* 
+@page "/informes/honorarios"
+
+@inject InformeHonorariosService InformeService
+@inject UsuarioService UsuarioService *@
+
+<div class="container-xxl mt-4 honorarios-container">
+
+
+
+<h3>Informe de Honorarios</h3>
+
+ <div class="card mb-3">
+        <div class="card-body">
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label>Desde</label>
+        <InputDate @bind-Value="Filtro.FechaDesde" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label>Hasta</label>
+        <InputDate @bind-Value="Filtro.FechaHasta" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label>Profesional</label>
+        <InputSelect @bind-Value="UsuarioSeleccionadoId" class="form-control">
+            <option value="">-- Todos --</option>
+            @foreach (var ab in Abogados)
+            {
+                <option value="@ab.Id">@ab.Nombre</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="col-md-3">
+        <label>Incluir ingresos sin imputar</label><br />
+        <InputCheckbox @bind-Value="Filtro.IncluirIngresosSinImputar" />
+    </div>
+</div>
+
+        </div>
+    </div>
+
+<div class="row mb-3">
+    <div class="col-md-12 text-end">
+        <button class="btn btn-primary" @onclick="Buscar">Buscar</button>
+    </div>
+</div>
+
+@if (Lineas is null)
+{
+    <p>Complete los filtros y presione Buscar.</p>
+}
+else if (!Lineas.Any())
+{
+    <p>No se encontraron resultados.</p>
+}
+else
+{
+    <div id="panelInforme">
+
+    <!-- RESUMEN GLOBAL POR PROFESIONAL -->
+    <h5>Resumen por profesional</h5>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Profesional</th>
+                <th class="text-end">Total Honorarios</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var grupo in Lineas
+                    .Where(l => !l.EsIngresoSinImputar && !l.EsSinDistribucion && l.AbogadoId != null)
+                    .GroupBy(l => l.AbogadoNombre))
+            {
+                <tr>
+                    <td>@grupo.Key</td>
+                    <td class="text-end">@grupo.Sum(l => l.ImporteParaAbogado).ToString("N2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- DETALLE POR CAUSA (PRESUPUESTO) Y PROFESIONAL -->
+    <h5>Detalle por causa y profesional</h5>
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Profesional</th>
+                <th>Presupuesto / Causa</th>
+                <th class="text-end">Total Honorarios</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var grupo in Lineas
+                    .Where(l => !l.EsIngresoSinImputar && !l.EsSinDistribucion && l.AbogadoId != null && l.PresupuestoId != null)
+                    .GroupBy(l => new { l.AbogadoId, l.AbogadoNombre, l.PresupuestoId, l.NombrePresupuesto }))
+            {
+                <tr>
+                    <td>@grupo.Key.AbogadoNombre</td>
+                    <td>
+                        @grupo.Key.PresupuestoId - @grupo.Key.NombrePresupuesto
+                    </td>
+                    <td class="text-end">
+                        @grupo.Sum(l => l.ImporteParaAbogado).ToString("N2")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- DETALLE FINO (opcional, como ya lo tenías) -->
+    <h5>Detalle de imputaciones</h5>
+    <table class="table table-sm table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Crédito</th>
+                <th>Recibo</th>
+                <th>Cliente</th>
+                <th>Presupuesto</th>
+                <th>Profesional</th>
+                <th class="text-end">Crédito</th>
+                <th class="text-end">Imputado</th>
+                <th class="text-end">% Prof.</th>
+                <th class="text-end">Honorarios Prof.</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var l in Lineas.OrderBy(l => l.FechaCredito).ThenBy(l => l.MovimientoCreditoId))
+            {
+                <tr class="@(l.EsIngresoSinImputar ? "table-warning" : l.EsSinDistribucion ? "table-danger" : "")">
+                    <td>@l.FechaCredito.ToShortDateString()</td>
+                    <td>@l.MovimientoCreditoId</td>
+                    <td>@(l.ReciboId?.ToString() ?? "—")</td>
+                    <td>@l.ClienteNombre</td>
+                    <td>@(l.PresupuestoId?.ToString() ?? "—") @l.NombrePresupuesto</td>
+                    <td>@(l.AbogadoNombre ?? (l.EsIngresoSinImputar ? "Sin imputar" : l.EsSinDistribucion ? "Sin distribución" : "—"))</td>
+                    <td class="text-end">@l.ImporteCredito.ToString("N2")</td>
+                    <td class="text-end">@l.ImporteImputado.ToString("N2")</td>
+                    <td class="text-end">@((l.PorcentajeAbogado ?? 0).ToString("N2"))</td>
+                    <td class="text-end">@l.ImporteParaAbogado.ToString("N2")</td>
+                    <td>
+                        @(l.EsIngresoSinImputar ? "Ingreso sin imputar" :
+                                        l.EsSinDistribucion ? "Sin distribución de honorarios" : "")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+        </div>
+}
+
+
+
+    <div class="mb-3">
+        <button class="btn btn-sm btn-outline-success me-2" @onclick="ExportarExcel">
+            Exportar Excel
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary me-2" @onclick="ImprimirPdf">
+            Imprimir / PDF
+        </button>
+
+        <button class="btn btn-sm btn-info" @onclick="MostrarDashboard">
+            Dashboard mensual
+        </button>
+    </div>
+
+    @if (VerDashboard && DashboardMensual.Any())
+    {
+        <h4>Dashboard mensual de honorarios</h4>
+
+        <h5>Totales mensuales (todos los profesionales)</h5>
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th class="text-end">Total honorarios</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in DashboardMensual)
+                {
+                    <tr>
+                        <td>@m.MesTexto</td>
+                        <td class="text-end">@m.TotalHonorarios.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h5>Detalle mensual por profesional</h5>
+        @foreach (var grupoMes in DashboardMensualProfesional.GroupBy(x => new { x.Anio, x.Mes }))
+        {
+            var any = grupoMes.First();
+            <h6>@any.MesTexto</h6>
+            <table class="table table-sm table-bordered">
+                <thead>
+                    <tr>
+                        <th>Profesional</th>
+                        <th class="text-end">Honorarios</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in grupoMes)
+                    {
+                        <tr>
+                            <td>@row.AbogadoNombre</td>
+                            <td class="text-end">@row.TotalHonorarios.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+
+
+</div>

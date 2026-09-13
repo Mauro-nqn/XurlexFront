@@ -1,0 +1,48 @@
+﻿@attribute [Authorize]
+
+@page "/caracteresintervencion"
+@inherits CaracterIntervencionBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>🧾 Caracteres de Intervención</h3>
+    <PermisoView Permiso="@Permisos.CaracteresIntervencion.Crear">
+    <button class="btn btn-success mb-3" @onclick="Nuevo">➕ Nuevo</button>
+    </PermisoView>
+    @if (Caracteres == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Caracteres.Any())
+    {
+        <p>No hay caracteres registrados.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Caracteres)
+                {
+                    <tr>
+                        <td>@c.Nombre</td>
+                        <td>
+                            <PermisoView Permiso="@Permisos.CaracteresIntervencion.Editar">
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(c.Id)">✏️ Editar</button>
+                            </PermisoView>
+
+                            <PermisoView Permiso="@Permisos.CaracteresIntervencion.Editar">
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(c.Id)">🗑️ Eliminar</button>
+                            </PermisoView>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

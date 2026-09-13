@@ -1,0 +1,57 @@
+﻿@attribute [Authorize]
+
+@page "/circunscripciones/crear-editar/{Id:int?}"
+@inherits CrearEditarCircunscripcionBase
+@layout AdminLayout
+@using IurixBlazor.Shared.Enums;
+
+<div class="container mt-4 circunscripcion-form">
+    <h3>@(Id.HasValue ? "✏️ Editar Circunscripción" : "➕ Nueva Circunscripción")</h3>
+
+    <EditForm Model="@Circunscripcion" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText class="form-control" @bind-Value="Circunscripcion.Nombre" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Jurisdicción</label>
+            <InputSelect class="form-select" @bind-Value="Circunscripcion.JurisdiccionId">
+                <option value="">Seleccione una jurisdicción</option>
+                @if (Jurisdicciones != null)
+                {
+                    @foreach (var j in Jurisdicciones)
+                    {
+                        <option value="@j.Id">@j.Nombre</option>
+                    }
+                }
+            </InputSelect>
+        </div>
+
+        @if (EsNeuquen)
+        {
+            <div class="mb-3">
+                <label class="form-label">Ciudad Dextra</label>
+                <InputSelect class="form-select" @bind-Value="Circunscripcion.CiudadDextra">
+                    <option value="">Seleccione</option>
+
+                    @foreach (var e in Enum.GetValues<CiudadDextra>())
+                    {
+                        <option value="@e">@e.ToExactString()</option>
+                    }
+            
+                </InputSelect>
+            </div>
+        }
+
+        <button class="btn btn-primary me-2" type="submit">💾 Guardar</button>
+        @if (Id.HasValue)
+        {
+            <button class="btn btn-danger" type="button" @onclick="Eliminar">🗑️ Eliminar</button>
+        }
+        <button class="btn btn-secondary ms-2" type="button" @onclick="Cancelar">Cancelar</button>
+    </EditForm>
+</div>

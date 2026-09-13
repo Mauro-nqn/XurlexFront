@@ -1,0 +1,44 @@
+﻿@attribute [Authorize]
+
+@page "/circunscripciones"
+@inherits CircunscripcionBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>📍 Circunscripciones</h3>
+    <button class="btn btn-success mb-3" @onclick="Nueva">➕ Nueva Circunscripción</button>
+
+    @if (Circunscripciones == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Circunscripciones.Any())
+    {
+        <p>No hay circunscripciones registradas.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Jurisdicción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Circunscripciones)
+                {
+                    <tr>
+                        <td>@c.Nombre</td>
+                        <td>@c.JurisdiccionNombre</td> @*ver esta propiedad no la tenemos*@
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(c.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(c.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

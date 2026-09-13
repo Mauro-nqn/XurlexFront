@@ -1,0 +1,41 @@
+﻿@attribute [Authorize]
+
+@page "/medios-pago"
+@inherits MediosPagoBase
+@layout AdminLayout
+
+<div class="container mt-4 list-page-container">
+    <h3>💳 Medios de Pago</h3>
+
+    <button class="btn btn-primary mb-3" @onclick="Nuevo">➕ Nuevo Medio</button>
+
+    <table class="table table-striped table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Activo</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Medios.Count == 0)
+            {
+                <tr><td colspan="3" class="text-center text-muted">No hay medios de pago.</td></tr>
+            }
+            else
+            {
+                @foreach (var m in Medios)
+                {
+                    <tr>
+                        <td>@m.Nombre</td>
+                        <td>@(m.Activo == true ? "Sí" : "No")</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(m.Id)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(m.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

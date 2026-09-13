@@ -1,0 +1,279 @@
+﻿@attribute [Authorize]
+
+@inherits VerMovimientoModalBase
+
+
+@if (Cargando)
+{
+    <div class="text-center p-4">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div>
+        <div class="mt-2">Cargando movimientos...</div>
+    </div>
+}
+
+<div class="modal fade" id="@ModalId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex flex-column">
+                    <h5 class="modal-title mb-0">📄 Ver Movimiento</h5>
+                    @if (Movimiento is not null)
+                    {
+                        <small class="text-muted">
+                            <strong>@Movimiento.Titulo</strong>
+                            <span class="ms-2">• @Movimiento.Fecha.ToString("dd/MM/yyyy")</span>
+                            @if (!string.IsNullOrWhiteSpace(NombreProceso))
+                            {
+                                <span class="ms-2">• Proceso: @NombreProceso</span>
+                            }
+                        </small>
+                    }
+                </div>
+                <button type="button" class="btn-close" @onclick="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                @if (Cargando)
+                {
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border me-2" role="status"></div>
+                        <span>Cargando movimiento…</span>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(Error))
+                {
+                    <div class="alert alert-danger">
+                        ❌ @Error
+                    </div>
+                }
+                else if (Movimiento is not null)
+                {
+                    <!-- Datos principales -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            @* <label class="form-label">Título</label> *@
+                            <div class="form-control-plaintext fw-semibold"> Título: @Movimiento.Titulo</div>
+                        </div>
+                        <div class="col-md-3">
+                            @* <label class="form-label">Fecha</label> *@
+                            <div class="form-control-plaintext"> Fecha: @Movimiento.Fecha.ToString("dd/MM/yyyy")</div>
+                        </div>
+@*                         <div class="col-md-3">
+                            <label class="form-label">Usuario</label>
+                            <div class="form-control-plaintext">@Movimiento.UsuarioNombre</div>
+                        </div> *@
+                        <div class="col-12">
+                            @* <label class="form-label">Detalle</label> *@
+                            <div >
+                                <strong style="margin-left:5px">Detalle: </strong> <p class="border rounded p-2 bg-light" style="min-height:48px">@(!string.IsNullOrWhiteSpace(Movimiento.Detalle) ? Movimiento.Detalle : "<sin detalle>")</p>
+                            </div>
+                        </div>
+
+                        <!-- Escrito personalizado -->
+                        @if (!string.IsNullOrWhiteSpace(Movimiento.EscritoPersonalizadoHtml) ||
+                                            !string.IsNullOrWhiteSpace(Movimiento.EscritoPersonalizadoTitulo))
+                        {
+                            <div class="col-12">
+                                <h6 class="mb-1">📝 Escrito</h6>
+                                @if (!string.IsNullOrWhiteSpace(Movimiento.EscritoPersonalizadoTitulo))
+                                {
+                                    <div><strong>Título: </strong>@Movimiento.EscritoPersonalizadoTitulo</div>
+                                }
+                                <div class="mt-1">
+                                    <small class="text-muted">Contenido (resumen):</small>
+                                    <div class="border p-2 bg-light rounded" style="max-height: 100px; overflow: hidden;">
+                                        @EscritoResumen
+                                    </div>
+                                </div>
+
+                                <details class="mt-2">
+                                    <summary class="text-primary" style="cursor:pointer">Ver contenido completo</summary>
+                                    <div class="border rounded p-2 mt-2" style="max-height: 400px; overflow:auto;">
+                                        @* Render seguro del HTML *@
+                                        @((MarkupString)(Movimiento.EscritoPersonalizadoHtml ?? string.Empty))
+                                    </div>
+                                </details>
+                            </div>
+                        }
+
+                        <!-- Agenda -->
+                        <div class="col-12">
+                            <h6 class="mb-1">📅 Agenda</h6>
+                            @if (Agenda is null)
+                            {
+                                <div class="text-muted">Este movimiento no tiene agenda vinculada.</div>
+                            }
+                            else
+                            {
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Tipo</label>
+                                        <div class="form-control-plaintext">@Agenda.TipoAgendamientoNombre</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Inicio (AR)</label>
+                                        <div class="form-control-plaintext">@Agenda.FechaAgendada.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Fin (AR)</label>
+                                        <div class="form-control-plaintext">
+                                            @(Agenda.FechaFin.HasValue? Agenda.FechaFin.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cliente</label>
+                                        <div class="form-control-plaintext">@(!string.IsNullOrWhiteSpace(Agenda.PersonaNombre) ? Agenda.PersonaNombre : "—")</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Observaciones</label>
+                                        <div class="form-control-plaintext">@(!string.IsNullOrWhiteSpace(Agenda.Observaciones) ? Agenda.Observaciones : "—")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Archivos -->
+                        <div class="col-12">
+                            <h6 class="mb-2">📎 Archivos adjuntos</h6>
+                            @if (Archivos.Count == 0)
+                            {
+                                <div class="text-muted">Sin archivos.</div>
+                            }
+                            else
+                            {
+                                @* <div class="list-group">
+                                    @foreach (var a in Archivos)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div class="me-2">
+                                                <div class="fw-semibold">@a.Nombre</div>
+                                                <small class="text-muted">@a.Extension • @a.TipoMime</small>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-secondary"
+                                                        @onclick="() => VerArchivoEnVisorAsync(a)">
+                                                    👁️ Ver
+                                                </button>
+                                                
+                                                <a class="btn btn-sm btn-outline-primary"
+                                                   href="@($"api/archivomovimiento/{a.Id}/contenido")"
+                                                   download="@a.Nombre">
+                                                    ⬇️ Descargar
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div> *@
+
+                                <div class="list-group">
+                                    @foreach (var a in Archivos)
+                                    {
+                                        <div class="list-group-item d-flex align-items-center gap-2">
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="fw-semibold text-break" title="@a.Nombre">@a.Nombre</div>
+                                                <small class="text-muted text-break">
+                                                    @a.Extension • @a.TipoMime
+                                                </small>
+                                            </div>
+
+                                            <div class="d-flex gap-2 flex-shrink-0">
+                                                <button class="btn btn-sm btn-outline-secondary"
+                                                        @onclick="() => VerArchivoEnVisorAsync(a)">
+                                                    <i class="bi bi-eye"></i> <span class="d-none d-sm-inline">Ver</span>
+                                                </button>
+
+                                                <a class="btn btn-sm btn-outline-primary"
+                                                   href="@($"api/archivomovimiento/{a.Id}/contenido")"
+                                                   download="@a.Nombre">
+                                                    <i class="bi bi-download"></i> <span class="d-none d-sm-inline">Descargar</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                   @*  @if (MostrarPreview && ArchivoPreview is not null)
+                    {
+                        <hr class="my-3" />
+                        <h6 class="mb-2">👁️ Vista previa: @ArchivoPreview.Nombre</h6>
+                        <div class="border rounded p-2">
+                            @if (ArchivoPreview.TipoMime == "application/pdf")
+                            {
+                                <iframe src="@ArchivoPreview.DataUrlBase64" width="100%" height="500"></iframe>
+                            }
+                            else if (ArchivoPreview.TipoMime?.StartsWith("image/") == true)
+                            {
+                                <img src="@ArchivoPreview.DataUrlBase64" class="img-fluid" />
+                            }
+                            else
+                            {
+                                <div class="text-muted">No hay vista previa para este tipo de archivo.</div>
+                            }
+                        </div>
+                    } *@
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Cerrar">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* ---------------- MODAL VISOR (nuevo) ---------------- *@
+<div class="modal fade" id="@VisorId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    <i class="bi bi-eye me-2"></i>Vista previa — @ArchivoSeleccionadoParaVer?.Nombre
+                </h6>
+                <button type="button" class="btn-close" @onclick="CerrarVisorAsync" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (ArchivoSeleccionadoParaVer is null)
+                {
+                    <div class="text-muted">Sin archivo.</div>
+                }
+                else if (!ArchivoSeleccionadoParaVer.ContenidoCargado)
+                {
+                    <div class="text-center p-4">
+                        <div class="spinner-border" role="status"></div>
+                        <div class="mt-2">Cargando archivo...</div>
+                    </div>
+                }
+                else
+                {
+                    @if (EsImagen(ArchivoSeleccionadoParaVer.TipoMime))
+                    {
+                        <img class="img-fluid" src="@ArchivoSeleccionadoParaVer.DataUrlBase64" alt="preview" />
+                    }
+                    else if (EsPdf(ArchivoSeleccionadoParaVer.TipoMime))
+                    {
+                        <iframe src="@ArchivoSeleccionadoParaVer.DataUrlBase64" style="width:100%;height:75vh;border:none;"></iframe>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            No hay vista previa para este tipo (<code>@ArchivoSeleccionadoParaVer.TipoMime</code>). Usá <strong>Descargar</strong>.
+                        </div>
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                @if (ArchivoSeleccionadoParaVer is not null)
+                {
+                    <a class="btn btn-primary" href="@ObtenerUrlDescarga(ArchivoSeleccionadoParaVer)" download="@ArchivoSeleccionadoParaVer.Nombre">
+                        <i class="bi bi-download me-1"></i>Descargar
+                    </a>
+                }
+                <button class="btn btn-secondary" @onclick="CerrarVisorAsync">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

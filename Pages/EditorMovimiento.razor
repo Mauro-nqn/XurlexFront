@@ -1,0 +1,1127 @@
+﻿@attribute [Authorize]
+
+@page "/editor-movimiento"
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject EscritoService EscritoService
+@inject MovimientoService MovimientoService
+@inject EditorInfoService EditorInfoService
+@inject TipoProcesoService TipoProcesoService
+@layout AdminLayout
+
+@using IurixBlazor.Shared.Services
+@using IurixBlazor.Pages
+@using System.Text
+
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
+
+<NavigationLock OnBeforeInternalNavigation="ConfirmarSalida" />
+
+<div class="container mt-4">
+    <h4>✍️ Editor de Movimiento</h4>
+    <h5>Datos del Proceso: @DatosProcesoTexto </h5>
+
+    <div class="d-flex mb-3">
+        <input class="form-control me-2" placeholder="🔍 Buscar escrito..." @bind="FiltroEscrito" @oninput="BuscarEscritos" />
+        <select class="form-select" @onchange="OnSeleccionarEscrito">
+            <option value="">📄 Seleccionar escrito guardado</option>
+            @foreach (var escrito in Escritos)
+            {
+                <option value="@escrito.Id">@escrito.Titulo</option>
+            }
+        </select>
+    </div>
+
+    <input class="form-control mb-2" placeholder="Título (opcional para guardar como escrito)" @bind="Titulo" />
+
+    <textarea id="editor1" style="height: 400px;"></textarea>
+
+    <div class="mt-3">
+        <button class="btn btn-success me-2" @onclick="Guardar"><i class="bi bi-floppy2"></i> Guardar</button>
+        <button class="btn btn-outline-primary me-2" @onclick="GuardarComoEscritoGlobal"><i class="bi bi-folder2"></i> Guardar modelo</button>
+        @if (MostrarBotonDemanda)
+        {
+            <button class="btn btn-dark me-2" @onclick="AbrirModalDemanda">
+                ⚡ Generar demanda ejecutiva (IA)
+            </button>
+        }
+
+
+        <IaDemandaModal @ref="IaModal" OnDemandaGenerada="InsertarDemandaEnEditor" />
+
+        <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+
+        @if (_hayBorrador)
+        {
+            <button class="btn btn-outline-danger me-2"
+                    @onclick="DescartarBorrador">
+                🧹 Descartar borrador
+            </button>
+        }
+
+    </div>
+
+</div>
+
+@code {
+    protected string? contenidoInicial;
+    protected string Titulo = "";
+    protected string? FiltroEscrito;
+    protected List<EscritoDto> Escritos = new();
+    protected int? EscritoSeleccionadoId;
+    protected string? DatosProcesoTexto;
+
+    IaDemandaModal IaModal;
+
+
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? Id { get; set; }
+
+    private MovimientoDto? movimiento;
+
+    // private string? base64;
+
+    private bool editorInicializado = false;
+
+    // protected int? TipoProcesoId { get; set; }      // el que viene del backend/localStorage
+    // protected List<TipoProcesoDto> TiposProceso { get; set; } = new();
+    // private int? _apremioTipoProcesoId;
+    // protected bool EsApremio { get; set; }
+
+    protected bool MostrarBotonDemanda { get; set; } = false;
+    protected bool EsApremio { get; set; }
+
+
+    private bool _tieneCambios = false;
+    // private bool _restoring = false;
+    private DotNetObjectReference<EditorMovimiento>? _dotNetRef;
+
+
+    private string? _gestionIdStr;
+
+    private string DraftKey =>
+        $"draft_escrito_g{(_gestionIdStr ?? "0")}_m{(Id?.ToString() ?? "nuevo")}";
+
+    private string DraftTituloKey => DraftKey + "_titulo";
+
+
+
+
+
+
+    private bool _hayBorrador = false;
+private bool _borradorRestaurado = false;
+
+
+
+    private bool _silenciarCambios = false;
+
+    private bool _cargandoEditor = true;
+
+    private string _tituloOriginal = "";
+    private string _htmlOriginal = "";
+
+    private bool _cancelando = false;
+
+    private bool _salidaIntencional = false;     // navego por guardar/cancelar
+    private bool _confirmandoSalida = false;     // anti doble confirm
+
+   
+
+   
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await BuscarEscritos();
+
+       
+    }
+
+
+
+
+
+   
+
+ 
+
+
+
+//     protected override async Task OnAfterRenderAsync(bool firstRender)
+//     {
+//         if (firstRender && !editorInicializado)
+//         {
+//             _cargandoEditor = true;
+//             _silenciarCambios = true;
+//             _tieneCambios = false;
+
+//             editorInicializado = true;
+
+//             // ✅ 0) Contexto para DraftKey (ANTES de usar DraftKey)
+//             _gestionIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "gestion_actual");
+
+
+//             // 👇 NUEVO: leemos tipo_proceso para decidir si mostrar el botón de demanda IA
+//             // var tipo = await JS.InvokeAsync<string>("localStorage.getItem", "tipo_proceso");
+//             // MostrarBotonDemanda = string.Equals(tipo, "Judicial", StringComparison.OrdinalIgnoreCase);
+
+//             var esApremioStr = await JS.InvokeAsync<string>("localStorage.getItem", "es_apremio");
+//             EsApremio = string.Equals(esApremioStr, "true", StringComparison.OrdinalIgnoreCase);
+//             MostrarBotonDemanda = EsApremio;
+
+//             System.Diagnostics.Debug.WriteLine($"[EditorMovimiento] es_apremio(localStorage)='{esApremioStr}', EsApremio={EsApremio}");
+
+
+//             string? base64 = null;
+
+            
+//             var clave = Id?.ToString() ?? "temporal";
+//             var info = EditorInfoService.Obtener(clave); // ❗️ No lo limpies
+
+//             if (info is not null && !string.IsNullOrWhiteSpace(info.ContenidoHtml))
+//             {
+//                 base64 = ToBase64(info.ContenidoHtml);
+//                 Titulo = info.Titulo ?? string.Empty;
+//             }
+
+//             // 🔹 2. Intentar desde localStorage
+//             else
+//             {
+//                 var contenido = await JS.InvokeAsync<string>("localStorage.getItem", "contenidoEditorMovimiento");
+//                 var titulo = await JS.InvokeAsync<string>("localStorage.getItem", "tituloEditorMovimiento");
+
+//                 if (!string.IsNullOrWhiteSpace(contenido))
+//                 {
+//                     base64 = ToBase64(contenido);
+//                     Titulo = titulo ?? string.Empty;
+
+//                     await JS.InvokeVoidAsync("localStorage.removeItem", "contenidoEditorMovimiento");
+//                     await JS.InvokeVoidAsync("localStorage.removeItem", "tituloEditorMovimiento");
+//                 }
+
+//                 // 🔹 3. Fallback desde backend si hay ID
+//                 else if (Id.HasValue)
+//                 {
+//                     movimiento = await MovimientoService.ObtenerPorIdAsync(Id.Value);
+//                     if (movimiento != null && !string.IsNullOrWhiteSpace(movimiento.EscritoPersonalizadoHtml))
+//                     {
+//                         base64 = ToBase64(movimiento.EscritoPersonalizadoHtml);
+//                         Titulo = movimiento.EscritoPersonalizadoTitulo ?? string.Empty;
+//                     }
+//                 }
+//             }
+
+// //             // ✅ Nunca pases null, mejor string.Empty si no hay contenido
+//             await JS.InvokeVoidAsync("initEditor", "editor1", base64 ?? "");
+
+// //           
+
+//             var borrador = await JS.InvokeAsync<string>("localStorage.getItem", DraftKey);
+//             _hayBorrador = !string.IsNullOrWhiteSpace(borrador);
+
+//             // ⚠️ si estoy editando un escrito existente y el borrador es de "nuevo", ignorar
+//             if (Id.HasValue && DraftKey.EndsWith("_mnuevo"))
+//             {
+//                 borrador = null;
+//             }
+
+//             if (_hayBorrador)
+//             {
+//                 await JS.InvokeVoidAsync("setEditorContent", "editor1", borrador);
+
+//                 var borradorTitulo = await JS.InvokeAsync<string>("localStorage.getItem", DraftTituloKey);
+//                 if (!string.IsNullOrWhiteSpace(borradorTitulo))
+//                     Titulo = borradorTitulo;
+
+//                 _tieneCambios = true;
+//                 _borradorRestaurado = true;
+
+//                 await JS.InvokeVoidAsync(
+//                     "mostrarToast",
+//                     "Se restauró un borrador no guardado.",
+//                     "info"
+//                 );
+//             }
+
+
+
+       
+
+//             // _dotNetRef ??= DotNetObjectReference.Create(this);
+//             // await JS.InvokeVoidAsync("bindEditorDirty", "editor1", _dotNetRef, DraftKey, DraftTituloKey);
+
+
+//             // DatosProcesoTexto = await JS.InvokeAsync<string>("localStorage.getItem", "datosProcesoEditorMovimiento");
+//             // await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+
+//             _dotNetRef ??= DotNetObjectReference.Create(this);
+//             await JS.InvokeVoidAsync("bindEditorDirty", "editor1", _dotNetRef, DraftKey, DraftTituloKey);
+
+//             DatosProcesoTexto = await JS.InvokeAsync<string>("localStorage.getItem", "datosProcesoEditorMovimiento");
+//             await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+
+//             // ✅ Snapshot + habilitar tracking
+//             await SnapshotOriginalAsync();
+//             if (_borradorRestaurado)
+//                 _tieneCambios = true;
+
+//             _silenciarCambios = false;
+//             _cargandoEditor = false;
+
+//             StateHasChanged();
+
+
+
+//             StateHasChanged();
+//         }
+//     }
+
+
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (!firstRender || editorInicializado) return;
+
+    //     editorInicializado = true;
+
+    //     _cargandoEditor = true;
+    //     _silenciarCambios = true;
+    //     _tieneCambios = false;
+    //     _borradorRestaurado = false;
+
+    //     try
+    //     {
+    //         // ✅ 0) Contexto para DraftKey (ANTES de usar DraftKey)
+    //         _gestionIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "gestion_actual");
+
+    //         var esApremioStr = await JS.InvokeAsync<string>("localStorage.getItem", "es_apremio");
+    //         EsApremio = string.Equals(esApremioStr, "true", StringComparison.OrdinalIgnoreCase);
+    //         MostrarBotonDemanda = EsApremio;
+            
+    //         string htmlBase = "";
+    //         string? base64 = null;
+
+    //         var clave = Id?.ToString() ?? "temporal";
+    //         var info = EditorInfoService.Obtener(clave); // ❗️No lo limpies
+
+    //         // 1) Fuente: EditorInfoService
+    //         if (info is not null && !string.IsNullOrWhiteSpace(info.ContenidoHtml))
+    //         {
+    //             htmlBase = info.ContenidoHtml;
+    //             base64 = ToBase64(info.ContenidoHtml);
+    //             Titulo = info.Titulo ?? string.Empty;
+    //         }
+    //         else
+    //         {
+    //             // 2) Fuente: localStorage “pasaje” temporal
+    //             var contenido = await JS.InvokeAsync<string>("localStorage.getItem", "contenidoEditorMovimiento");
+    //             var titulo = await JS.InvokeAsync<string>("localStorage.getItem", "tituloEditorMovimiento");
+
+    //             if (!string.IsNullOrWhiteSpace(contenido))
+    //             {
+    //                 htmlBase = contenido;
+    //                 base64 = ToBase64(contenido);
+    //                 Titulo = titulo ?? string.Empty;
+
+    //                 await JS.InvokeVoidAsync("localStorage.removeItem", "contenidoEditorMovimiento");
+    //                 await JS.InvokeVoidAsync("localStorage.removeItem", "tituloEditorMovimiento");
+    //             }
+    //             else if (Id.HasValue)
+    //             {
+    //                 // 3) Fuente: backend
+    //                 movimiento = await MovimientoService.ObtenerPorIdAsync(Id.Value);
+    //                 if (movimiento != null && !string.IsNullOrWhiteSpace(movimiento.EscritoPersonalizadoHtml))
+    //                 {
+    //                     htmlBase = movimiento.EscritoPersonalizadoHtml;
+    //                     base64 = ToBase64(movimiento.EscritoPersonalizadoHtml);
+    //                     Titulo = movimiento.EscritoPersonalizadoTitulo ?? string.Empty;
+    //                 }
+    //             }
+    //         }
+
+    //         // ✅ init editor (nunca null)
+    //         await JS.InvokeVoidAsync("initEditor", "editor1", base64 ?? "");
+
+    //         // ✅ borrador
+    //         var borrador = await JS.InvokeAsync<string>("localStorage.getItem", DraftKey);
+
+    //         // ⚠️ si estoy editando un escrito existente y el borrador es de "nuevo", ignorar (y opcional: limpiar)
+    //         if (Id.HasValue && DraftKey.EndsWith("_mnuevo"))
+    //         {
+    //             // opcional pero recomendado: limpiar para que no moleste más
+    //             await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+    //             await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+
+    //             borrador = null;
+    //         }
+
+    //         _hayBorrador = !string.IsNullOrWhiteSpace(borrador);
+
+    //         if (_hayBorrador)
+    //         {
+    //             await JS.InvokeVoidAsync("setEditorContent", "editor1", borrador);
+
+    //             var borradorTitulo = await JS.InvokeAsync<string>("localStorage.getItem", DraftTituloKey);
+    //             if (!string.IsNullOrWhiteSpace(borradorTitulo))
+    //                 Titulo = borradorTitulo;
+
+    //             _tieneCambios = true;
+    //             _borradorRestaurado = true;
+
+    //             await JS.InvokeVoidAsync("mostrarToast", "Se restauró un borrador no guardado.", "info");
+    //         }
+
+    //         // ✅ bind dirty (después de setear contenido)
+    //         _dotNetRef ??= DotNetObjectReference.Create(this);
+    //         await JS.InvokeVoidAsync("bindEditorDirty", "editor1", _dotNetRef, DraftKey, DraftTituloKey);
+
+    //         DatosProcesoTexto = await JS.InvokeAsync<string>("localStorage.getItem", "datosProcesoEditorMovimiento");
+    //         await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+
+    //         // ✅ Snapshot + habilitar tracking
+    //         await SnapshotOriginalAsync();
+    //         if (_borradorRestaurado)
+    //             _tieneCambios = true;
+    //     }
+    //     finally
+    //     {
+    //         _silenciarCambios = false;
+    //         _cargandoEditor = false;
+
+    //         await InvokeAsync(StateHasChanged);
+    //     }
+    // }
+
+
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || editorInicializado) return;
+
+        editorInicializado = true;
+
+        _cargandoEditor = true;
+        _silenciarCambios = true;
+        _tieneCambios = false;
+        _borradorRestaurado = false;
+
+        try
+        {
+            // ✅ 0) Contexto para DraftKey (ANTES de usar DraftKey)
+            _gestionIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "gestion_actual");
+
+            var esApremioStr = await JS.InvokeAsync<string>("localStorage.getItem", "es_apremio");
+            EsApremio = string.Equals(esApremioStr, "true", StringComparison.OrdinalIgnoreCase);
+            MostrarBotonDemanda = EsApremio;
+
+            string? base64 = null;
+            string htmlBase = ""; // ✅ contenido “base” real para comparar borrador
+
+            var clave = Id?.ToString() ?? "temporal";
+            var info = EditorInfoService.Obtener(clave); // ❗️No lo limpies
+
+            // 1) Fuente: EditorInfoService
+            if (info is not null && !string.IsNullOrWhiteSpace(info.ContenidoHtml))
+            {
+                htmlBase = info.ContenidoHtml;
+                base64 = ToBase64(htmlBase);
+                Titulo = info.Titulo ?? string.Empty;
+            }
+            else
+            {
+                // 2) Fuente: localStorage “pasaje” temporal
+                var contenido = await JS.InvokeAsync<string>("localStorage.getItem", "contenidoEditorMovimiento");
+                var titulo = await JS.InvokeAsync<string>("localStorage.getItem", "tituloEditorMovimiento");
+
+                if (!string.IsNullOrWhiteSpace(contenido))
+                {
+                    htmlBase = contenido;
+                    base64 = ToBase64(htmlBase);
+                    Titulo = titulo ?? string.Empty;
+
+                    await JS.InvokeVoidAsync("localStorage.removeItem", "contenidoEditorMovimiento");
+                    await JS.InvokeVoidAsync("localStorage.removeItem", "tituloEditorMovimiento");
+                }
+                else if (Id.HasValue)
+                {
+                    // 3) Fuente: backend
+                    movimiento = await MovimientoService.ObtenerPorIdAsync(Id.Value);
+                    if (movimiento != null && !string.IsNullOrWhiteSpace(movimiento.EscritoPersonalizadoHtml))
+                    {
+                        htmlBase = movimiento.EscritoPersonalizadoHtml;
+                        base64 = ToBase64(htmlBase);
+                        Titulo = movimiento.EscritoPersonalizadoTitulo ?? string.Empty;
+                    }
+                }
+            }
+
+            // ✅ init editor (nunca null)
+            await JS.InvokeVoidAsync("initEditor", "editor1", base64 ?? "");
+
+            // ✅ borrador (restaurar SOLO si es distinto del base)
+            var borrador = await JS.InvokeAsync<string>("localStorage.getItem", DraftKey);
+            var borradorTitulo = await JS.InvokeAsync<string>("localStorage.getItem", DraftTituloKey);
+
+            bool borradorValido = !string.IsNullOrWhiteSpace(borrador);
+
+            bool borradorEsDistinto =
+                NormalizarHtml(borrador) != NormalizarHtml(htmlBase) ||
+                (borradorTitulo ?? "").Trim() != (Titulo ?? "").Trim();
+
+            _hayBorrador = borradorValido && borradorEsDistinto;
+
+            if (_hayBorrador)
+            {
+                await JS.InvokeVoidAsync("setEditorContent", "editor1", borrador);
+
+                if (!string.IsNullOrWhiteSpace(borradorTitulo))
+                    Titulo = borradorTitulo;
+
+                _tieneCambios = true;
+                _borradorRestaurado = true;
+
+                await JS.InvokeVoidAsync("mostrarToast", "Se restauró un borrador no guardado.", "info");
+            }
+            else
+            {
+                // ✅ si existe pero es igual (o basura), lo limpiamos y listo
+                if (borradorValido)
+                {
+                    await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+                    await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+                }
+            }
+
+            // ✅ bind dirty (después de setear contenido)
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("bindEditorDirty", "editor1", _dotNetRef, DraftKey, DraftTituloKey);
+
+            DatosProcesoTexto = await JS.InvokeAsync<string>("localStorage.getItem", "datosProcesoEditorMovimiento");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+
+            // ✅ Snapshot + habilitar tracking
+            await SnapshotOriginalAsync();
+            if (_borradorRestaurado)
+                _tieneCambios = true;
+
+            // ✅ (opcional) limpiar borrador “mnuevo” al editar un escrito existente
+            if (Id.HasValue)
+            {
+                var draftNuevoKey = $"draft_escrito_g{(_gestionIdStr ?? "0")}_mnuevo";
+                await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey);
+                await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey + "_titulo");
+            }
+        }
+        finally
+        {
+            _silenciarCambios = false;
+            _cargandoEditor = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+
+    private async Task SnapshotOriginalAsync()
+    {
+        _tituloOriginal = (Titulo ?? "").Trim();
+        _htmlOriginal = NormalizarHtml(await JS.InvokeAsync<string>("getEditorContent", "editor1"));
+        _tieneCambios = false; // importante
+    }
+
+
+    private static string NormalizarHtml(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return "";
+
+        var s = html.Replace("\u00A0", " ").Trim();
+
+        var vacios = new[]
+        {
+        "<p><br></p>",
+        "<p><br/></p>",
+        "<p>&nbsp;</p>",
+        "<p> </p>",
+        "<div><br></div>",
+        "<br>",
+        "<br/>"
+    };
+
+        foreach (var v in vacios)
+            if (string.Equals(s, v, StringComparison.OrdinalIgnoreCase))
+                return "";
+
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ");
+        return s.Trim();
+    }
+
+
+
+
+
+
+
+    [JSInvokable]
+    public Task EditorChanged()
+    {
+        if (_silenciarCambios || _cargandoEditor)
+            return Task.CompletedTask;
+
+        _tieneCambios = true;
+        _ = InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+
+    // protected async Task ConfirmarSalida(LocationChangingContext context)
+    // {
+    //     var hayCambios = await HayCambiosRealesAsync();
+    //     if (!hayCambios) return;
+
+    //     var confirmar = await JS.InvokeAsync<bool>(
+    //         "confirm",
+    //         "Hay cambios sin guardar en el escrito. ¿Querés salir y perderlos?"
+    //     );
+
+    //     if (!confirmar)
+    //     {
+    //         context.PreventNavigation();
+    //         return;
+    //     }
+
+    //     await LimpiarBorradorAsync();
+    //     _tieneCambios = false;
+
+    //     await JS.InvokeVoidAsync("destroyEditor");
+    // }
+
+
+    protected async Task ConfirmarSalida(LocationChangingContext context)
+    {
+        if (_salidaIntencional) return;          // ✅ no preguntar
+        if (_confirmandoSalida) return;          // ✅ anti reentradas
+
+        var hayCambios = await HayCambiosRealesAsync();
+        if (!hayCambios) return;
+
+        _confirmandoSalida = true;
+        try
+        {
+            var confirmar = await JS.InvokeAsync<bool>(
+                "confirm",
+                "Hay cambios sin guardar en el escrito. ¿Querés salir y perderlos?"
+            );
+
+            if (!confirmar)
+            {
+                context.PreventNavigation();
+                return;
+            }
+
+            await LimpiarBorradorAsync();
+            _tieneCambios = false;
+            await JS.InvokeVoidAsync("destroyEditor");
+        }
+        finally
+        {
+            _confirmandoSalida = false;
+        }
+    }
+
+
+
+public void Dispose()
+{
+    _dotNetRef?.Dispose();
+}
+
+
+
+
+private async Task LimpiarBorradorAsync()
+{
+    await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+    await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+    _hayBorrador = false;
+    _borradorRestaurado = false;
+}
+
+
+
+    private async Task LimpiarTodosLosBorradoresAsync()
+    {
+        // borrador del escrito actual
+        await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+        await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+
+        // borrador residual de "nuevo"
+        var draftNuevoKey = $"draft_escrito_g{(_gestionIdStr ?? "0")}_mnuevo";
+        await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey);
+        await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey + "_titulo");
+
+        _hayBorrador = false;
+        _borradorRestaurado = false;
+    }
+
+
+
+
+
+
+
+    // private async Task Guardar()
+    // {
+    //     var contenido = await JS.InvokeAsync<string>("getEditorContent", "editor1");
+
+    //     // 🔥 Guardar borrador por si algo falla justo antes de navegar
+    //     await JS.InvokeVoidAsync("localStorage.setItem", DraftKey, contenido);
+    //     await JS.InvokeVoidAsync("localStorage.setItem", DraftTituloKey, Titulo ?? "");
+
+    //     // --- tu lógica actual ---
+    //     await JS.InvokeVoidAsync("localStorage.setItem", "contenidoEditorMovimiento", contenido);
+    //     await JS.InvokeVoidAsync("localStorage.setItem", "tituloEditorMovimiento", Titulo ?? "");
+
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+    //     await JS.InvokeVoidAsync("destroyEditor");
+
+    //     var clave = Id?.ToString() ?? "temporal";
+
+    //     await Task.Run(() =>
+    //     {
+    //         EditorInfoService.Guardar(
+    //             clave: clave,
+    //             titulo: Titulo,
+    //             contenidoHtml: contenido
+    //         );
+    //     });
+
+    //     // 🔥 Como el usuario guardó “de verdad”, limpiamos el borrador
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+
+    //     _tieneCambios = false;
+
+    //     var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+    //     Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+    // }
+
+
+    private async Task Guardar()
+    {
+
+         // ✅ cortar autosave primero (evita que re-escriba borrador luego)
+        try { await JS.InvokeVoidAsync("unbindEditorDirty", "editor1"); } catch { }
+
+
+        var contenido = await JS.InvokeAsync<string>("getEditorContent", "editor1");
+
+        // ❌ NO re-escribir el borrador acá (esto genera falsos positivos)
+        // await JS.InvokeVoidAsync("localStorage.setItem", DraftKey, contenido);
+        // await JS.InvokeVoidAsync("localStorage.setItem", DraftTituloKey, Titulo ?? "");
+
+        await JS.InvokeVoidAsync("localStorage.setItem", "contenidoEditorMovimiento", contenido);
+        await JS.InvokeVoidAsync("localStorage.setItem", "tituloEditorMovimiento", Titulo ?? "");
+
+        await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+        await JS.InvokeVoidAsync("destroyEditor");
+
+        var clave = Id?.ToString() ?? "temporal";
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                EditorInfoService.Guardar(
+                    clave: clave,
+                    titulo: Titulo,
+                    contenidoHtml: contenido
+                );
+            });
+
+            // ✅ guardó OK => limpiar borradores (actual + mnuevo)
+            await LimpiarBorradorAsync();
+
+            var draftNuevoKey = $"draft_escrito_g{(_gestionIdStr ?? "0")}_mnuevo";
+            await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey);
+            await JS.InvokeVoidAsync("localStorage.removeItem", draftNuevoKey + "_titulo");
+
+            _tieneCambios = false;
+            _salidaIntencional = true;
+
+            var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+            Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+        }
+        catch
+        {
+            // ✅ si falla, NO limpies el borrador: así queda recuperable
+            await JS.InvokeVoidAsync("mostrarToast", "No se pudo guardar. Se conservó el borrador.", "error");
+        }
+    }
+
+
+
+
+
+
+    private async Task GuardarComoEscritoGlobal()
+    {
+        var contenido = await JS.InvokeAsync<string>("getEditorContent", "editor1");
+
+        if (string.IsNullOrWhiteSpace(Titulo))
+        {
+            await JS.InvokeVoidAsync("mostrarToast", "Debe ingresar un título para guardar el escrito.", "error");
+            return;
+        }
+
+        var ok = await EscritoService.GuardarEscritoAsync(Titulo, contenido);
+        if (ok)
+            await JS.InvokeVoidAsync("mostrarToast", "Escrito guardado correctamente.", "success");
+        else
+            await JS.InvokeVoidAsync("mostrarToast", "Error al guardar el escrito.", "error");
+    }
+
+    // private async Task Cancelar()
+    // {
+    //     var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+    //     // Si querés, lo limpiás
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+    //     await JS.InvokeVoidAsync("destroyEditor");
+    //     Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+    //     // Nav.NavigateTo("/movimientos");
+    // }
+
+
+
+//     private async Task<bool> HayCambiosRealesAsync()
+// {
+//     // si ya está en false, no hay
+//     if (!_tieneCambios) return false;
+
+//     // Rechequear contenido real del editor
+//     var html = await JS.InvokeAsync<string>("getEditorContent", "editor1");
+//     var titulo = Titulo ?? "";
+
+//     // Si está todo vacío, NO considerarlo cambios
+//     if (string.IsNullOrWhiteSpace(html) && string.IsNullOrWhiteSpace(titulo))
+//     {
+//         _tieneCambios = false;
+//         return false;
+//     }
+
+//     // Si NO hay borrador en storage y el editor está vacío, tampoco
+//     var borrador = await JS.InvokeAsync<string>("localStorage.getItem", DraftKey);
+//     if (string.IsNullOrWhiteSpace(html) && string.IsNullOrWhiteSpace(borrador) && string.IsNullOrWhiteSpace(titulo))
+//     {
+//         _tieneCambios = false;
+//         return false;
+//     }
+
+//     return true;
+// }
+
+
+    private async Task<bool> HayCambiosRealesAsync()
+    {
+        var tituloActual = (Titulo ?? "").Trim();
+        var htmlActual = NormalizarHtml(await JS.InvokeAsync<string>("getEditorContent", "editor1"));
+
+        // ✅ si no cambió nada real, no hay cambios
+        if (tituloActual == _tituloOriginal && htmlActual == _htmlOriginal)
+        {
+            _tieneCambios = false;
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
+    // private async Task Cancelar()
+    // {
+    //     if (_tieneCambios)
+    //     {
+    //         var confirmar = await JS.InvokeAsync<bool>(
+    //             "confirm",
+    //             "Hay cambios sin guardar en el escrito. ¿Querés cancelar y perderlos?"
+    //         );
+
+    //         if (!confirmar)
+    //             return;
+    //     }
+
+    //     // ✅ Si confirmó perderlos, descartamos borrador
+    //     await LimpiarBorradorAsync();
+    //     _tieneCambios = false;
+
+    //     var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+    //     await JS.InvokeVoidAsync("destroyEditor");
+
+    //     Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+    // }
+
+
+    // private async Task Cancelar()
+    // {
+    //     var hayCambios = await HayCambiosRealesAsync();
+
+    //     if (hayCambios)
+    //     {
+    //         var confirmar = await JS.InvokeAsync<bool>(
+    //             "confirm",
+    //             "Hay cambios sin guardar en el escrito. ¿Querés cancelar y perderlos?"
+    //         );
+
+    //         if (!confirmar)
+    //             return;
+
+    //         await LimpiarBorradorAsync();
+    //         _tieneCambios = false;
+    //     }
+    //     else
+    //     {
+    //         // Si no hay cambios reales, igual limpiamos borrador si existía
+    //         await LimpiarBorradorAsync();
+    //     }
+
+    //     var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+    //     await JS.InvokeVoidAsync("destroyEditor");
+
+    //     Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+    // }
+
+
+
+    private async Task Cancelar()
+    {
+        if (_cancelando) return;
+        _cancelando = true;
+
+        try
+        {
+            var hayCambios = await HayCambiosRealesAsync();
+
+            if (hayCambios)
+            {
+                var confirmar = await JS.InvokeAsync<bool>(
+                    "confirm",
+                    "Hay cambios sin guardar en el escrito. ¿Querés cancelar y perderlos?"
+                );
+
+                if (!confirmar)
+                {
+                    _cancelando = false;
+                    return;
+                }
+
+                // // ✅ cortar autosave ANTES de limpiar borrador
+                // try { await JS.InvokeVoidAsync("unbindEditorDirty", "editor1"); } catch { }
+
+                // await LimpiarBorradorAsync();
+                // _tieneCambios = false;
+            }
+            // else
+            // {
+            //     await LimpiarBorradorAsync();
+            // }
+
+
+
+            // ✅ SIEMPRE cortar autosave (haya cambios o no)
+            try { await JS.InvokeVoidAsync("unbindEditorDirty", "editor1"); } catch { }
+
+            // ✅ SIEMPRE limpiar borrador (haya cambios o no)
+            await LimpiarBorradorAsync();
+            _tieneCambios = false;
+
+            _salidaIntencional = true; // ✅ evita NavigationLock
+
+            var returnUrl = await JS.InvokeAsync<string>("localStorage.getItem", "volverADespuesDeEditor");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "datosProcesoEditorMovimiento");
+            await JS.InvokeVoidAsync("destroyEditor");
+
+            Nav.NavigateTo(!string.IsNullOrEmpty(returnUrl) ? returnUrl : "/gestiones");
+        }
+        finally
+        {
+            // si querés, no hace falta resetear si ya navegás
+            // _salidaIntencional = false;
+        }
+    }
+
+
+
+
+
+
+    // private async Task DescartarBorrador()
+    // {
+    //     var confirmar = await JS.InvokeAsync<bool>(
+    //         "confirm",
+    //         "Esto borrará el borrador local de este escrito para esta gestión/movimiento. ¿Continuar?"
+    //     );
+
+    //     if (!confirmar) return;
+
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", DraftKey);
+    //     await JS.InvokeVoidAsync("localStorage.removeItem", DraftTituloKey);
+
+    //     _tieneCambios = false;
+
+    //     // (opcional) solo limpiar título en UI
+    //     Titulo = "";
+
+    //     await JS.InvokeVoidAsync("mostrarToast", "Borrador descartado.", "success");
+    // }
+
+    // private async Task DescartarBorrador()
+    // {
+    //     var confirmar = await JS.InvokeAsync<bool>(
+    //         "confirm",
+    //         "Se eliminará el borrador local de este escrito. ¿Continuar?"
+    //     );
+
+    //     if (!confirmar)
+    //         return;
+
+
+
+    //         // borrar borrador de storage
+    //     await LimpiarBorradorAsync();
+
+    //     // ✅ si querés limpiar el editor en pantalla:
+    //     _silenciarCambios = true;
+    //     await JS.InvokeVoidAsync("setEditorContent", "editor1", "");
+    //     _silenciarCambios = false;
+
+    //     Titulo = "";
+    //     _tieneCambios = false;
+
+    //     await JS.InvokeVoidAsync("mostrarToast", "Borrador descartado.", "success");
+    // }
+
+
+    private async Task DescartarBorrador()
+    {
+        var confirmar = await JS.InvokeAsync<bool>(
+            "confirm",
+            "Se eliminará el borrador local de este escrito. ¿Continuar?"
+        );
+        if (!confirmar) return;
+
+        // 1) Borrar storage
+        await LimpiarBorradorAsync();
+
+        // 2) Pausar dirty en JS para que setData NO marque cambios
+        await JS.InvokeVoidAsync("pauseEditorDirty", "editor1");
+
+        // 3) Limpiar editor visible
+        await JS.InvokeVoidAsync("setEditorContent", "editor1", "");
+
+        // 4) Reanudar dirty
+        await JS.InvokeVoidAsync("resumeEditorDirty", "editor1");
+
+        // 5) Reset flags
+        Titulo = "";
+        _tieneCambios = false;
+
+        await JS.InvokeVoidAsync("mostrarToast", "Borrador descartado.", "success");
+        await InvokeAsync(StateHasChanged);
+
+
+                
+
+    }
+
+
+
+
+
+
+
+
+
+
+    private async Task BuscarEscritos()
+    {
+        var resultado = await EscritoService.ObtenerEscritosAsync(1, 20, FiltroEscrito);
+        Escritos = resultado.Items ?? new();
+    }
+
+    private async Task OnSeleccionarEscrito(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            EscritoSeleccionadoId = id;
+
+            var escrito = await EscritoService.ObtenerEscritoPorIdAsync(id);
+            if (escrito != null)
+            {
+                Titulo = escrito.Titulo;
+
+                var base64 = ToBase64(escrito.ContenidoHtml);
+                await JS.InvokeVoidAsync("initEditor", "editor1", base64);
+            }
+        }
+    }
+
+    private static string ToBase64(string plainText)
+    {
+        var bytes = Encoding.UTF8.GetBytes(plainText);
+        return Convert.ToBase64String(bytes);
+    }
+
+
+
+    private async Task AbrirModalDemanda()
+    {
+        var gestionIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "gestion_actual");
+
+        if (int.TryParse(gestionIdStr, out var gid))
+        {
+            await IaModal.Abrir(gid);
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("mostrarToast",
+                "No se pudo determinar la gestión actual para generar la demanda.", "error");
+        }
+    }
+
+
+
+
+    // private async Task InsertarDemandaEnEditor(string html)
+    // {
+    //     if (string.IsNullOrWhiteSpace(html))
+    //         return;
+
+    //     var base64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(html));
+
+    //     // ♻️ Reutilizamos initEditor, que ya sabe recibir contenido base64
+    //     await JS.InvokeVoidAsync("initEditor", "editor1", base64);
+    // }
+
+    private async Task InsertarDemandaEnEditor(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+            return;
+
+        // 💡 Mandamos el texto plano directamente a JS
+        await JS.InvokeVoidAsync("setEditorContentFromText", "editor1", texto);
+    }
+
+
+}
+

@@ -1,0 +1,89 @@
+﻿@attribute [Authorize]
+
+@page "/afip-auth"
+@inherits AfipAuthBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>🔐 Gestión de Certificados AFIP</h3>
+
+    <!-- Selección de Usuario -->
+    <div class="mb-3">
+        <label>Usuario Facturante</label>
+        <select class="form-select" @onchange="OnUsuarioSeleccionado">
+            <option value="0">-- Seleccione un usuario --</option>
+            @foreach (var usuario in Usuarios)
+            {
+                <option value="@usuario.Id">@usuario.Nombre @usuario.Apellido (@usuario.NombreUsuario)</option>
+            }
+        </select>
+    </div>
+
+    @if (UsuarioSeleccionado != null)
+    {
+
+        <div class="card p-3">
+            <h5>Certificados de Homologación</h5>
+            <div class="mb-2">
+                <label for="cnHomologacion" class="form-label">Nombre del sistema (CN) en AFIP -Homologacion-:</label>
+                <input type="text" id="cnHomologacion" class="form-control" @bind="CnHomologacion" placeholder="Ej: IURIXPrueba" />
+            </div>
+           @*  <button class="btn btn-primary mb-2" @onclick="GenerarSolicitudHomologacion">Generar Solicitud (CSR)</button>
+            <button class="btn btn-secondary mb-2" @onclick="CargarCertificadoHomologacion">Cargar Certificado X.509</button>
+            <button class="btn btn-warning mb-2" @onclick="RecargarClavePrivadaHomologacion">Recargar Clave Privada</button>
+            <button class="btn btn-danger mb-2" @onclick="EliminarCertificadosHomologacion">Eliminar Certificados</button> *@
+            <!-- Homologación -->
+            <button class="btn btn-primary mb-2" @onclick="GenerarSolicitudHomologacion" disabled="@(!PuedeGenerarSolicitudHomol)">Generar Solicitud (CSR)</button>
+            <button class="btn btn-secondary mb-2" @onclick="CargarCertificadoHomologacion" disabled="@(!PuedeCargarCertHomol)">Cargar Certificado X.509</button>
+            <button class="btn btn-outline-success mb-2"
+                    @onclick="RecargarCertificadoHomologacion"
+                    disabled="@(!TieneClaveHomol)">
+                Recargar Certificado (Homol.)
+            </button>
+            <button class="btn btn-warning mb-2" @onclick="RecargarClavePrivadaHomologacion" disabled="@(!PuedeRecargarClaveHomol)">Recargar Clave Privada</button>
+            <button class="btn btn-danger mb-2" @onclick="EliminarCertificadosHomologacion" disabled="@(!PuedeEliminarHomol)">Eliminar Certificados</button>
+            <p><strong>Estado Certificado:</strong> @EstadoCertificadoHomologacion</p>
+            <p><strong>Estado Clave RSA:</strong> @EstadoRsaHomologacion</p>
+       
+
+            <p>
+                <strong>Vigencia Homol.:</strong>
+                @(AfipAuth?.CertValidFrom?.ToString("dd/MM/yyyy") ?? "-")
+                –
+                @(AfipAuth?.CertValidTo?.ToString("dd/MM/yyyy") ?? "-")
+            </p>
+        </div>
+
+        <div class="card p-3 mt-3">
+            <h5>Certificados de Producción</h5>
+            <div class="mb-2">
+                <label for="cnHomologacion" class="form-label">Nombre del sistema (CN) en AFIP -Produccion-:</label>
+                <input type="text" id="cnHomologacion" class="form-control" @bind="CnProduccion" placeholder="Ej: IURIXProduccion" />
+            </div>
+           @*  <button class="btn btn-primary mb-2" @onclick="GenerarSolicitudProduccion">Generar Solicitud (CSR)</button>
+            <button class="btn btn-secondary mb-2" @onclick="CargarCertificadoProduccion">Cargar Certificado X.509</button>
+            <button class="btn btn-warning mb-2" @onclick="RecargarClavePrivadaProduccion">Recargar Clave Privada</button>
+            <button class="btn btn-danger mb-2" @onclick="EliminarCertificadosProduccion">Eliminar Certificados</button> *@
+            <!-- Producción -->
+            <button class="btn btn-primary mb-2" @onclick="GenerarSolicitudProduccion" disabled="@(!PuedeGenerarSolicitudProd)">Generar Solicitud (CSR)</button>
+            <button class="btn btn-secondary mb-2" @onclick="CargarCertificadoProduccion" disabled="@(!PuedeCargarCertProd)">Cargar Certificado X.509</button>
+            <button class="btn btn-outline-success mb-2"
+                    @onclick="RecargarCertificadoProduccion"
+                    disabled="@(!TieneClaveProd)">
+                Recargar Certificado (Prod)
+            </button>
+
+       
+            <button class="btn btn-warning mb-2" @onclick="RecargarClavePrivadaProduccion" disabled="@(!PuedeRecargarClaveProd)">Recargar Clave Privada</button>
+            <button class="btn btn-danger mb-2" @onclick="EliminarCertificadosProduccion" disabled="@(!PuedeEliminarProd)">Eliminar Certificados</button>
+            <p><strong>Estado Certificado:</strong> @EstadoCertificadoProduccion</p>
+            <p><strong>Estado Clave RSA:</strong> @EstadoRsaProduccion</p>
+            <p>
+                <strong>Vigencia Prod:</strong>
+                @(AfipAuth?.CertValidFrom_PROD?.ToString("dd/MM/yyyy") ?? "-")
+                –
+                @(AfipAuth?.CertValidTo_PROD?.ToString("dd/MM/yyyy") ?? "-")
+            </p>
+        </div>
+    }
+</div>

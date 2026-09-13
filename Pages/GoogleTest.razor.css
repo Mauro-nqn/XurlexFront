@@ -1,0 +1,12 @@
+﻿.google-test {
+    max-width: 800px;
+}
+
+    .google-test h5 {
+        margin-top: 20px;
+        font-weight: bold;
+    }
+
+    .google-test .form-control {
+        margin-bottom: 8px;
+    }

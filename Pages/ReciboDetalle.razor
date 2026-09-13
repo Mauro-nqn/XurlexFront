@@ -1,0 +1,646 @@
+﻿@* @page "/recibos/{Id:int}"
+@inherits ReciboDetalleBase
+@layout AdminLayout
+
+<div class="recibo-a4">
+    <header class="recibo-header">
+        <!-- encabezado -->
+        <div class="row align-items-center">
+            <div class="col-3 text-center">
+                <img src="@LogoUrl" alt="Logo" class="logo-estudio" />
+            </div>
+            <div class="col-9">                
+                <div class="muted">@NombreEstudio</div>
+            </div>
+        </div>
+        
+            <div class="brand-text">
+                <h1>RECIBO</h1>
+                <div class="muted">N.º @Vista?.Recibo.Id</div>
+            </div>
+        
+
+        @if (Vista is not null)
+        {
+            var total = Vista.Recibo.Total;
+            var imp = Vista.TotalImputado;
+            var saldo = Vista.SaldoResultante;
+
+            <div class="estado">
+                @if (imp <= 0)
+                {
+                    <span class="badge badge-warning">Anticipo sin imputar</span>
+                }
+                else if (imp < total)
+                {
+                    <span class="badge badge-info">Parcialmente imputado</span>
+                }
+                else
+                {
+                    <span class="badge badge-success">Totalmente imputado</span>
+                }
+            </div>
+        }
+    </header>
+
+    <section class="grid">
+        <div class="panel">
+            <h4>Datos</h4>
+            <div class="grid-2">
+                <div><b>Fecha:</b> @(Vista?.Recibo?.Fecha is DateTime f ? f.ToLocalTime().ToString("dd/MM/yyyy") : "-")</div>
+                <div><b>Medio de Pago:</b> @MedioPagoNombre</div>
+                <div class="span-2"><b>Cliente:</b> @ClienteNombre</div>
+                @if (!string.IsNullOrWhiteSpace(Vista?.Recibo.Observaciones))
+                {
+                    <div class="span-2"><b>Concepto:</b> @Vista!.Recibo.Observaciones</div>
+                }
+            </div>
+        </div>
+
+        <div class="panel totals">
+            <h4>Totales</h4>
+            <div class="kpis">
+                <div><div class="label">Total Recibo</div><div class="value">@Vista?.Recibo.Total.ToString("C")</div></div>
+                <div><div class="label">Imputado</div><div class="value">@Vista?.TotalImputado.ToString("C")</div></div>
+                <div><div class="label">Saldo</div><div class="value">@Vista?.SaldoResultante.ToString("C")</div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-title">
+            <h4>Imputaciones</h4>
+            @* acá podrías mostrar acciones según tu política (p.ej. “Imputar”) 
+        </div>
+
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Fecha</th><th>Concepto</th><th class="text-end">Importe</th></tr>
+            </thead>
+            <tbody>
+                @if (Vista?.Imputaciones?.Count > 0)
+                {
+                    @foreach (var i in Vista.Imputaciones)
+                    {
+                        <tr>
+                            <td>@i.Fecha.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>@i.Concepto</td>
+                            <td class="text-end">@i.Importe.ToString("C")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" class="text-center text-muted py-4">@* No hay imputaciones para este recibo. </td></tr>
+                }
+
+
+            </tbody>
+        </table>
+    </section>
+
+    <div>Recibimos la suma de  <b>@Vista?.Recibo.Total.ToString("C") (@ImporteEnLetras)</b> de @ClienteNombre</div>
+    <div><b>En concepto de:</b> @Vista?.Recibo.Observaciones</div>
+
+
+    <footer>
+    <div class="firma mt-5">
+        <div>@NombreEstudio</div>
+        <div class="muted">@PieEstudio</div>
+    </div>
+    </footer>
+
+    <div class="acciones-no-print mt-3">
+        <button class="btn btn-secondary" @onclick="Volver">← Volver</button>
+        <button class="btn btn-primary ms-2" @onclick="Imprimir">🖨 Imprimir</button>
+        @if ((Vista?.SaldoResultante ?? 0m) > 0m)
+        {
+            <button class="btn btn-success ms-2" @onclick="AbrirImputarRecibo">💸 Imputar</button>
+        }
+
+
+    </div> *@
+
+@attribute [Authorize]
+
+@page "/recibos/{Id:int}"
+@inherits ReciboDetalleBase
+@layout AdminLayout
+
+@{
+    var total = Vista?.Recibo.Total ?? 0m;
+    var imp = Vista?.TotalImputado ?? 0m;
+    var saldo = Vista?.SaldoResultante ?? (total - imp);
+    var hayImputaciones = (Vista?.Imputaciones?.Count ?? 0) > 0;
+}
+
+<div id="print-root" class="recibo-a4">
+    <header class="recibo-header">
+        <div class="row align-items-center w-100">
+            <div class="col-3 text-center">
+                <img src="@LogoUrl" alt="Logo" class="logo-estudio" />
+            </div>
+            <div class="col-9">
+                <h2 class="mb-1">RECIBO</h2>
+                <div class="muted">N.º @Vista?.Recibo.Id</div>
+                <div class="muted">@NombreEstudio</div>
+            </div>
+        </div>
+
+@*         @if (hayImputaciones)
+        {
+            <div class="estado mt-2">
+                @if (imp < total)
+                {
+                    <span class="badge badge-info">Parcialmente imputado</span>
+                }
+                else
+                {
+                    <span class="badge badge-success">Totalmente imputado</span>
+                }
+            </div>
+        } *@
+
+        @if (EstaAnulado)
+        {
+            <div class="estado mt-2">
+                <span class="badge badge-warning">ANULADO</span>
+                @if (Vista?.Recibo.FechaAnulacion is DateTime fa)
+                {
+                    <small class="ms-2 text-muted">el @fa.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small>
+                }
+            </div>
+        }
+        else if (hayImputaciones)
+        {
+            <div class="estado mt-2">
+                @if (imp < total)
+                {
+                    <span class="badge badge-info">Parcialmente imputado</span>
+                }
+                else
+                {
+                    <span class="badge badge-success">Totalmente imputado</span>
+                }
+            </div>
+        }
+    </header>
+
+    <section class="panel">
+        <h4>Datos</h4>
+        <div class="grid-2">
+            <div><b>Fecha:</b> @(Vista?.Recibo?.Fecha is DateTime f ? f.ToLocalTime().ToString("dd/MM/yyyy") : "-")</div>
+            <div><b>Medio de Pago:</b> @MedioPagoNombre</div>
+            <div class="span-2"><b>Cliente:</b> @ClienteNombre</div>
+            @if (!string.IsNullOrWhiteSpace(Vista?.Recibo.Observaciones))
+            {
+                <div class="span-2"><b>Concepto:</b> @Vista!.Recibo.Observaciones</div>
+            }
+        </div>
+
+
+    </section>
+
+    <!-- MODO SIMPLE (cliente) -->
+    @if (!hayImputaciones)
+    {
+        <section class="panel">
+            <p class="lead">
+                Recibimos la suma de <b>@total.ToString("C") (@ImporteEnLetras)</b> de <b>@ClienteNombre</b>.
+            </p>
+            @if (!string.IsNullOrWhiteSpace(Vista?.Recibo.Observaciones))
+            {
+                <p><b>En concepto de:</b> @Vista!.Recibo.Observaciones</p>
+            }
+        </section>
+    }
+
+    <!-- MODO CONTABLE: solo si hay imputaciones -->
+    @if (hayImputaciones)
+    {
+        <section class="grid">
+            <div class="panel totals">
+                <h4>Totales</h4>
+                <div class="kpis">
+                    <div><div class="label">Total Recibo</div><div class="value">@total.ToString("C")</div></div>
+                    <div><div class="label">Imputado</div><div class="value">@imp.ToString("C")</div></div>
+                    <div><div class="label">Saldo</div><div class="value">@saldo.ToString("C")</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-title">
+                <h4>Imputaciones</h4>
+            </div>
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Fecha</th><th>Concepto</th><th class="text-end">Importe</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Vista!.Imputaciones!)
+                    {
+                        <tr>
+                            <td>@i.Fecha.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                            <td>@i.Concepto</td>
+                            <td class="text-end">@i.Importe.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <footer class="mt-4">
+        <div class="firma mt-5">
+            <div>@NombreEstudio</div>
+            <div class="muted">@PieEstudio</div>
+        </div>
+    </footer>
+
+@*     <div class="acciones-no-print mt-3">
+        <button class="btn btn-secondary" @onclick="Volver">← Volver</button>
+        <button class="btn btn-primary ms-2" @onclick="Imprimir">🖨 Imprimir</button>
+        @if (saldo > 0m)
+        {
+            <button class="btn btn-success ms-2" @onclick="AbrirImputarRecibo">💸 Imputar</button>
+        }
+    </div> *@
+
+
+    <div class="acciones-no-print mt-3">
+        <button class="btn btn-secondary" @onclick="Volver">← Volver</button>
+        <button class="btn btn-primary ms-2" @onclick="Imprimir">🖨 Imprimir</button>
+
+
+                @* Botón IMPUTAR *@
+        @if (Vista?.PuedeImputar == true)
+        {
+            <button type="button"
+                    class="btn btn-success"
+                    @onclick="AbrirImputarRecibo">
+                💸 Imputar
+            </button>
+        }
+
+        @* Botón ANULAR *@
+        <PermisoView Permiso="@Permisos.Recibos.Anular">
+            @if (Vista?.PuedeAnular == true)
+            {
+                <button type="button"
+                        class="btn btn-outline-danger"
+                        @onclick="AnularRecibo">
+                    ❌ Anular
+                </button>
+            }
+        </PermisoView>
+
+
+
+        @* @if (!EstaAnulado && saldo > 0m)
+        {
+            <button class="btn btn-success ms-2" @onclick="AbrirImputarRecibo">💸 Imputar</button>
+        }
+
+        <PermisoView Permiso="@Permisos.Recibos.Anular">
+            @if (!EstaAnulado && PuedeAnularRecibo)
+            {
+                <button class="btn btn-outline-danger ms-2"
+                        @onclick="AnularRecibo">
+                    ❌ Anular
+                </button>
+            }
+        </PermisoView> *@
+    </div>
+</div>
+
+
+@*     @if (MostrarImputar)
+    { *@
+@*         <div class="modal-backdrop-custom" @onclick="CerrarImputar"></div>
+        <div class="modal-custom">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+                <h5 class="m-0">Imputar recibo N.º @Vista?.Recibo.Id</h5>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="CerrarImputar">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2 text-muted">
+                    <b>Saldo del recibo:</b> @SaldoDisponible.ToString("C")
+                </div>
+
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th class="text-end">Saldo débito</th>
+                            <th class="text-end" style="width:160px">Imputar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (DebitosAbiertosModal?.Count > 0)
+                        {
+                            @foreach (var row in DebitosAbiertosModal)
+                            {
+                                <tr>
+                                    <td>
+                                        @(row.Debito.Fecha.HasValue
+                                         ? row.Debito.Fecha.Value.ToLocalTime().ToString("dd/MM/yyyy")
+                                         : "-")
+                                    </td>
+
+                                    <td>@row.Debito.Detalle</td>
+                                    <td class="text-end">@row.Saldo.ToString("C")</td>
+                                    <td class="text-end">
+                                        <input class="form-control form-control-sm text-end"
+                                               type="number"
+                                               step="0.01"
+                                               min="0"
+                                               max="@row.Saldo"
+                                               value="@row.Imputar"
+                                               @oninput="(e => OnImputarChanged(row, e))" />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="4" class="text-center text-muted py-3">No hay débitos abiertos para imputar.</td></tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><b>Total a imputar</b></td>
+                            <td class="text-end"><b>@TotalAImputar.ToString("C")</b></td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                @if (!string.IsNullOrEmpty(ValidacionError))
+                {
+                    <div class="alert alert-warning py-2 my-2">
+                        @ValidacionError
+                    </div>
+                }
+            </div>
+            <div class="modal-footer d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary" @onclick="CerrarImputar">Cancelar</button>
+                <button class="btn btn-success" disabled="@(!PuedeConfirmarImputacion)"
+                        @onclick="ConfirmarImputacionesRecibo">
+                    Confirmar imputación
+                </button>
+            </div>
+        </div> *@
+
+    <ImputarReciboModal @ref="_imputarModal" OnImputado="OnImputadoRecibo" />
+
+   @* } *@     
+
+
+
+
+
+
+<style>
+
+    
+    /* .modal-backdrop-custom {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.35);
+        z-index: 1040
+    }
+
+    .modal-custom {
+        position: fixed;
+        left: 50%;
+        top: 10%;
+        transform: translateX(-50%);
+        width: min(900px,94vw);
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        z-index: 1050;
+        box-shadow: 0 10px 30px rgba(0,0,0,.1)
+    }
+
+    .modal-header, .modal-footer {
+        padding: 10px 14px;
+        border-bottom: 1px solid #eef2f7
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eef2f7;
+        border-bottom: none
+    }
+
+    .modal-body {
+        padding: 14px
+    }
+
+    @@media (max-width:576px) {
+        .modal-custom {
+            top: 4%
+        }
+    } */
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    .recibo-a4 {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 24px
+    }
+
+    .recibo-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 12px;
+        margin-bottom: 16px
+    }
+
+    .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center
+    }
+
+    .logo {
+        height: 56px
+    }
+
+    .logo-estudio {
+        max-width: 100%;
+        max-height: 120px; /* alto máximo razonable para encabezado */
+        object-fit: contain; /* mantiene proporciones sin recortar */
+        display: inline-block;
+    }
+
+    .brand-text h1 {
+        font-size: 22px;
+        margin: 0
+    }
+
+    .brand-text .muted {
+        color: #6b7280
+    }
+
+    .estado .badge {
+        display: inline-block;
+        padding: .35rem .6rem;
+        border-radius: 999px;
+        font-size: .85rem
+    }
+
+    .badge-warning {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412
+    }
+
+    .badge-info {
+        background: #eff6ff;
+        border: 1px solid #93c5fd;
+        color: #1d4ed8
+    }
+
+    .badge-success {
+        background: #ecfdf5;
+        border: 1px solid #86efac;
+        color: #065f46
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px
+    }
+
+    .panel {
+        background: #fafafa;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 16px
+    }
+
+    .panel-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px
+    }
+
+        .grid-2 .span-2 {
+            grid-column: 1 / -1
+        }
+
+    .totals .kpis {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 8px
+    }
+
+    .kpis .label {
+        font-size: .8rem;
+        color: #6b7280
+    }
+
+    .kpis .value {
+        font-size: 1.15rem;
+        font-weight: 700
+    }
+
+    .table th, .table td {
+        vertical-align: middle
+    }
+    @@media (max-width:720px) {
+        .grid
+
+    {
+        grid-template-columns: 1fr
+    }
+
+    .totals .kpis {
+        grid-template-columns: 1fr
+    }
+
+    }
+    @@media print {
+        .acciones-no-print
+
+    {
+        display: none
+    }
+
+    body {
+        background: #fff
+    }
+
+    .panel {
+        border: none;
+        padding: 0
+    }
+
+    .recibo-header {
+        border-bottom: none
+    }
+
+        .logo-estudio {
+            max-height: 80px; /* en impresión, un poco más chico */
+        }
+
+    
+
+    
+  body * { visibility: hidden; }
+  #print-root, #print-root * { visibility: visible; }
+  #print-root { position: absolute; left: 0; top: 0; }
+  .acciones-no-print { display: none !important; }
+  
+}
+
+
+
+
+</style>

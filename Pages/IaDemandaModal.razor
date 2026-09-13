@@ -1,0 +1,244 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using IurixBlazor.Shared.Iademandas
+@using IurixBlazor.Services
+@using Microsoft.AspNetCore.Components
+
+@inherits IaDemandaModalBase
+
+@if (Visible)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Generar Demanda Ejecutiva (IA)</h5>
+                    <button class="btn-close" @onclick="Cerrar"></button>
+                </div>
+
+@*                 <div class="modal-body">
+                    <EditForm Model="modelo" OnValidSubmit="Generar">
+                        <DataAnnotationsValidator />
+
+                        <h6>Abogada / Abogado</h6>
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Nombre" placeholder="Nombre abogado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Apellido" placeholder="Apellido abogado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Matricula" placeholder="Matrícula" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Cuit" placeholder="CUIT" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.CondicionIva" placeholder="Condición IVA" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.DomicilioProcesal" placeholder="Domicilio procesal" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Ciudad" placeholder="Ciudad" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.Provincia" placeholder="Provincia" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Abogado.DomicilioElectronico" placeholder="Domicilio electrónico" />
+
+                        <hr />
+
+                        <h6>Actor (Cliente)</h6>
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Nombre" placeholder="Cliente / Actor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Domicilio" placeholder="Domicilio actor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Ciudad" placeholder="Ciudad actor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Provincia" placeholder="Provincia actor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Cuit" placeholder="CUIT actor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Cliente.Dni" placeholder="DNI actor" />
+
+                        <hr />
+
+                        <h6>Demandado (Deudor)</h6>
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Nombre" placeholder="Deudor / Demandado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Domicilio" placeholder="Domicilio demandado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Ciudad" placeholder="Ciudad demandado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Provincia" placeholder="Provincia demandado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Cuit" placeholder="CUIT demandado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Deudor.Dni" placeholder="DNI demandado" />
+
+                        <hr />
+
+                        <h6>Certificado de deuda</h6>
+                        <InputNumber class="form-control mb-2" @bind-Value="modelo.Certificado.Monto" placeholder="Monto" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Certificado.Numero" placeholder="N° certificado" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Certificado.OrganismoEmisor" placeholder="Organismo emisor" />
+                        <InputText class="form-control mb-2" @bind-Value="modelo.Certificado.Dependencia" placeholder="Dependencia" />
+
+                        <button class="btn btn-primary mt-2" type="submit">Generar demanda</button>
+                    </EditForm>
+                </div> *@
+
+                <div class="modal-body">
+                    <EditForm Model="modelo" OnValidSubmit="Generar">
+                        <DataAnnotationsValidator />
+
+                        <!-- ABOGADA / ABOGADO -->
+                        <h6>Abogada / Abogado</h6>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Nombre" placeholder="Nombre" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Apellido" placeholder="Apellido" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Matricula" placeholder="Matrícula" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Cuit" placeholder="CUIT" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.CondicionIva" placeholder="Condición IVA" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-8">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.DomicilioProcesal" placeholder="Domicilio procesal" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.DomicilioElectronico" placeholder="Domicilio electrónico" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Ciudad" placeholder="Ciudad" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Abogado.Provincia" placeholder="Provincia" />
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- ACTOR / CLIENTE -->
+                        <h6>Actor (Cliente)</h6>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-12">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Nombre" placeholder="Cliente / Actor" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-8">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Domicilio" placeholder="Domicilio actor" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Cuit" placeholder="CUIT actor" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Ciudad" placeholder="Ciudad actor" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Provincia" placeholder="Provincia actor" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Cliente.Dni" placeholder="DNI actor" />
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- DEMANDADO / DEUDOR -->
+                        <h6>Demandado (Deudor)</h6>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-12">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Nombre" placeholder="Deudor / Demandado" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-8">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Domicilio" placeholder="Domicilio demandado" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Cuit" placeholder="CUIT demandado" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Ciudad" placeholder="Ciudad demandado" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Provincia" placeholder="Provincia demandado" />
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <InputText class="form-control" @bind-Value="modelo.Deudor.Dni" placeholder="DNI demandado" />
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- CERTIFICADO DE DEUDA -->
+                        <h6>Certificado de deuda</h6>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputNumber class="form-control" @bind-Value="modelo.Certificado.Monto" placeholder="Monto" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Certificado.Numero" placeholder="N° certificado" />
+                            </div>
+                        </div>
+
+           @*              <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Certificado.OrganismoEmisor" placeholder="Organismo emisor" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Certificado.Dependencia" placeholder="Dependencia" />
+                            </div>
+                        </div> *@
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Certificado.FechaCertificado" placeholder="Fecha Certificado" />
+                            </div>
+                            <div class="col-md-6">
+                                <InputText class="form-control" @bind-Value="modelo.Certificado.FechaLiquidacion" placeholder="Fecha Liquidación" />
+                            </div>
+                        </div> 
+
+                        <!-- 🔽 Cargar PDF de certificado -->
+                        <div class="border rounded p-2 mb-2 bg-light">
+                            <div class="mb-2 fw-semibold">Cargar certificado (PDF)</div>
+                            <div class="row g-2 align-items-center">
+                                <div class="col-md-8">
+                                    <InputFile OnChange="OnCertificadoPdfSeleccionado" accept="application/pdf" />
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            @onclick="ProcesarCertificadoPdf">
+                                        Leer datos del certificado
+                                    </button>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(CertificadoMensaje))
+                            {
+                                <div class="mt-2 small text-muted">@CertificadoMensaje</div>
+                            }
+                        </div>
+
+                        <button class="btn btn-primary mt-2" type="submit">Generar demanda</button>
+
+                    </EditForm>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+}
+

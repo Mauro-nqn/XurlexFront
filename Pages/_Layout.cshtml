@@ -1,0 +1,292 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@namespace IurixBlazor.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    
+    <base href="/" />  <!--  CORRECTO -->
+
+    <link rel="icon" type="image/png" href="images/faviconxurlex.png" />
+
+    <link href="fullcalendar/main.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="css/bootstrap/css/bootstrap.css" />
+    <link rel="stylesheet" href="css/bootstrap-icons/font/bootstrap-icons.css">
+    <script src="js/bootstrap/bootstrap.bundle.min.js"></script>
+
+    <script src="js/modal.js"></script>
+
+    
+    <link href="css/site.css" rel="stylesheet" asp-append-version="true" />
+    
+    
+    <link href="IurixBlazor.styles.css" rel="stylesheet" /> <!-- ✅ Estilos de componentes -->
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    @* <link href="css/agenda.css" rel="stylesheet" /> *@
+
+    
+    @* <link rel="stylesheet" href="css/floatingWindows.css"> *@
+
+
+    
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+</head>
+
+<body>
+    @RenderBody()
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+
+    @* <div class="modal fade" id="reconnectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        ⚠ Conexión perdida
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">
+                        Se perdió la conexión con el servidor. Estamos intentando reconectar...
+                    </p>
+                    <p class="mb-0 small text-muted">
+                        Si pasan varios segundos y no vuelve a responder, tocá el botón
+                        <strong>Recargar</strong> para continuar.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            onclick="window.forzarRecargaBlazor()">
+                        🔄 Recargar ahora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    <div id="reconnectOverlay" style="
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:99999;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+">
+        <div style="
+    max-width:420px; width:100%;
+    background:#fff;
+    border-radius:14px;
+    padding:16px 16px 12px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  ">
+            <div style="font-size:18px; font-weight:700; margin-bottom:8px;">
+                ⚠ Conexión perdida
+            </div>
+
+            <div style="font-size:14px; line-height:1.35; margin-bottom:10px;">
+                Estamos intentando reconectar con el servidor…
+            </div>
+
+            <div style="font-size:13px; color:#555; margin-bottom:12px;">
+                Si no vuelve a responder, recargaremos automáticamente en
+                <b><span id="reconnectCountdown">15</span>s</b>.
+            </div>
+
+            <button onclick="location.reload()" style="
+      width:100%;
+      border:0;
+      background:#0d6efd;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+    ">
+                🔄 Recargar ahora
+            </button>
+        </div>
+    </div>
+
+    
+    <script src="js/blazorHelpers.js"></script>
+    <script src="editor/ckeditor/ckeditor.js"></script>
+    <script src="editor/editor.js"></script>
+    <script src="js/googleLink.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="js/site.js"></script>
+
+    <link href="js/site.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    @* <script src="_framework/blazor.server.js"></script> *@
+
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+
+    @* <script>
+        (function () {
+            let reconnectModal = null;
+
+            function getReconnectModal() {
+                if (!reconnectModal) {
+                    const modalElement = document.getElementById('reconnectModal');
+                    if (!modalElement || !window.bootstrap) return null;
+
+                    reconnectModal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                }
+                return reconnectModal;
+            }
+
+            function showReconnectModal() {
+                const m = getReconnectModal();
+                if (m) m.show();
+            }
+
+            function hideReconnectModal() {
+                const m = getReconnectModal();
+                if (m) m.hide();
+            }
+
+            // Función global para el botón "Recargar ahora"
+            window.forzarRecargaBlazor = function () {
+                location.reload();
+            };
+
+            // Handler de reconexión en español
+            const reconnectionHandler = {
+                // Se dispara cuando se cae la conexión (tab suspendida, cambio de red, etc.)
+                onConnectionDown: (options, error) => {
+                    console.log("Conexión con Blazor caída:", error);
+                    showReconnectModal();
+
+                    // true = dejar que Blazor use su estrategia de reconexión automática
+                    return true;
+                },
+
+                // Se dispara cuando la conexión se restablece
+                onConnectionUp: () => {
+                    console.log("Conexión con Blazor restablecida");
+                    hideReconnectModal();
+                }
+            };
+
+            // Arrancamos Blazor manualmente con opciones de reconexión
+            Blazor.start({
+                reconnectionHandler: reconnectionHandler,
+                reconnectionOptions: {
+                    maxRetries: 20,                 // intentos de reconexión
+                    retryIntervalMilliseconds: 3000 // cada 3 segundos
+                }
+            }).catch(err => {
+                console.error("Error iniciando Blazor:", err);
+            });
+
+        })();
+    </script> *@
+
+
+    <script>
+        (function () {
+          const overlay = document.getElementById("reconnectOverlay");
+          const countdownEl = document.getElementById("reconnectCountdown");
+
+          let countdownTimer = null;
+          let autoReloadTimer = null;
+
+          function showOverlay(secondsToReload) {
+            if (!overlay) return;
+            overlay.style.display = "flex";
+
+            let s = secondsToReload ?? 15;
+            if (countdownEl) countdownEl.textContent = String(s);
+
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+              s--;
+              if (countdownEl) countdownEl.textContent = String(Math.max(s, 0));
+            }, 1000);
+
+            if (autoReloadTimer) clearTimeout(autoReloadTimer);
+            autoReloadTimer = setTimeout(() => {
+              location.reload();
+            }, (secondsToReload ?? 15) * 1000);
+          }
+
+          function hideOverlay() {
+            if (!overlay) return;
+            overlay.style.display = "none";
+            if (countdownTimer) clearInterval(countdownTimer);
+            if (autoReloadTimer) clearTimeout(autoReloadTimer);
+            countdownTimer = null;
+            autoReloadTimer = null;
+          }
+
+          // Si el usuario vuelve a la pestaña (pantalla encendida), y quedó “colgado”,
+          // intentamos una recarga suave después de unos segundos si sigue desconectado.
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+              // si el overlay está visible, damos un pequeño margen y luego recargamos
+              if (overlay && overlay.style.display === "flex") {
+                setTimeout(() => location.reload(), 4000);
+              }
+            }
+          });
+
+          const reconnectionHandler = {
+            onConnectionDown: (options, error) => {
+              console.log("Blazor: conexión caída", error);
+              // Mostramos overlay y auto-recargamos si no vuelve
+              showOverlay(15);
+              return true; // deja que Blazor intente reconectar
+            },
+            onConnectionUp: () => {
+              console.log("Blazor: reconectado");
+              hideOverlay();
+            }
+          };
+
+          Blazor.start({
+            reconnectionHandler,
+            reconnectionOptions: {
+              maxRetries: 10,
+              retryIntervalMilliseconds: 2000
+            }
+          }).catch(err => console.error("Error iniciando Blazor:", err));
+        })();
+    </script>
+
+ 
+    
+
+
+</body>
+
+
+
+</html>
+
+
+

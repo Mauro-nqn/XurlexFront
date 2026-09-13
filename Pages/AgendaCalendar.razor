@@ -1,0 +1,142 @@
+﻿@attribute [Authorize]
+
+@page "/agendacalendar"
+@inherits AgendaCalendarBase
+@layout AdminLayout
+
+<div id="agendaCalendar"></div>
+
+<!-- Modal de evento -->
+@* <div class="modal fade" id="modalEventosDia" tabindex="-1" aria-labelledby="eventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventoTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Fecha:</strong> <span id="eventoFecha"></span></p>
+                <p id="eventoDescripcion"></p>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+
+<div class="modal fade" id="modalEventosDia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header evento-header" id="modalEventoHeader" data-estado="desconocido">
+                <h5 class="modal-title" id="eventoTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Fecha:</strong> <span id="eventoFecha"></span></p>
+                <p id="eventoDescripcion"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* <div class="modal fade" id="modalEventosDia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="--bs-modal-width: 600px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventoTitulo"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2"><strong>Fecha:</strong> <span id="eventoFecha"></span></div>
+                <div id="eventoDescripcion"></div>
+            </div>
+        </div>
+    </div>
+</div> *@
+
+<style>
+    /* Desktop */
+    #modalEventosDia .modal-dialog {
+        max-width: 520px !important; /* ajustá 480/520/640 a gusto */
+        width: auto !important;
+        margin: 1rem auto !important;
+    }
+
+    #modalEventosDia .modal-content {
+        border-radius: .75rem !important;
+        height: auto !important;
+    }
+
+    #modalEventosDia .modal-body {
+        max-height: 70vh !important;
+        overflow-y: auto !important;
+        padding: 1rem !important;
+    }
+
+    /* Mobile */
+    @@media (max-width: 576px) {
+   
+    #modalEventosDia .modal-dialog {
+        max-width: 94vw !important;
+        margin: 0 auto !important;
+    }
+
+    #modalEventosDia .modal-content {
+        border-radius: 0 !important;
+    }
+
+
+
+    #modalEventosDia .modal-body {
+        max-height: 60vh !important;
+        padding: .75rem !important;
+    }
+    }
+
+    /* Mano en TODO el evento y sus hijos */
+    /* Mano en los eventos del month-view (mismo selector que usa FC para los márgenes) */
+    .fc-direction-ltr .fc-daygrid-event.fc-event-end,
+    .fc-direction-rtl .fc-daygrid-event.fc-event-start {
+        cursor: pointer !important;
+    }
+
+    /* Dot events y sus hijos (título/hora) */
+    .fc-daygrid-dot-event,
+    .fc-daygrid-dot-event * {
+        cursor: pointer !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+
+    /* Por si aparece en otras vistas/listas */
+    .fc-timegrid-event, .fc-timegrid-event *,
+    .fc-list-event, .fc-list-event * {
+        cursor: pointer !important;
+        user-select: none !important;
+    }
+
+
+
+
+    /* Permitir salto de línea en el título del evento en month view */
+    .fc .fc-daygrid-event .fc-event-title,
+    .fc .fc-daygrid-dot-event .fc-event-title {
+        white-space: normal !important; /* en vez de nowrap */
+        line-height: 1.2;
+    }
+
+    /* (Opcional) limitar a 2 líneas y agregar “…” */
+    .fc .fc-daygrid-dot-event .fc-event-title {
+        display: -webkit-box;
+        -webkit-line-clamp: 2; /* cantidad de líneas */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+
+
+
+
+
+    
+</style>

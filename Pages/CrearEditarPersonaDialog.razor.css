@@ -1,0 +1,10 @@
+﻿.toast-container {
+    position: fixed;
+    z-index: 99999;
+    /* ... otras reglas de estilo ... */
+}
+
+.toast {
+    z-index:5000 !important;
+    position: fixed
+}

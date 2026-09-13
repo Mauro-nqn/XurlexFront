@@ -1,0 +1,493 @@
+﻿@* @using Microsoft.AspNetCore.Components.Web
+@using IurixBlazor.Services.Windowing
+@inject WindowService Windows
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="win"
+     style="left:@(Item.Left)px; top:@(Item.Top)px; width:@(Item.Width)px; height:@(Item.Height)px; z-index:@Item.ZIndex;"
+     @onmousedown="@(() => Windows.BringToFront(Item.Id))">
+    <div class="win-titlebar" @onmousedown="StartDrag">
+        <div class="win-title">@Item.Title</div>
+        <div class="win-actions">
+            <button type="button" class="btn-win" @onclick="Min">—</button>
+            <button type="button" class="btn-win" @onclick="Max">□</button>
+            <button type="button" class="btn-win close" @onclick="() => Windows.Close(Item.Id)">✕</button>
+        </div>
+    </div>
+
+    <div class="win-content">
+        <DynamicComponent Type="Item.ComponentType" Parameters="_merged" />
+    </div>
+
+    @if (Item.Resizable)
+    {
+        <div class="win-resize" @onmousedown="StartResize"></div>
+    }
+</div>
+
+@code {
+    [Parameter] public WindowItem Item { get; set; } = default!;
+
+    private Dictionary<string, object?> _merged = new();
+    private bool _dragging, _resizing;
+    private double _sx, _sy, _sl, _st, _sw, _sh;
+    private DotNetObjectReference<FloatingWindow>? _selfRef;
+
+    protected override void OnParametersSet()
+    {
+        _merged = new(Item.Parameters ?? new());
+        _merged["WindowId"] = Item.Id;                         // 👈 Pasa Id al contenido
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) _selfRef = DotNetObjectReference.Create(this);
+        return Task.CompletedTask;
+    }
+
+    void StartDrag(MouseEventArgs e)
+    {
+        if (!Item.Draggable) return;
+        _dragging = true;
+        _sx = e.ClientX; _sy = e.ClientY;
+        _sl = Item.Left; _st = Item.Top;
+        JS.InvokeVoidAsync("winInterop.setActive", _selfRef);
+    }
+    void StartResize(MouseEventArgs e)
+    {
+        _resizing = true;
+        _sx = e.ClientX; _sy = e.ClientY;
+        _sw = Item.Width; _sh = Item.Height;
+        JS.InvokeVoidAsync("winInterop.setActive", _selfRef);
+    }
+
+    [JSInvokable]
+    public void OnMouseMove(double x, double y)
+    {
+        if (_dragging)
+        {
+            Windows.Move(Item.Id, Math.Max(0, _sl + (x - _sx)), Math.Max(0, _st + (y - _sy)));
+        }
+        else if (_resizing)
+        {
+            Windows.Resize(Item.Id, _sw + (x - _sx), _sh + (y - _sy));
+        }
+    }
+
+    [JSInvokable]
+    public void OnMouseUp()
+    {
+        _dragging = false; _resizing = false;
+    }
+
+    void Min() => Windows.Resize(Item.Id, Item.Width, 44);
+    async void Max()
+    {
+        var wh = await JS.InvokeAsync<double[]>("winInterop.getWindowSize");
+        Windows.Move(Item.Id, 8, 8);
+        Windows.Resize(Item.Id, Math.Max(480, wh[0] - 16), Math.Max(320, wh[1] - 16));
+    }
+
+    public void Dispose() => _selfRef?.Dispose();
+}
+ *@
+
+
+
+
+
+
+@* <div class="win"
+     style="left:@(Item.Left)px; top:@(Item.Top)px; width:@(Item.Width)px; height:@(Item.Height)px; z-index:@Item.ZIndex;"
+     @onmousedown="@(() => Windows.BringToFront(Item.Id))">
+    <div class="win-titlebar" @onmousedown="StartDrag">
+        <div class="win-title">@Item.Title</div>
+        <div class="win-actions">
+            <button type="button" class="btn-win" @onclick="Min">—</button>
+            <button type="button" class="btn-win" @onclick="Max">□</button>
+            <button type="button" class="btn-win close" @onclick:stopPropagation @onclick="() => Windows.Close(Item.Id)">✕</button>
+        </div>
+    </div>
+
+    <div class="win-content">
+        <DynamicComponent Type="Item.ComponentType" Parameters="_merged" />
+    </div>
+
+    @if (Item.Resizable)
+    {
+        <div class="win-resize" @onmousedown="StartResize"></div>
+    }
+</div> *@
+
+
+
+
+
+
+
+
+
+@* <!--VERSION FUNCIONAL-->
+
+@using Microsoft.AspNetCore.Components.Web
+@using IurixBlazor.Services.Windowing
+@inject WindowService Windows
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="win @(Item.IsMinimized ? "minimized" : "")"
+     style="left:@(Item.Left)px; top:@(Item.Top)px; width:@(Item.Width)px; height:@(Item.Height)px; z-index:@Item.ZIndex;"
+     @onmousedown="@(() => Windows.BringToFront(Item.Id))"
+     >
+
+    <div class="win-titlebar" 
+        @onmousedown="StartDrag"
+        >
+        <div class="win-title">@Item.Title</div>
+        <div class="win-actions">
+            <button type="button" class="btn-win" @onclick="Min">—</button>
+            <button type="button" class="btn-win" @onclick="Max">□</button>
+            <button type="button" class="btn-win close" @onclick:stopPropagation @onclick="() => Windows.Close(Item.Id)">✕</button>
+        </div>
+    </div>
+
+    <div class="win-content">
+        <DynamicComponent Type="Item.ComponentType" Parameters="_merged" />
+    </div>
+
+    @if (Item.Resizable)
+    {
+        <div class="win-resize" 
+            @onmousedown="StartResize"
+            ></div>
+    }
+</div>
+
+@code {
+    [Parameter] public WindowItem Item { get; set; } = default!;
+
+    private Dictionary<string, object?> _merged = new();
+    private bool _dragging, _resizing;
+    private double _sx, _sy, _sl, _st, _sw, _sh;
+    private DotNetObjectReference<FloatingWindow>? _selfRef;
+    bool isMaximized = false;
+
+    protected override void OnParametersSet()
+    {
+        _merged = new(Item.Parameters ?? new());
+        _merged["WindowId"] = Item.Id;
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _selfRef = DotNetObjectReference.Create(this);
+        }
+        return Task.CompletedTask;
+    }
+
+    void StartDrag(MouseEventArgs e)
+    {
+        if (!Item.Draggable) return;
+        _dragging = true;
+        _sx = e.ClientX; _sy = e.ClientY;
+        _sl = Item.Left; _st = Item.Top;
+        // Pasa el ID y la referencia al JavaScript
+        JS.InvokeVoidAsync("winInterop.setActive", Item.Id.ToString(), _selfRef);
+    }
+    void StartResize(MouseEventArgs e)
+    {
+        _resizing = true;
+        _sx = e.ClientX; _sy = e.ClientY;
+        _sw = Item.Width; _sh = Item.Height;
+        // Pasa el ID y la referencia al JavaScript
+        JS.InvokeVoidAsync("winInterop.setActive", Item.Id.ToString(), _selfRef);
+    }
+
+
+
+
+    
+
+    [JSInvokable]
+    public void OnMouseMove(double x, double y)
+    {
+        if (_dragging)
+        {
+            Windows.Move(Item.Id, Math.Max(0, _sl + (x - _sx)), Math.Max(0, _st + (y - _sy)));
+        }
+        else if (_resizing)
+        {
+            Windows.Resize(Item.Id, _sw + (x - _sx), _sh + (y - _sy));
+        }
+    }
+
+    [JSInvokable]
+    public void OnMouseUp()
+    {
+        // Limpia los estados de arrastre/redimensionamiento
+        _dragging = false; _resizing = false;
+    }
+
+    // void Min() => Windows.Resize(Item.Id, Item.Width, 44);
+    void Min()
+    {
+        Windows.Minimize(Item.Id);
+    }
+
+    // async void Max()
+    // {
+    //     var wh = await JS.InvokeAsync<double[]>("winInterop.getWindowSize");
+    //     Windows.Move(Item.Id, 8, 8);
+    //     Windows.Resize(Item.Id, Math.Max(480, wh[0] - 16), Math.Max(320, wh[1] - 16));
+    // }
+
+    async void Max()
+    {
+        var wh = await JS.InvokeAsync<double[]>("winInterop.getWindowSize");
+        // Llama al servicio con el ID de la ventana y el tamaño del navegador
+        Windows.MaximizeOrRestore(Item.Id, wh[0], wh[1]);
+    }
+
+    public void Dispose()
+    {
+        // Al destruir el componente, notifica a JS para que elimine la referencia
+        // Esto previene que se queden referencias huérfanas
+        JS.InvokeVoidAsync("winInterop.removeActive", Item.Id.ToString());
+        _selfRef?.Dispose();
+    }
+} *@
+
+
+
+
+
+
+
+<!-- VERSION FUNCIONAL + DRAG Interact.js -->
+@using Microsoft.AspNetCore.Components.Web
+@using IurixBlazor.Services.Windowing
+@using Microsoft.JSInterop
+@inject WindowService Windows
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="win @(Item.IsMinimized ? "minimized" : "") @( _suppressClicks ? "suppress" : "" )"
+     @ref="_rootRef"
+     style="left:@(Item.Left)px; top:@(Item.Top)px; width:@(Item.Width)px; height:@(Item.Height)px; z-index:@Item.ZIndex;"
+     @onmousedown="@(() => Windows.BringToFront(Item.Id))"
+     @onpointerdown="@(() => Windows.BringToFront(Item.Id))">
+
+    <div class="win-titlebar" @ref="_titlebarRef">
+        <div class="win-title">@Item.Title</div>
+
+        <div class="win-actions">
+@*             <button type="button" class="btn-win"
+                    @onclick="OnMin"
+                    @onclick:stopPropagation
+                    @onclick:preventDefault
+                    @onpointerdown:stopPropagation>
+                —
+            </button>
+            <button type="button" class="btn-win"
+                    @onclick="OnMax"
+                    @onclick:stopPropagation
+                    @onclick:preventDefault
+                    @onpointerdown:stopPropagation>
+                □
+            </button>
+            <button type="button" class="btn-win close"
+                    @onclick="OnClose"
+                    @onclick:stopPropagation
+                    @onclick:preventDefault
+                    @onpointerdown:stopPropagation>
+                ✕
+            </button> *@
+
+            <button type="button" class="btn-win"
+                    @onpointerdown="OnMin"
+                    @onpointerdown:stopPropagation
+                    @onpointerdown:preventDefault>
+                —
+            </button>
+
+            <button type="button" class="btn-win"
+                    @onpointerdown="OnMax"
+                    @onpointerdown:stopPropagation
+                    @onpointerdown:preventDefault>
+                □
+            </button>
+
+            <button type="button" class="btn-win close"
+                    @onpointerdown="OnClose"
+                    @onpointerdown:stopPropagation
+                    @onpointerdown:preventDefault>
+                ✕
+            </button>
+        </div>
+    </div>
+
+    <div class="win-content">
+        <DynamicComponent Type="Item.ComponentType" Parameters="_merged" />
+    </div>
+
+    @if (Item.Resizable)
+    {
+        <div class="win-resize" @onmousedown="StartResize"></div>
+    }
+</div>
+
+@code {
+    [Parameter] public WindowItem Item { get; set; } = default!;
+
+    private ElementReference _rootRef, _titlebarRef;
+    private DotNetObjectReference<FloatingWindow>? _selfRef;
+    private Dictionary<string, object?> _merged = new();
+    private bool _resizing, _suppressClicks;
+    private double _sx, _sy, _sw, _sh;
+
+    protected override void OnParametersSet()
+    {
+        _merged = new(Item.Parameters ?? new());
+        _merged["WindowId"] = Item.Id;
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (!firstRender) return;
+    //     _selfRef = DotNetObjectReference.Create(this);
+    //     await JS.InvokeVoidAsync("winCapture.attach", _rootRef, _titlebarRef, _selfRef);
+
+
+    // }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        _selfRef = DotNetObjectReference.Create(this);
+
+        // //  HUD ON (best-effort: si el script no cargó aún, ignoramos)
+        // try { await JS.InvokeVoidAsync("winCaptureHUD.enable", true); } catch { }
+
+        // Vincula el drag de la barra de título
+        await JS.InvokeVoidAsync("winCapture.attach", _rootRef, _titlebarRef, _selfRef);
+
+        // // (Opcional) log en el HUD para confirmar el attach
+        // try { await JS.InvokeVoidAsync("winCaptureLog", $"FW attach {Item.Id}"); } catch { }
+    }
+
+    // Commit desde JS (al soltar)
+    [JSInvokable] public void CommitMove(double left, double top) => Windows.Move(Item.Id, left, top);
+
+    // Anti "tap fantasma" tras soltar
+    [JSInvokable]
+    public async Task SuppressClicks(int ms)
+    {
+        _suppressClicks = true; StateHasChanged();
+        try { await Task.Delay(ms); }
+        finally { _suppressClicks = false; StateHasChanged(); }
+    }
+
+    // --- RESIZE (mouse) ---
+    void StartResize(MouseEventArgs e)
+    {
+        _resizing = true;
+        _sx = e.ClientX; _sy = e.ClientY;
+        _sw = Item.Width; _sh = Item.Height;
+        JS.InvokeVoidAsync("winInterop.setActive", Item.Id.ToString(), _selfRef);
+    }
+
+    [JSInvokable]
+    public void OnMouseMove(double x, double y)
+    {
+        if (_resizing)
+            Windows.Resize(Item.Id, _sw + (x - _sx), _sh + (y - _sy));
+    }
+
+    [JSInvokable]
+    public void OnMouseUp() { _resizing = false; }
+
+    // --- Botones protegidos por _suppressClicks ---
+    // void OnMin() { if (_suppressClicks) return; Windows.Minimize(Item.Id); }
+    // async void OnMax()
+    // {
+    //     if (_suppressClicks) return;
+    //     var wh = await JS.InvokeAsync<double[]>("winInterop.getWindowSize");
+    //     Windows.MaximizeOrRestore(Item.Id, wh[0], wh[1]);
+    // }
+    // void OnClose() { if (_suppressClicks) return; Windows.Close(Item.Id); }
+
+    void OnMin()
+    {
+        if (_suppressClicks) return;
+        JS.InvokeVoidAsync("winCaptureLog", "OnMin() fired");
+        Windows.Minimize(Item.Id);
+    }
+    async void OnMax()
+    {
+        if (_suppressClicks) return;
+        JS.InvokeVoidAsync("winCaptureLog", "OnMax() fired");
+        var wh = await JS.InvokeAsync<double[]>("winInterop.getWindowSize");
+        Windows.MaximizeOrRestore(Item.Id, wh[0], wh[1]);
+    }
+    void OnClose()
+    {
+        if (_suppressClicks) return;
+        JS.InvokeVoidAsync("winCaptureLog", "OnClose() fired");
+        Windows.Close(Item.Id);
+    }
+
+    public void Dispose()
+    {
+        // JS.InvokeVoidAsync("winInterop.removeActive", Item.Id.ToString());
+        // _selfRef?.Dispose();
+
+        JS.InvokeVoidAsync("winCaptureLog", $"DISPOSE {Item.Id}");
+        JS.InvokeVoidAsync("winInterop.removeActive", Item.Id.ToString());
+        _selfRef?.Dispose();
+    }
+}
+
+
+<style>
+    .win {
+        position: absolute;
+        will-change: left, top;
+    }
+
+    .win-titlebar {
+        position: relative;
+        touch-action: none;
+        user-select: none;
+        cursor: move;
+    }
+
+    .win-actions {
+        position: absolute;
+        right: 6px;
+        top: 4px;
+        z-index: 2;
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .win-content {
+        height: calc(100% - 44px);
+        overflow: auto;
+    }
+
+    .win.is-any-dragging .win-actions,
+    .win.is-any-dragging .win-content,
+    .win.is-any-dragging .win-resize {
+        pointer-events: none !important;
+    }
+
+    .win.suppress .win-actions,
+    .win.suppress .win-content,
+    .win.suppress .win-resize {
+        pointer-events: none !important;
+    }
+
+</style>

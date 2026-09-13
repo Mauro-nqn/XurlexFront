@@ -1,0 +1,418 @@
+﻿@attribute [Authorize]
+
+@page "/usuarios/editar/{Id:int}"
+@inherits UsuariosEditarBase
+@layout AdminLayout
+
+@using IurixBlazor.Shared.Enums
+@using IurixBlazor.Shared.Helpers
+
+<div class="container mt-4 usuario-form">
+    <h3 class="mb-4">✏️ Editar Usuario</h3>
+
+    @if (IsLoading || editContext is null)
+    {
+        <div class="text-center mt-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Cargando datos del usuario...</p>
+        </div>
+    }
+    else
+    {
+       @*  <EditForm Model="@usuario" OnValidSubmit="ActualizarUsuario">
+            <DataAnnotationsValidator />
+            <ValidationSummary /> *@
+
+        <EditForm EditContext="@editContext"
+                  OnValidSubmit="ActualizarUsuario"
+                  OnInvalidSubmit="OnInvalidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Usuario (solo lectura) -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Usuario</label>
+                    <InputText class="form-control" @bind-Value="usuario.NombreUsuario" readonly />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Password</label>
+                    <InputText class="form-control" @bind-Value="usuario.Password" type="password" />
+                </div>
+
+   
+            </div>
+
+            <!-- Nombre y Apellido -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Nombre</label>
+                    <InputText class="form-control" @bind-Value="usuario.Nombre" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Apellido</label>
+                    <InputText class="form-control" @bind-Value="usuario.Apellido" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>DNI</label>
+                    <InputText class="form-control" @bind-Value="usuario.DNI" />
+                </div>
+            </div>
+
+            <!-- CUIT y Condicion Iva - si corresponde -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>RAZON SOCIAL</label>
+                    <InputText class="form-control" @bind-Value="usuario.RazonSocial" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>CUIT</label>
+                    <InputText class="form-control" @bind-Value="usuario.CUIT" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>IIBB</label>
+                    <InputText class="form-control" @bind-Value="usuario.IIBB" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Condicion Iva</label>
+                    @* <InputSelect class="form-control" @bind-Value="usuario.CondicionIvaId">
+                        <option value="">Seleccione...</option>
+                        @foreach (var condicionIva in CondicionIvas)
+                        {
+                            <option value="@condicionIva.Id">@condicionIva.Nombre</option>
+                        }
+                    </InputSelect> *@
+                    <!-- Condición IVA (si es int?) -->
+                    <InputSelect class="form-control"
+                                 @bind-Value="usuario.CondicionIvaId"
+                                 TValue="int?">
+                        <option value="">Seleccione...</option>
+                        @foreach (var condicionIva in CondicionIvas)
+                        {
+                            <option value="@condicionIva.Id">@condicionIva.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+
+            <!-- Datos para Factura Domicilio Fiscal, Provincia, Inicio Actividades (AFIP)  -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Domicilio Fiscal</label>
+                    <InputText class="form-control" @bind-Value="usuario.DomicilioFiscal" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Provincia</label>
+                    <InputText class="form-control" @bind-Value="usuario.Provincia" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Inicio Actividades</label>
+                    <InputDate class="form-control" @bind-Value="usuario.InicioActividades" />
+                </div>
+            </div>
+
+            <div class="row">
+            <!-- Rol y Cargo -->
+            <div class="col-md-6 mb-3">
+                <label>Rol</label>
+                @* <InputSelect class="form-control" @bind-Value="usuario.RolId">
+                    <option value="">Seleccione...</option>
+                    @foreach (var rol in Roles)
+                    {
+                        <option value="@rol.Id">@rol.Nombre</option>
+                    }
+                </InputSelect> *@
+                    <!-- Rol (si es int?) -->
+                    <InputSelect class="form-control"
+                                 @bind-Value="usuario.RolId"
+                                 TValue="int">
+                        <option value="">Seleccione...</option>
+                        @foreach (var rol in Roles)
+                        {
+                            <option value="@rol.Id">@rol.Nombre</option>
+                        }
+                    </InputSelect>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Cargo</label>
+                <InputSelect class="form-control" @bind-Value="usuario.Cargo">
+                    @foreach (var cargo in CargoEnumHelper.Cargos)
+                    {
+                        <option value="@cargo">@cargo</option>
+                    }
+                </InputSelect>
+            </div>
+            </div>
+
+            <!-- Matrículas -->
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label>Matrícula</label>
+                    <InputText class="form-control" @bind-Value="usuario.Matricula" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Matrícula 1</label>
+                    <InputText class="form-control" @bind-Value="usuario.Matricula1" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Matrícula 2</label>
+                    <InputText class="form-control" @bind-Value="usuario.Matricula2" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>Matrícula 3</label>
+                    <InputText class="form-control" @bind-Value="usuario.Matricula3" />
+                </div>
+            </div>
+
+            <!-- Email, Teléfono y Celular -->
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label>Email</label>
+                    <InputText class="form-control" @bind-Value="usuario.email" type="email" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label>Teléfono</label>
+                    <InputText class="form-control" @bind-Value="usuario.Telefono" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label>Celular</label>
+                    <InputText class="form-control" @bind-Value="usuario.Celular" />
+                </div>
+            </div>
+
+
+
+
+
+        <div class="card">
+            <div class="card-header" style="background-color:dimgrey; color:white">
+                    Vincular cuenta de Google
+            </div>
+                
+            <div class="card-body">
+            <!-- Botones -->
+        @* <div class="mt-3"> *@
+        
+        
+
+        <!-- 🔗 Vinculación Google -->
+                <button type="button" class="btn btn-outline-danger me-2" @onclick="OnVincularGoogleClicked">Vincular con Google</button>
+                <button type="button" class="btn btn-outline-info" @onclick="OnVerificarVinculacionClicked">Verificar vinculación</button>
+
+
+               
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            @onclick="OnDesvincularGoogleClicked"
+                            disabled="@(!(usuario?.Id > 0) || GoogleVinculado != true)">
+                        Desvincular
+                    </button>
+
+                    <div class="card-body">
+                    @if (GoogleVinculado == true)
+                    {
+                        <div class="text-success mt-2">✅ Vinculado: @GoogleEmail</div>
+                    }
+                    else if (GoogleVinculado == false)
+                    {
+                        <div class="text-danger mt-2">
+                            ❌ No vinculado@((!string.IsNullOrWhiteSpace(GoogleEmail) ? $" (email registrado: {GoogleEmail})" : ""))
+                        </div>
+                    }
+                    </div>
+               
+        @* </div> *@
+                </div>
+
+
+            </div>
+
+
+            <div class="card mt-4">
+              <div class="card-header" style="background:#2f4858; color:white">
+                🔐 Credenciales Dextra
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4 mb-2">
+                    <label>Host</label>
+                    <InputText class="form-control" @bind-Value="NuevaCred.Host" />
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label>Usuario Dextra</label>
+                    <InputText class="form-control" @bind-Value="NuevaCred.UsuarioDextra" />
+                  </div>
+                  <div class="col-md-4 mb-2">
+                    <label>Password</label>
+                    <InputText class="form-control" type="password" @bind-Value="NuevaCred.PasswordPlain" />
+                  </div>
+                </div>
+                <div class="form-check mb-3">
+                  <InputCheckbox class="form-check-input" @bind-Value="NuevaCred.IsDefault" />
+                  <label class="form-check-label">Usar como predeterminada</label>
+                </div>
+                <button type="button" class="btn btn-outline-primary me-2" @onclick="CrearCredencialAsync">
+                  Guardar credencial
+                </button>
+              </div>
+
+              @* <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead><tr>
+                    <th>Host</th><th>Usuario</th><th>Default</th><th>Verificada</th><th>OK</th><th>Acciones</th>
+                  </tr></thead>
+                  <tbody>
+                    @foreach (var c in Creds)
+                    {
+                      <tr>
+                        <td>@c.Host</td>
+                        <td>@c.UsuarioDextra</td>
+                        <td>@(c.IsDefault ? "Sí" : "No")</td>
+                        <td>@(c.LastVerifiedAt?.ToLocalTime().ToString("g"))</td>
+                        <td>@(c.LastVerifyOk is null ? "-" : (c.LastVerifyOk == true ? "✅" : "❌"))</td>
+                        <td>
+                          <button type="button" class="btn btn-sm btn-outline-success me-1" @onclick="() => VerificarCredAsync(c.Id)">Probar</button>
+                          @if (!c.IsDefault)
+                          {
+                          <button type="button" class="btn btn-sm btn-outline-secondary me-1" @onclick="() => SetDefaultAsync(c.Id)">Hacer default</button>
+                          }
+                          <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarCredAsync(c.Id)">Eliminar</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div> *@
+
+                @if (esMovil)
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var c in Creds)
+                        {
+                            <div class="card shadow-sm">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div class="min-w-0">
+                                            <div class="fw-semibold text-break" title="@c.Host">
+                                                <i class="bi bi-hdd-network me-1"></i>@c.Host
+                                            </div>
+                                            <div class="text-muted small text-break" title="@c.UsuarioDextra">
+                                                <i class="bi bi-person me-1"></i>@c.UsuarioDextra
+                                            </div>
+                                        </div>
+
+                                        <div class="text-end flex-shrink-0">
+                                            @if (c.IsDefault)
+                                            {
+                                                <span class="badge bg-primary">Default</span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-2" />
+
+                                    <div class="row g-2 small">
+                                        <div class="col-6">
+                                            <div class="text-muted">Verificada</div>
+                                            <div class="fw-semibold">
+                                                @(c.LastVerifiedAt.HasValue? c.LastVerifiedAt.Value.ToLocalTime().ToString("g") : "—")
+                                            </div>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <div class="text-muted">OK</div>
+                                            <div class="fw-semibold">
+                                                @(c.LastVerifyOk is null ? "—" : (c.LastVerifyOk == true ? "✅" : "❌"))
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 d-grid gap-2">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success"
+                                                @onclick="() => VerificarCredAsync(c.Id)">
+                                            <i class="bi bi-check2-circle me-1"></i>Probar
+                                        </button>
+
+                                        <div class="d-flex gap-2">
+                                            @if (!c.IsDefault)
+                                            {
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-secondary flex-fill"
+                                                        @onclick="() => SetDefaultAsync(c.Id)">
+                                                    <i class="bi bi-star me-1"></i>Default
+                                                </button>
+                                            }
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger flex-fill"
+                                                    @onclick="() => EliminarCredAsync(c.Id)">
+                                                <i class="bi bi-trash me-1"></i>Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Host</th>
+                                    <th>Usuario</th>
+                                    <th>Default</th>
+                                    <th>Verificada</th>
+                                    <th>OK</th>
+                                    <th class="text-nowrap">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in Creds)
+                                {
+                                    <tr>
+                                        <td class="text-truncate" style="max-width:240px" title="@c.Host">@c.Host</td>
+                                        <td class="text-truncate" style="max-width:220px" title="@c.UsuarioDextra">@c.UsuarioDextra</td>
+                                        <td>@(c.IsDefault ? "Sí" : "No")</td>
+                                        <td>@(c.LastVerifiedAt?.ToLocalTime().ToString("g") ?? "—")</td>
+                                        <td>@(c.LastVerifyOk is null ? "—" : (c.LastVerifyOk == true ? "✅" : "❌"))</td>
+                                        <td class="text-nowrap">
+                                            <button type="button" class="btn btn-sm btn-outline-success me-1"
+                                                    @onclick="() => VerificarCredAsync(c.Id)">
+                                                Probar
+                                            </button>
+                                            @if (!c.IsDefault)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+                                                        @onclick="() => SetDefaultAsync(c.Id)">
+                                                    Hacer default
+                                                </button>
+                                            }
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    @onclick="() => EliminarCredAsync(c.Id)">
+                                                Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+            </div>
+
+
+
+            <!-- Botones -->
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary me-2"><i class="bi bi-floppy2"></i> Guardar</button>
+                <button type="button" class="btn btn-secondary me-2" @onclick="Cancelar"><i class="bi bi-x-circle"></i> Cancelar</button>
+            </div>
+        </EditForm>
+    }
+</div>

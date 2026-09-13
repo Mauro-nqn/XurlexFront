@@ -1,0 +1,43 @@
+﻿@attribute [Authorize]
+
+@page "/tipo-comprobantes"
+@inherits TipoComprobantesBase
+@layout AdminLayout
+
+<div class="container mt-4 tipo-comprobantes-container">
+    <h3>📄 Tipo de Comprobantes</h3>
+
+    <button class="btn btn-primary mb-3" @onclick="NuevoTipo">➕ Nuevo Tipo</button>
+
+    <table class="table table-striped table-hover shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Letra</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Tipos.Count == 0)
+            {
+                <tr><td colspan="4" class="text-center text-muted">No hay tipos de comprobante registrados.</td></tr>
+            }
+            else
+            {
+                @foreach (var t in Tipos)
+                {
+                    <tr>
+                        <td>@t.Id</td>
+                        <td>@t.Descripcion</td>
+                        <td>@t.Letra</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-info me-2" @onclick="() => Editar(t.Id)">✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" @onclick="() => Eliminar(t.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

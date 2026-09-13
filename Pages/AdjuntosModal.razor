@@ -1,0 +1,233 @@
+﻿@using IurixBlazor.Services
+@inject ArchivoMovimientoService ArchivoMovimientoService 
+@inherits AdjuntosModalBase
+
+
+
+@if (Cargando)
+{
+    <div class="text-center p-4">
+        <div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div>
+        <div class="mt-2">Cargando adjuntos...</div>
+    </div>
+}
+
+<div class="modal fade" id="@ModalId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-paperclip me-2"></i>Archivos adjuntos — Movimiento #@MovimientoId
+                </h5>
+                <button type="button" class="btn-close" @onclick="CerrarAsync" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                @if (Archivos is null)
+                {
+                    <div class="text-muted">Sin datos.</div>
+                }
+                else if (!Archivos.Any())
+                {
+                    <div class="text-muted">Este movimiento no tiene adjuntos.</div>
+                }
+                else
+                {
+                    <ul class="list-group">
+                        @foreach (var a in Archivos)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <!-- Izquierda: puede encogerse -->
+                                <div class="flex-grow-1 min-w-0">
+
+                                    <div class="fw-semibold text-break" title="@a.Nombre">
+                                        @a.Nombre
+                                    </div>
+
+                                    <div class="small text-muted text-break">
+                                        @a.Extension?.ToUpperInvariant() • @a.TipoMime
+                                        @if (a.FechaSubida.HasValue)
+                                        {
+                                            <span> • @a.FechaSubida.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Derecha: no se encoge -->
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            title="Ver"
+                                            @onclick="() => VerArchivoAsync(a)">
+                                        <i class="bi bi-eye"></i> <span class="d-none d-sm-inline">Ver</span>
+                                    </button>
+
+                                    <a class="btn btn-sm btn-outline-primary"
+                                       title="Descargar"
+                                       href="@ObtenerUrlDescarga(a)"
+                                       download="@a.Nombre">
+                                        <i class="bi bi-download"></i> <span class="d-none d-sm-inline">Descargar</span>
+                                    </a>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CerrarAsync">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal VISOR -->
+<div class="modal fade" id="@VisorId" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    <i class="bi bi-eye me-2"></i>Vista previa — @ArchivoSeleccionadoParaVer?.Nombre
+                </h6>
+                <button type="button" class="btn-close" @onclick="CerrarVisorAsync" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (ArchivoSeleccionadoParaVer is null)
+                {
+                    <div class="text-muted">Sin archivo.</div>
+                }
+        @*         else if (!ArchivoSeleccionadoParaVer.ContenidoCargado)
+                {
+                    <div class="text-center p-4">
+                        <div class="spinner-border" role="status"></div>
+                        <div class="mt-2">Cargando archivo...</div>
+                    </div>
+                } *@
+
+                else if (MostrarPdfSinPreview)
+                {
+                    <!--  MOBILE + PDF: NO spinner -->
+                    <div class="alert alert-info">
+                        En celular la vista previa embebida no está disponible.
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-primary"
+                           href="@ArchivoMovimientoService.UrlVerInlineUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                           target="_blank" rel="noopener">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+                        </a>
+
+                        <a class="btn btn-primary"
+                           href="@ArchivoMovimientoService.UrlDescargaUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                           download="@ArchivoSeleccionadoParaVer.Nombre">
+                            <i class="bi bi-download me-1"></i>Descargar
+                        </a>
+                    </div>
+                }
+                else if (!ArchivoSeleccionadoParaVer.ContenidoCargado)
+                {
+                    <!-- 🔄 Spinner SOLO para casos donde realmente esperamos bytes -->
+                    <div class="text-center p-4">
+                        <div class="spinner-border"></div>
+                        <div class="mt-2">Cargando archivo...</div>
+                    </div>
+                }
+                else
+                {
+                    @if (EsImagen(ArchivoSeleccionadoParaVer.TipoMime))
+                    {
+                        <img class="img-fluid" src="@ArchivoSeleccionadoParaVer.DataUrlBase64" alt="preview" />
+                    }
+            @*         else if (EsPdf(ArchivoSeleccionadoParaVer.TipoMime))
+                    {
+                        <iframe src="@ArchivoSeleccionadoParaVer.DataUrlBase64"
+                                style="width:100%;height:75vh;border:none;"></iframe>
+                    } *@
+
+                    else if (EsPdf(ArchivoSeleccionadoParaVer.TipoMime))
+                    {
+                        @if (esMovil)
+                        {
+                            <div class="alert alert-info">
+                                En celular la vista previa embebida puede no estar soportada. Usá <b>Abrir</b>.
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-outline-primary"
+                                   href="@ArchivoMovimientoService.UrlVerInlineUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                                   target="_blank" rel="noopener">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+                                </a>
+
+                                <a class="btn btn-primary"
+                                   href="@ArchivoMovimientoService.UrlDescargaUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                                   download="@ArchivoSeleccionadoParaVer.Nombre">
+                                    <i class="bi bi-download me-1"></i>Descargar
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <iframe src="@ArchivoSeleccionadoParaVer.DataUrlBase64"
+                                    style="width:100%;height:75vh;border:none;"></iframe>
+                        }
+                    }
+
+
+                    else
+                    {
+@*                         <div class="alert alert-info">
+                            No hay vista previa para este tipo (<code>@ArchivoSeleccionadoParaVer.TipoMime</code>).
+                            Usá <strong>Descargar</strong>.
+                        </div> *@
+
+                        <div class="alert alert-info">
+                            No hay vista previa para este tipo de archivo
+                            (<code>@ArchivoSeleccionadoParaVer.TipoMime</code>).
+                            Podés <b>Abrir</b> o <b>Descargar</b>.
+                        </div>
+
+                        <div class="d-grid gap-2">
+    @*                         <a class="btn btn-outline-primary"
+                               href="@ObtenerUrlVerInline(ArchivoSeleccionadoParaVer)"
+                               target="_blank" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+                            </a>
+
+                            <a class="btn btn-primary"
+                               href="@ObtenerUrlDescarga(ArchivoSeleccionadoParaVer)"
+                               download="@ArchivoSeleccionadoParaVer.Nombre">
+                                <i class="bi bi-download me-1"></i>Descargar
+                            </a> *@
+
+                            <a class="btn btn-outline-primary"
+                               href="@ArchivoMovimientoService.UrlVerInlineUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                               target="_blank" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Abrir
+                            </a>
+
+                            <a class="btn btn-primary"
+                               href="@ArchivoMovimientoService.UrlDescargaUi(ArchivoSeleccionadoParaVer.Id!.Value)"
+                               download="@ArchivoSeleccionadoParaVer.Nombre">
+                                <i class="bi bi-download me-1"></i>Descargar
+                            </a>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                @if (ArchivoSeleccionadoParaVer is not null)
+                {
+                    <a class="btn btn-primary"
+                       href="@ObtenerUrlDescarga(ArchivoSeleccionadoParaVer)"
+                       download="@ArchivoSeleccionadoParaVer.Nombre">
+                        <i class="bi bi-download me-1"></i>Descargar
+                    </a>
+                }
+                <button class="btn btn-secondary" @onclick="CerrarVisorAsync">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+

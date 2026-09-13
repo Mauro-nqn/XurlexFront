@@ -1,0 +1,249 @@
+﻿
+.main-container {
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    margin: -1rem; /* anula el p-3 (=1rem) del <main> */
+    width: calc(100% + 2rem); /* recupera el ancho perdido por el margin */
+    
+}
+
+/* Fondo adaptable */
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/fondos/login8.jpg');
+    background-size: cover;
+    background-position: center;    
+    z-index: -1
+    
+}
+
+
+
+
+/* Que la ventana use casi todo el alto de la pantalla */
+/*#modalAgenda .modal-dialog {
+    max-width: 95% !important;*/ /* Más ancho que modal-xl */
+    /*height: 95vh;*/ /* Alto casi total */
+    /*margin: auto;
+}
+
+#modalAgenda .modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#modalAgenda .modal-body {
+    flex: 1;
+    overflow-y: auto;*/ /* Si el contenido se pasa de alto */
+/*}*/
+
+
+/* Forzar el modal por encima de TODO */
+#modalAgenda.modal {
+    z-index: 3000 !important;
+}
+
+#modalAgenda ~ .modal-backdrop {
+    z-index: 2990 !important;
+}
+
+
+/* Hacer grande el dialog y que el body sea flexible */
+#modalAgenda .modal-dialog {
+    width: 70vw;
+    max-width: none;
+    height: 70vh;
+    margin: auto;
+}
+
+#modalAgenda .modal-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#modalAgenda .modal-body {
+    flex: 1;
+    overflow: hidden; /* importante para que el calendario ocupe todo */
+    padding: 0; /* opcional: quita paddings para aprovechar espacio */
+}
+
+/* Un wrapper para controlar el alto del calendario */
+#modalAgenda .calendar-wrapper {
+    height: 100%;
+}
+
+/* Asegura que el <div id="calendar"> ocupe todo */
+#modalAgenda #calendar {
+    height: 100%;
+    min-height: 400px; /* fallback por si acaso */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* --- Tablet --- */
+@media (max-width: 992px) {
+    #modalAgenda .modal-dialog {
+        width: 90vw;
+        height: 75vh;
+        margin: 2vh auto;
+    }
+
+    #agendaCalendar {
+        min-height: 420px;
+    }
+}
+
+/* --- Mobile --- */
+@media (max-width: 576px) {
+    /* Si no usás modal-fullscreen-sm-down, forzá fullscreen */
+    #modalAgenda .modal-dialog {
+        width: 100vw;
+        max-width: none;
+        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        margin: 0;
+    }
+
+    #modalAgenda .modal-content {
+        height: 100%;
+        border-radius: 0;
+    }
+
+    #modalAgenda .modal-body {
+        padding: 0;
+    }
+
+    #agendaCalendar {
+        min-height: 60vh;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Ancho razonable y altura acotada con scroll */
+#modalEventosDia .modal-dialog {
+    max-width: 640px;
+}
+/* ~modal-md */
+#modalEventosDia .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Si querés aún más compacto en mobile */
+@media (max-width: 576px) {
+    #modalEventosDia .modal-dialog {
+        max-width: 95vw;
+        margin: 0 auto;
+    }
+
+    #modalEventosDia .modal-body {
+        max-height: 60vh;
+    }
+}
+
+
+
+
+
+/ /* Mano en TODOS los eventos (grid, timegrid, list) */
+.fc a.fc-daygrid-event,
+.fc .fc-daygrid-event,
+.fc .fc-timegrid-event,
+.fc .fc-list-event,
+.fc .fc-event {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* (Opcional) mano también al pasar por el día para reforzar que es clickeable */
+.fc-daygrid-day, .fc-daygrid-day-frame {
+    cursor: pointer !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Fondo móvil */
+@media (max-width: 768px) {
+    .background {
+        background-image: url('/images/fondos/loginmobile1.jpg');
+        filter: brightness(0.8); /* Menos blur, más contraste en móvil */
+    }
+}
+
+.content {
+    max-width: 1200px;
+    width: 100%;
+}
+
+.btn-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 10px;
+}
+
+    .btn-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+/* Iconos más grandes en desktop, más chicos en móvil */
+.icon {
+    font-size: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .icon {
+        font-size: 2rem;
+    }
+}
+
+

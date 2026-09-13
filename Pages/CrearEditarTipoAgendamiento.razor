@@ -1,0 +1,24 @@
+﻿@attribute [Authorize]
+
+@page "/tipo-agendamiento/editar/{Id:int?}"
+@inherits CrearEditarTipoAgendamientoBase
+@layout AdminLayout
+
+<EditForm Model="Tipo" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="container mt-4 crear-editar-tipo-agendamiento">
+        <h3>@(Id.HasValue ? "✏️ Editar Tipo de Agendamiento" : "➕ Nuevo Tipo de Agendamiento")</h3>
+
+        <div class="mb-3">
+            <label for="nombre">Nombre</label>
+            <InputText id="nombre" class="form-control" @bind-Value="Tipo.Nombre" />
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-success">💾 Guardar</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancelar">↩️ Cancelar</button>
+        </div>
+    </div>
+</EditForm>

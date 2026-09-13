@@ -1,0 +1,29 @@
+﻿@using IurixBlazor.Services.Windowing
+@inject WindowService Windows
+@implements IDisposable
+
+<div class="taskbar">
+    @foreach (var w in Windows.Windows.Where(w => w.IsMinimized))
+    {
+        <div class="taskbar-item" @key="w.Id" @onclick="@(() => Windows.Restore(w.Id))">
+            @w.Title
+        </div>
+
+
+
+    }
+</div>
+
+@code {
+    private Action? _handler;
+    protected override void OnInitialized()
+    {
+        _handler = () => InvokeAsync(StateHasChanged);
+        Windows.OnChanged += _handler;
+    }
+
+    public void Dispose()
+    {
+        if (_handler != null) Windows.OnChanged -= _handler;
+    }
+}

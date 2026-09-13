@@ -1,0 +1,672 @@
+﻿@attribute [Authorize]
+
+
+@page "/facturas/nueva"
+@inherits FacturasBase
+@layout AdminLayout
+@using IurixBlazor.Shared.Enums;
+@using System.Globalization
+
+<div class="container mt-4 facturas-container">
+    <h3>🧾 Facturación de Servicios</h3>
+
+
+
+    <!-- Datos del Emisor -->
+    <div class="alert alert-info">
+        <label for="usuarioSelect"><strong>Seleccionar Emisor:</strong></label>
+        <select id="usuarioSelect" class="form-select" @onchange="OnUsuarioEmisorChanged">
+            @foreach (var u in Usuarios)
+            {
+                <option value="@u.Id" selected="@(u.Id == UsuarioId)">
+                    @($"{u.Nombre} {u.Apellido} - {u.CUIT}")
+                </option>
+            }
+        </select>
+
+
+
+        <div class="d-flex justify-content-between align-items-start mt-2">
+            <!-- Columna izquierda: datos del emisor -->
+            <div id="datos-emisor">
+                <strong>Emisor:</strong> @UsuarioEmisorNombre <br />
+                <strong>CUIT:</strong> @UsuarioEmisorCuit <br />
+                <strong>IVA:</strong> @UsuarioEmisorCondicion
+            </div>
+
+            <!-- Columna derecha: aviso -->
+            @if (!UsuarioTieneCertificados)
+            {
+                <div class="alert alert-warning ms-3 mb-0">
+                    ⚠️ Este usuario no tiene certificados AFIP producción cargados.
+                    <br />Podrá cargar la factura pero <strong>NO emitirla electrónicamente</strong>.
+                </div>
+            }
+        </div>
+    </div>
+
+
+
+
+    <!-- Cliente seleccionado -->
+    <div class="mb-3">
+        <label class="form-label">Cliente</label>
+        <div class="input-group">
+            @* <input class="form-control" readonly value="@ClienteDisplay" placeholder="Seleccione un cliente" /> *@
+            <input class="form-control"
+                   readonly
+                   value="@ClienteDisplay"
+                   placeholder="Seleccione un cliente"
+                   @onfocus="AbrirModalClientes" />
+            <button class="btn btn-secondary" @onclick="AbrirModalClientes">🔍 Buscar</button>
+        </div>
+        <div class="mt-2 text-muted">
+            <small>
+                <strong>@(ClienteSeleccionadoDocLabel):</strong> @ClienteSeleccionadoDoc
+                | <strong>IVA:</strong> @ClienteSeleccionadoCondicion
+            </small>
+        </div>
+    </div>
+
+
+
+
+    <!-- Modal de Selección de Cliente -->
+    @if (MostrarModalClientes)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Seleccionar Cliente</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalClientes"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (ListaClientes == null || !ListaClientes.Any())
+                        {
+                            <p class="text-muted">No hay clientes disponibles.</p>
+                        }
+                        else
+                        {
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Documento</th>
+                                        <th>IVA</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cliente in ListaClientes)
+                                    {
+                                        <tr>
+                                            <!-- Cliente: Razón Social o Nombre + Apellido -->
+                                            <td>
+                                                @if (!string.IsNullOrWhiteSpace(cliente.RazonSocial) &&
+                                                                                    (cliente.CondicionIvaNombre != "Consumidor Final"))
+                                                {
+                                                    @cliente.RazonSocial
+                                                }
+                                                else
+                                                {
+                                                    @($"{cliente.Nombre} {cliente.Apellido}")
+                                                }
+                                            </td>
+
+                                            <!-- Documento: CUIT si existe, sino DNI -->
+                                            <td>
+                                                @if (!string.IsNullOrWhiteSpace(cliente.CUIT) &&
+                                                                                    (cliente.CondicionIvaNombre != "Consumidor Final"))
+                                                {
+                                                    @cliente.CUIT
+                                                }
+                                                else
+                                                {
+                                                    @cliente.DNI
+                                                }
+                                            </td>
+
+                                            <td>@cliente.CondicionIvaNombre</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" @onclick="() => SeleccionarCliente(cliente)">
+                                                    ✔ Seleccionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CerrarModalClientes">Cerrar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    }
+
+
+
+
+
+
+    <!-- Concepto y Punto de Venta -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Concepto</label>
+            <select class="form-select" @bind="Factura.Concepto">
+                @foreach (var concepto in Enum.GetValues<ConceptoFactura>())
+                {
+                    <option value="@concepto">@concepto</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Punto de Venta</label>
+            <select class="form-select" @bind="Factura.PuntoVentaId">
+                <option value="">Seleccione...</option>
+                @foreach (var pv in PuntosVenta)
+                {
+                    <option value="@pv.Id">@pv.Numero - @pv.Descripcion</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Tipo Comprobante</label>
+            <input class="form-control" readonly value="@Factura.TipoComprobanteDescripcion" />
+        </div>
+
+
+    </div>
+
+
+
+    <div class="mb-3">
+        <label class="form-label">Tipo de Operación</label>
+        <select class="form-select" value="@OperacionSeleccionada" @onchange="OnOperacionChanged">
+            <option value="Factura">Factura</option>
+            <option value="NotaCredito">Nota de Crédito</option>
+            <option value="NotaDebito">Nota de Débito</option>
+        </select>
+    </div>
+
+@*     @if (OperacionSeleccionada == "NotaCredito" || OperacionSeleccionada == "NotaDebito")
+    {
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Tipo Comprobante Ref.</label>
+                <input class="form-control" @bind="Factura.CbteReferenciaTipo" placeholder="Ej: 1 (Factura A)" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Número Comprobante Ref.</label>
+                <input class="form-control" @bind="Factura.CbteReferenciaNumero" />
+            </div>
+        </div>
+    } *@
+
+    @if (RequiereComprobanteAsociado)
+    {
+        <div class="card border-warning mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <strong>Comprobante asociado</strong>
+
+                        @if (ComprobanteAsociadoSeleccionado is not null)
+                        {
+                            <div class="small text-muted">
+                                @ComprobanteAsociadoSeleccionado.TipoComprobanteDescripcion
+                                @ComprobanteAsociadoSeleccionado.PuntoVentaNumero.ToString("0000")-
+                                @ComprobanteAsociadoSeleccionado.Numero.ToString("00000000")
+                                |
+                                @ComprobanteAsociadoSeleccionado.Fecha.ToString("dd/MM/yyyy")
+                                |
+                                Total: @ComprobanteAsociadoSeleccionado.Total.ToString("C")
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="small text-danger">
+                                No seleccionado
+                            </div>
+                        }
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline-primary"
+                            @onclick="@(() => AbrirModalComprobanteAsociado())">
+                        Seleccionar comprobante
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Forma de venta</label>
+            <select class="form-select" @bind="Factura.FormaVenta">
+                <option value="@FormaVenta.Contado">Contado</option>
+                <option value="@FormaVenta.CuentaCorriente">Cuenta corriente</option>
+            </select>
+
+            @if (Factura.FormaVenta == FormaVenta.CuentaCorriente)
+            {
+                <div class="form-text text-warning">
+                    Se registrará el saldo en la cuenta corriente del cliente.
+                </div>
+            }
+            else
+            {
+                <div class="form-text">
+                    Venta contado: no se cargará saldo en cuenta corriente.
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <button class="btn btn-outline-dark"
+            @onclick="AbrirModalPresupuestos"
+            disabled="@(Factura.PersonaId <= 0)">
+        ➕ Cargar desde Presupuesto
+    </button>
+
+    @if (MostrarModalPresupuestos)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5)">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>Seleccionar Presupuesto</h5>
+                        <button class="btn-close" @onclick="CerrarModalPresupuestos"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (PresupuestosCliente?.Any() == true)
+                        {
+                            <table class="table table-hover">
+                                <thead><tr><th>#</th><th>Fecha</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (var p in PresupuestosCliente)
+                                    {
+                                        <tr>
+                                            <td>@p.Id</td>
+                                            <td>@p.Fecha.ToString("dd/MM/yyyy")</td>
+                                            <td>@p.Total.ToString("C")</td>
+                                            <td>@p.Estado</td>
+                                            <td><button class="btn btn-sm btn-primary" @onclick="() => ImportarPresupuesto(p.Id)">Importar</button></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="text-muted">No hay presupuestos para este cliente.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+    <!-- Items -->
+    <h5 class="mt-4">📝 Items</h5>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light">
+            <tr>
+                <th>Descripción</th>
+                <th style="width: 100px;">Cantidad</th>
+                @* <th style="width: 150px;">Importe</th> *@
+                <th style="width: 150px;">
+                    @(EsFacturaA ? "Importe (neto)" : "Importe (neto)")
+                </th>
+                <th style="width: 100px;">IVA %</th>
+                <th style="width: 150px; text-align: right;">Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Detalles)
+            {
+                <tr @key="item.PresupuestoDetalleId ?? item.GetHashCode()">
+               
+                    <td><input class="form-control" @bind="item.Descripcion" /></td>
+                    <td>
+
+                        <input class="form-control" type="number" step="any" min="0"
+                               value="@item.Cantidad.ToString(CultureInfo.InvariantCulture)"
+                               @oninput="(e) => OnCantidadInput(item, e)" />
+                        @if (item.EsDePresupuesto)
+                        {
+                            <small class="text-muted">Pendiente: @item.CantidadPendiente</small>
+                        }
+                    </td>
+                    <td>
+
+                        <input class="form-control" type="number" step="any"
+                               value="@item.PrecioUnitario.ToString(CultureInfo.InvariantCulture)"
+                               readonly="@(!item.PermitirRenegociar && item.EsDePresupuesto)"
+                               disabled="@(!item.PermitirRenegociar && item.EsDePresupuesto)"
+                               @oninput="(e) => OnPrecioInput(item, e)" />
+                        @if (item.EsDePresupuesto && !item.PermitirRenegociar)
+                        {
+                            <small class="text-muted">Precio del presupuesto</small>
+                        }
+                    </td>
+                
+
+                         <td>
+
+                        <select class="form-select"
+                                value="@item.IvaAlicuotaId"
+                                disabled="@(!item.PermitirRenegociar && item.EsDePresupuesto)"
+                                @onchange="(e) => OnIvaChanged(item, e)">
+                            @foreach (var iva in IvaAlicuotas)
+                            {
+                                <option value="@iva.Id">@iva.Porcentaje %</option>
+                            }
+                        </select>
+                        </td>
+                    
+
+
+
+
+
+                  
+          
+
+
+
+                    <td style="text-align: right;">
+                        @{
+                            var alicuota = IvaAlicuotas.FirstOrDefault(a => a.Id == item.IvaAlicuotaId);
+                            var tasaBase = (alicuota?.Porcentaje ?? 0m) / 100m;
+                            var tasa = EsFacturaC ? 0m : tasaBase;
+
+                            var qty = item.Cantidad;
+                            var netoUnit = item.PrecioUnitario; // neto
+                            var baseLinea = qty * netoUnit;
+                            var ivaLinea = Math.Round(baseLinea * tasa, 2, MidpointRounding.AwayFromZero);
+                            var totalLinea = baseLinea + ivaLinea;
+                        }
+                        @totalLinea.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))
+                    </td>
+
+
+
+
+
+
+
+                    <td>
+    
+
+                    <button class="btn btn-sm btn-danger" @onclick="() => EliminarItem(item)">❌</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <button class="btn btn-outline-primary" @onclick="AgregarItem">➕ Agregar Item</button>
+
+   
+
+    <div class="mt-4">
+        <h5>Totales</h5>
+        <p>Subtotal: <strong>@Factura.Neto.ToString("C")</strong></p>
+
+        @if (EsFacturaA)
+        {
+            <h6>IVA Discriminado</h6>
+            <ul class="list-unstyled">
+                @foreach (var iva in Factura.IvaDiscriminado)
+                {
+                    var ali = IvaAlicuotas.FirstOrDefault(a => a.Id == iva.AlicuotaId);
+                    <li>
+                        <strong>@(ali?.Porcentaje.ToString("0.##") ?? "0")%</strong>
+                        — Base: @iva.BaseImp.ToString("C") | IVA: @iva.Importe.ToString("C")
+                    </li>
+                }
+            </ul>
+            <p>Total IVA: <strong>@Factura.Iva.ToString("C")</strong></p>
+        }
+        else if (EsFacturaB)
+        {
+            <div class="alert alert-info p-2">
+                Régimen de Transparencia al Consumidor — IVA contenido:
+                <strong>@Factura.Iva.ToString("C")</strong>
+            </div>
+        }
+
+        <p>Total Final: <strong>@Factura.Total.ToString("C")</strong></p>
+    </div>
+
+
+
+
+    <!-- Botones -->
+    <div class="mt-4">
+        @* <button class="btn btn-success me-2" @onclick="SolicitarCAE">✅ Facturar y Obtener CAE</button> *@
+        
+        <button class="btn btn-success me-2" @onclick="ConfirmarFacturar">✅ Facturar</button>
+        <button class="btn btn-success me-2" @onclick="GuardarFacturaSinAfip">✅ Guardar</button>
+                <!-- Toggle + botón para abrir el modal -->
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <input type="checkbox" id="chkManual"
+                   @bind="CargarDatosFiscalesManuales" />
+
+            <label for="chkManual" class="mb-0">Cargar datos fiscales manuales</label>
+
+          <button class="btn btn-sm btn-outline-secondary"
+                  disabled="@( !CargarDatosFiscalesManuales )"
+                  @onclick="AbrirModal">
+            Completar datos
+          </button>
+        </div>
+        <button class="btn btn-secondary" @onclick="Cancelar">❌ Cancelar</button>
+
+    </div>
+
+
+
+    <!-- Modal -->
+    @if (MostrarModalFiscales)
+    {
+        <div class="modal-backdrop fade show"></div>
+        <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,.35);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <EditForm Model="DatosManuales" OnValidSubmit="OnGuardarDatosManuales">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Datos fiscales manuales</h5>
+                            <button type="button" class="btn-close" @onclick="CerrarModal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <label class="form-label">Punto de Venta</label>
+                                <InputNumber class="form-control" @bind-Value="DatosManuales.PuntoVentaNumero" />
+                                <ValidationMessage For="@(() => DatosManuales.PuntoVentaNumero)" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Número de Comprobante</label>
+                                <InputNumber class="form-control" @bind-Value="DatosManuales.Numero" />
+                                <ValidationMessage For="@(() => DatosManuales.Numero)" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Fecha de Emisión</label>
+                                <InputDate class="form-control" @bind-Value="DatosManuales.Fecha" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">CAE (14 dígitos)</label>
+                                <InputText class="form-control" @bind-Value="DatosManuales.CAE" />
+                                @if (ValidarCaeSoloDigitos(DatosManuales.CAE) is string msg)
+                                {
+                                    <div class="text-danger small mt-1">@msg</div>
+                                }
+                                <ValidationMessage For="@(() => DatosManuales.CAE)" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Vencimiento CAE</label>
+                                <InputDate class="form-control" @bind-Value="DatosManuales.CAEFchVto" />
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-link" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" disabled="@(!FormularioManualValido())">
+                                Usar estos datos
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+
+     @if (FacturaCreadaExito)
+    {
+        <div class="alert alert-success mt-3">
+            <strong>✅ @MensajeExito</strong>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(MensajeExito))
+    {
+        <div class="alert alert-danger mt-3">
+            <strong>@MensajeExito</strong>
+        </div>
+    } 
+
+
+
+
+
+    @if (MostrarConfirmacionPtoVenta0)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirmar Factura sin AFIP</h5>
+                        <button type="button" class="btn-close" @onclick="() => MostrarConfirmacionPtoVenta0 = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            ¿Está seguro que desea guardar esta factura con
+                            <strong>Punto de Venta 0</strong>?
+                            <br />
+                            <span class="text-danger">No se enviará a AFIP ni tendrá CAE.</span>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="() => MostrarConfirmacionPtoVenta0 = false">Cancelar</button>
+                        <button class="btn btn-danger" @onclick="GuardarFacturaSinAfip">Sí, Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+
+    <!--Modal para seleccionar factura asociada en Nota de Credito y Debito-->
+    @if (MostrarModalComprobanteAsociado)
+    {
+        <div class="modal fade show d-block"
+             tabindex="-1"
+             style="background-color: rgba(0,0,0,.5);">
+
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            Seleccionar comprobante asociado
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                @onclick="() => MostrarModalComprobanteAsociado = false">
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        @if (!ComprobantesAsociables.Any())
+                        {
+                            <div class="alert alert-warning">
+                                No hay comprobantes disponibles.
+                            </div>
+                        }
+                        else
+                        {
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Comprobante</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var c in ComprobantesAsociables)
+                                    {
+                                        <tr>
+                                            <td>@c.Fecha.ToString("dd/MM/yyyy")</td>
+
+                                            <td>
+                                                <strong>@c.TipoComprobanteDescripcion</strong>
+                                                <br />
+                                                <span class="text-muted">
+                                                    @c.PuntoVentaNumero.ToString("0000")-
+                                                    @c.Numero.ToString("00000000")
+                                                </span>
+                                            </td>
+
+                                            <td>@c.Total.ToString("C")</td>
+
+                                            <td class="text-end">
+                                                <button type="button"
+                                                        class="btn btn-primary btn-sm"
+                                                        @onclick="() => SeleccionarComprobanteAsociado(c)">
+                                                    Seleccionar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+
+
+
+
+
+
+
+
+
+

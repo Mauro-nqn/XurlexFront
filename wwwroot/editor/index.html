@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Editor Judicial</title>
+
+    <script src="ckeditor/ckeditor.js"></script>
+
+    <!--<script>
+        window.setEditorContent = function (html) {
+            console.log("📝 setEditorContent llamado con:", html);
+            if (CKEDITOR.instances.editor1) {
+                CKEDITOR.instances.editor1.setData(html);
+            } else {
+                console.warn("⚠️ CKEDITOR.instances.editor1 no está listo aún.");
+            }
+        };
+    </script>-->
+    <!--<script src="ckeditor/ckeditor.js"></script>-->
+</head>
+<body>
+    <h2>Redacte su escrito judicial</h2>
+
+    <!-- ✅ Agregar form //para que funcione guardar-->
+    <form id="editorForm" onsubmit="guardarContenido(); return false;">
+        <textarea name="editor1" id="editor1" rows="10" cols="80">
+        
+        </textarea>
+    </form>
+
+
+
+
+    <script>
+
+        window.onload = function () {
+            console.log("CKEDITOR: window.onload");
+
+            if (typeof CKEDITOR === 'undefined') {
+                document.body.innerHTML += "<p style='color: red;'>❌ CKEditor no se cargó correctamente.</p>";
+            } else {
+                document.body.innerHTML += "<p style='color: green;'>✅ CKEditor cargado.</p>";
+
+                const editor = CKEDITOR.replace('editor1', {
+                    language: 'es',
+                    extraPlugins: 'save',
+                    versionCheck: false, //con esto eliminamos aviso version vieja
+                    removePlugins: 'exportpdf',
+                    contentsCss: 'ckeditor/contents.css', // Ruta relativa a index.html
+                    toolbar: [
+                        { name: 'document', groups: ['mode', 'document', 'doctools'], items: ['Source', '-', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates', 'VistaImpresionJudicial'] },
+                        { name: 'clipboard', groups: ['clipboard', 'undo'], items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+                        { name: 'editing', groups: ['find', 'selection', 'spellchecker'], items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
+                        { name: 'forms', items: ['Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton', 'HiddenField'] },
+                        '/',
+                        { name: 'basicstyles', groups: ['basicstyles', 'cleanup'], items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'RemoveFormat'] },
+                        { name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align', 'bidi'], items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiLtr', 'BidiRtl', 'Language'] },
+                        { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+                        { name: 'insert', items: ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe', 'SuperButton', 'PaginaJudicial'] },
+                        '/',
+                        { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                        { name: 'colors', items: ['TextColor', 'BGColor'] },
+                        { name: 'tools', items: ['Maximize', 'ShowBlocks'] },
+                        { name: 'others', items: ['-'] },
+
+                    ],
+                    format_tags: 'p;h1;h2;pre;parrafojudicial',
+                    format_parrafojudicial: {
+                        name: 'Párrafo judicial',
+                        element: 'p',
+                        attributes: { 'class': 'parrafo-judicial' }
+                    }
+                });
+
+
+                // Botón personalizado
+                editor.addCommand("mySimpleCommand", {
+                    //exec: function (edt) {
+                    //    alert("Contenido actual:\n\n" + edt.getData());
+                    //}
+                    exec: function (editor) {
+                        const selection = editor.getSelection();
+                        const range = selection.getRanges()[0];
+
+                        // Recorremos todos los elementos dentro del rango
+                        const walker = new CKEDITOR.dom.walker(range);
+                        walker.evaluator = function (node) {
+                            return node.type === CKEDITOR.NODE_ELEMENT && node.getName() === 'p';
+                        };
+
+                        let found = false;
+
+                        let node;
+                        while ((node = walker.next())) {
+                            node.addClass('parrafo-judicial');
+                            found = true;
+                        }
+
+                        if (!found) {
+                            // Si no se encontró ningún <p>, insertar uno nuevo
+                            editor.insertHtml('<p class="parrafo-judicial">Texto judicial aquí...</p>');
+                        } else {
+                            console.log("✅ Clase aplicada a párrafos seleccionados");
+                        }
+                    }
+
+                });
+
+
+
+                editor.ui.addButton('SuperButton', {
+                    label: "Click me",
+                    command: 'mySimpleCommand',
+                    toolbar: 'insert',
+                    icon: 'icons/ej.png'
+                });
+
+
+
+
+                //pagejs para vista judicial
+                //        // 👉 Agregar comando para Vista Judicial
+                //        editor.addCommand("vistaImpresionJudicial", {
+                //            exec: function (editor) {
+                //                const html = editor.getData();
+                //                const safeHtml = html.replace(/<\/script>/gi, '<\\/script>');
+
+                //                const win = window.open('', '_blank');
+                //                if (!win) {
+                //                    alert("⚠️ Permití ventanas emergentes para ver la Vista Judicial.");
+                //                    return;
+                //                }
+
+                //                const pageContent = `
+                //    <!DOCTYPE html>
+                //    <html>
+                //    <head>
+                //        <meta charset="utf-8">
+                //        <title>Vista de impresión judicial</title>
+                //        <style>
+                //            body {
+                //                font-family: "Times New Roman", serif;
+                //                font-size: 12pt;
+                //                line-height: 1.5;
+                //                text-align: justify;
+                //                margin: 0;
+                //                padding: 0;
+                //                background: white;
+                //            }
+
+                //            .pagina {
+                //                width: 21cm;
+                //                min-height: 29.7cm;
+                //                page-break-after: always;
+                //                padding-top: 5cm;
+                //                padding-bottom: 2.5cm;
+                //                padding-left: 5cm;
+                //                padding-right: 1.5cm;
+                //            }
+
+                //            .parrafo-judicial {
+                //                text-indent: 1.5em;
+                //                margin-bottom: 1em;
+                //            }
+
+                //            @media print {
+                //                .pagina {
+                //                    page-break-inside: avoid;
+                //                }
+                //            }
+                //        </style>
+                //    </head>
+                //    <body>
+                //        <div class="pagina">
+                //            ${safeHtml}
+                //        </div>
+                //        <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\\/script>
+                //    </body>
+                //    </html>
+                //`;
+
+                //                win.document.open();
+                //                win.document.write(pageContent);
+                //                win.document.close();
+                //            }
+                //        });
+
+
+
+
+
+
+                //VERSION FUNCIONA MARGENES ESCRITO JUDICIAL
+
+                //                editor.addCommand("vistaImpresionJudicial", {
+                //                    exec: function (editor) {
+                //                        const html = editor.getData();
+                //                        const safeHtml = html.replace(/<\/script>/gi, '<\\/script>');
+
+                //                        const win = window.open('', '_blank');
+                //                        if (!win) {
+                //                            alert("⚠️ Permití ventanas emergentes para ver la Vista Judicial.");
+                //                            return;
+                //                        }
+
+                //                        const pageContent = `
+                //<!DOCTYPE html>
+                //<html>
+                //<head>
+                //        <meta charset="utf-8">
+                //        <title>Vista de impresión judicial</title>
+                //        <style>
+                //            body {
+                //                font-family: "Times New Roman", serif;
+                //                font-size: 12pt;
+                //                line-height: 1.5;
+                //                text-align: justify;
+                //                margin: 0;
+                //                padding: 0;
+                //                background: white;
+                //            }
+
+                //            #botonImprimir {
+                //                position: fixed;
+                //                top: 10px;
+                //                right: 10px;
+                //                padding: 10px 15px;
+                //                background: #007bff;
+                //                color: white;
+                //                border: none;
+                //                cursor: pointer;
+                //                font-size: 14px;
+                //                z-index: 999;
+                //            }
+
+                //            @page {
+                //                size: A4;
+                //                margin-top: 5cm;
+                //                margin-bottom: 2.5cm;
+                //            }
+
+                //            @page :left {
+                //                margin-left: 1.5cm;
+                //                margin-right: 5cm;
+                //            }
+
+                //            @page :right {
+                //                margin-left: 5cm;
+                //                margin-right: 1.5cm;
+                //            }
+
+                //            p {
+                //                text-indent: 1.5em;
+                //                margin: 0 0 1em 0;
+                //            }
+
+                //            @media print {
+                //                #botonImprimir { display: none; }
+                //            }
+                //        </style>
+                //</head>
+                //<body>
+                //        <button id="botonImprimir" onclick="window.print()">🖨 Imprimir</button>
+
+                //        <div id="contenido">
+                //            ${safeHtml}
+                //        </div>
+
+                //        <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\/script>
+                //</body>
+                //</html>
+                //`;
+
+                //        win.document.open();
+                //        win.document.write(pageContent);
+                //        win.document.close();
+                //    }
+                //});
+
+
+
+
+
+
+
+
+
+
+
+                //   ----------------FUNCIONAL SOLO VISTA JUDICIAL CON MARGENES DINAMICOS---------------------------
+                                editor.addCommand("vistaImpresionJudicial", {
+                                    exec: function (editor) {
+                                        const html = editor.getData();
+                                        const safeHtml = html.replace(/<\/script>/gi, '<\\/script>');
+
+                                        const configWindow = window.open('', '_blank');
+                                        if (!configWindow) {
+                                            alert("⚠️ Permití ventanas emergentes para continuar.");
+                                            return;
+                                        }
+
+                                        const configHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                            <meta charset="utf-8">
+                            <title>Configurar márgenes</title>
+                            <style>
+                                body {
+                                    font-family: sans-serif;
+                                    padding: 20px;
+                                }
+
+                                label {
+                                    display: block;
+                                    margin: 10px 0 5px;
+                                }
+
+                                input {
+                                    width: 80px;
+                                    padding: 5px;
+                                }
+
+                                button {
+                                    margin-top: 20px;
+                                    padding: 10px 20px;
+                                    font-size: 14px;
+                                }
+                            </style>
+                </head>
+                <body>
+                            <h2>Configuración de márgenes (en cm)</h2>
+                            <label>Superior: <input id="margenSuperior" type="number" value="5" step="0.1" /></label>
+                            <label>Inferior: <input id="margenInferior" type="number" value="2.5" step="0.1" /></label>
+                            <label>Interior: <input id="margenInterior" type="number" value="5" step="0.1" /></label>
+                            <label>Exterior: <input id="margenExterior" type="number" value="1.5" step="0.1" /></label>
+                            <button onclick="abrirVistaJudicial()">Aceptar</button>
+
+                            <script>
+                                function abrirVistaJudicial() {
+                                    const top = document.getElementById('margenSuperior').value || '5';
+                                    const bottom = document.getElementById('margenInferior').value || '2.5';
+                                    const interior = document.getElementById('margenInterior').value || '5';
+                                    const exterior = document.getElementById('margenExterior').value || '1.5';
+
+                                    const vista = window.open('', '_blank');
+                                    const contenido = \`${safeHtml}\`;
+
+                                    const pageHtml = \`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                            <meta charset="utf-8">
+                            <title>Vista de impresión judicial</title>
+                            <style>
+                                body {
+                                    font-family: "Times New Roman", serif;
+                                    font-size: 12pt;
+                                    line-height: 1.5;
+                                    text-align: justify;
+                                    margin: 0;
+                                    padding: 0;
+                                    background: white;
+                                }
+
+                                #botonImprimir {
+                                    position: fixed;
+                                    top: 10px;
+                                    right: 10px;
+                                    padding: 10px 15px;
+                                    background: #007bff;
+                                    color: white;
+                                    border: none;
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                    z-index: 999;
+                                }
+
+
+
+                                @page {
+                                    size: A4;
+                                    margin-top: \${top}cm;
+                                    margin-bottom: \${bottom}cm;
+                                }
+
+                                @page :left {
+                                    margin-left: \${exterior}cm;
+                                    margin-right: \${interior}cm;
+                                }
+
+                                @page :right {
+                                    margin-left: \${interior}cm;
+                                    margin-right: \${exterior}cm;
+                                }
+
+                                p {
+                                    text-indent: 1.5em;
+                                    margin: 0 0 1em 0;
+                                }
+
+                                .pagedjs_page {
+                                    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+                                    margin: 8px auto;
+                                    background: white;
+                                }
+
+
+
+
+
+
+
+                                @media print {
+                                    #botonImprimir { display: none; }
+                                }
+
+                                .pagedjs_page {
+                                    box-shadow: none !important;
+                                    margin: 0 !important;
+                                  }
+
+                                  html, body {
+                                    margin: 0;
+                                    padding: 0;
+                                  }
+
+                            </style>
+                </head>
+                <body >
+                            <button id="botonImprimir" onclick="window.print()">🖨 Imprimir</button>
+                            <div id="contenido">\${contenido}</div>
+
+                </body>
+                </html>
+                \`;
+
+                                vista.document.open();
+                                vista.document.write(pageHtml);
+                                vista.document.close();
+
+
+                                const script = vista.document.createElement("script");
+                script.src = "https://unpkg.com/pagedjs/dist/paged.polyfill.js";
+                script.onload = () => {
+                  if (vista.PagedPolyfill) {
+                    vista.PagedPolyfill.on("after", () => {
+                      const btn = vista.document.getElementById("botonImprimir");
+                      if (btn) btn.style.display = "block";
+                    });
+                  }
+                };
+                vista.document.head.appendChild(script);
+
+
+                                window.close(); // Cierra la ventana de configuración
+                            }
+                    <\/script>
+                </body>
+                </html>
+                `;
+
+                        configWindow.document.open();
+                        configWindow.document.write(configHtml);
+                        configWindow.document.close();
+                    }
+                                });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//                editor.addCommand("vistaImpresionJudicial", {
+//                    exec: function (editor) {
+//                        const html = editor.getData();
+//                        const safeHtml = html.replace(/<\/script>/gi, '<\\/script>');
+
+//                        const configWindow = window.open("margenes.html", "_blank");
+
+//                        window.addEventListener("message", function (event) {
+//                            if (event.data?.tipo === "margenesConfirmados") {
+//                                const { top, bottom, interior, exterior } = event.data.datos;
+
+//                                const vistaPrevia = window.open('', '_blank');
+
+//                                const previewHtml = `
+//<!DOCTYPE html>
+//<html>
+//<head>
+//      <meta charset="utf-8">
+//      <title>Vista previa</title>
+//      <style>
+//        body {
+//          font-family: "Times New Roman", serif;
+//          font-size: 12pt;
+//          line-height: 1.5;
+//          text-align: justify;
+//          margin: 0;
+//          padding: 0;
+//          background: white;
+//        }
+
+//        @page {
+//          size: A4;
+//          margin-top: ${top}cm;
+//          margin-bottom: ${bottom}cm;
+//        }
+//        @page :left {
+//          margin-left: ${exterior}cm;
+//          margin-right: ${interior}cm;
+//        }
+//        @page :right {
+//          margin-left: ${interior}cm;
+//          margin-right: ${exterior}cm;
+//        }
+//        p {
+//          text-indent: 1.5em;
+//          margin: 0 0 1em 0;
+//        }
+//      </style>
+//</head>
+//<body>
+
+
+//      <script>
+//        document.getElementById("botonImprimirFinal").onclick = function () {
+//          const win = window.open("", "_blank");
+//          const contenido = \`${safeHtml}\`;
+
+//          const finalHtml = \`
+//<!DOCTYPE html>
+//<html>
+//<head>
+//      <meta charset="utf-8">
+//      <title>Impresión</title>
+//      <style>
+//        body {
+//          font-family: "Times New Roman", serif;
+//          font-size: 12pt;
+//          line-height: 1.5;
+//          text-align: justify;
+//          margin: 0;
+//          padding: 0;
+//          background: white;
+//        }
+//        @page {
+//          size: A4;
+//          margin-top: ${top}cm;
+//          margin-bottom: ${bottom}cm;
+//        }
+//        @page :left {
+//          margin-left: ${exterior}cm;
+//          margin-right: ${interior}cm;
+//        }
+//        @page :right {
+//          margin-left: ${interior}cm;
+//          margin-right: ${exterior}cm;
+//        }
+//        p {
+//          text-indent: 1.5em;
+//          margin: 0 0 1em 0;
+//        }
+//        @media print {
+//          #botonImprimir { display: none; }
+//        }
+//      </style>
+//</head>
+//<body onload="window.print()">
+//      <div id="contenido">\${contenido}</div>
+//      <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"><\\/script>
+//</body>
+//</html>
+//          \`;
+
+//          win.document.open();
+//          win.document.write(finalHtml);
+//          win.document.close();
+//        };
+//    <\\/script>
+//</body>
+//</html>
+//        `;
+
+//        vistaPrevia.document.open();
+//        vistaPrevia.document.write(previewHtml);
+//        vistaPrevia.document.close();
+//      }
+//    }, { once: true });
+//  }
+//});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                // 👉 Botón para la barra de herramientas
+                editor.ui.addButton('VistaImpresionJudicial', {
+                    label: "🖨 Vista judicial",
+                    command: 'vistaImpresionJudicial',
+                    toolbar: 'document',
+                    icon: 'https://cdn-icons-png.flaticon.com/512/159/159040.png'
+                });
+
+
+
+                // Comando Save personalizado
+                editor.addCommand('save', {
+                    exec: function () {
+                        guardarContenido();
+                    }
+                });
+
+
+
+                editor.on('instanceReady', function () {
+                    console.log("✅ Editor listo");
+
+
+
+                    // ⬇️ Esta función recibe HTML directamente
+                    window.setEditorContent = function (html) {
+                        console.log("📝 setEditorContent llamado con:", html);
+                        editor.setData(html, function () {
+                            console.log("✅ Contenido insertado");
+                        });
+                    };
+
+                    // ⬇️ Esta función recibe HTML codificado en base64 desde MAUI
+                    window.setEditorContentFromBase64 = function (base64) {
+                        try {
+                            const decoded = decodeURIComponent(escape(window.atob(base64)));
+                            console.log("📥 HTML decodificado:", decoded);
+                            window.setEditorContent(decoded);
+                        } catch (err) {
+                            console.error("❌ Error decodificando Base64:", err);
+                        }
+                    };
+
+
+
+
+
+                    editor.commands.save.exec = function () {
+                        console.log("💾 Ejecutando comando personalizado save");
+                        guardarContenido();
+                    };
+
+
+
+
+                    if (window.chrome?.webview?.postMessage) {
+                        console.log("📤 Enviando '__ready__' a MAUI");
+                        window.chrome.webview.postMessage("__ready__");
+
+                        console.log("📤 Enviando '__inicial__' a MAUI");
+                        window.chrome.webview.postMessage("__inicial__");
+
+                    }
+
+
+
+
+                });
+
+
+
+
+
+
+
+
+
+                // ⚡ Esta función se llama cuando el usuario hace clic en "Save"
+                function guardarContenido() {
+                    const contenido = CKEDITOR.instances.editor1.getData();
+                    /*alert("✅ Se ejecutó guardarContenido()");*/
+                    console.log("💾 Contenido a guardar:", contenido);
+
+                    // MAUI: Enviar HTML a WebView2
+                    if (window.chrome && window.chrome.webview) {
+                        window.chrome.webview.postMessage(contenido);
+                    } else {
+                        console.warn("❌ WebView2 no disponible");
+                    }
+                }
+            }
+
+
+
+
+
+
+
+        };
+
+
+
+
+
+
+    </script>
+
+
+
+
+<button onclick="guardarContenido()">Guardar manual</button>
+</body>
+
+</html>

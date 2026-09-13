@@ -1,0 +1,556 @@
+﻿@attribute [Authorize]
+
+@page "/movimientos/{tipo}/crear/{procesoId:int}"
+@page "/movimientos/editar/{id:int}"
+@using IurixBlazor.Shared.Enums;
+@inherits MovimientoCrearEditarBase
+@layout AdminLayout
+
+<div class="container mt-4">
+    <h3>@(EsEdicion ? "✏️ Editar Movimiento" : "➕ Nuevo Movimiento")</h3>
+
+    @if (!string.IsNullOrEmpty(NombreProceso))
+    {
+        <div class="alert alert-info">
+            <strong>Proceso:</strong> @NombreProceso
+        </div>
+    }
+
+@*     @if (EsApremioMovimiento) {
+        <div> ES APREMIO </div>
+    } *@
+
+    <EditForm Model="Modelo" OnValidSubmit="Guardar">
+        <InputText class="form-control mb-2" @bind-Value="Modelo.Titulo" placeholder="Título" />
+        <InputTextArea class="form-control mb-2" @bind-Value="Modelo.Detalle" placeholder="Detalle" />
+        <InputDateTime class="form-control mb-2" @bind-Value="Modelo.Fecha" />
+
+        <h6 class="mt-3">📝 Escrito</h6>
+        <button class="btn btn-outline-primary mb-2" type="button" 
+        style="margin-right:10px" @onclick="() => AbrirEditorMovimiento(MovimientoId)">
+            ✍️ Editar Escrito
+        </button>
+
+        <!-- Título -->
+        @if (!string.IsNullOrWhiteSpace(Modelo?.EscritoPersonalizadoHtml) || 
+        !string.IsNullOrWhiteSpace(Modelo?.EscritoPersonalizadoTitulo))
+        {
+            <button class="btn btn-outline-danger ms-2 mb-2" type="button" 
+            style="margin-right:10px" @onclick="EliminarEscritoAsync">
+                <i class="bi bi-trash3-fill fs-5"></i> Quitar Escrito
+            </button>
+        }
+
+        <strong>Título:</strong>
+        <span class="text-muted ms-2">
+            @Modelo.EscritoPersonalizadoTitulo
+        </span>
+
+        <!-- Resumen del contenido -->
+        <div class="mt-1">
+            <small class="text-muted">Contenido:</small>
+            <div class="border p-2 bg-light rounded" style="max-height: 100px; overflow: hidden;">
+                @EscritoPersonalizadoResumen
+            </div>
+        </div>
+
+
+
+        
+
+        <h6 class="mt-3">📎 Archivos adjuntos</h6>
+        <InputFile OnChange="OnArchivoSeleccionado" multiple />
+
+     
+
+        
+
+        @if (ArchivosTemporales.Any())
+        {
+            <div class="mt-3">
+                @foreach (var archivo in ArchivosTemporales)
+                {
+                    @* <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>@archivo.Nombre (@archivo.Extension)</strong>
+
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        type="button"
+                                        @onclick="() => VerArchivo(archivo)">
+                                    👁️ Ver
+                                </button>
+
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="@ObtenerUrlDescarga(archivo)"
+                                   download="@archivo.Nombre">
+                                    ⬇️ Descargar
+                                </a>
+
+                                <button class="btn btn-sm btn-outline-danger"
+                                        type="button"
+                                        @onclick="() => EliminarArchivo(archivo)">
+                                    ❌ Quitar
+                                </button>
+                            </div>
+                        </div>
+                    </div> *@
+
+                    <div class="border rounded p-3 mb-3">
+                        <div class="text-break mb-2">
+                            <strong>@archivo.Nombre</strong>
+                            <span class="text-muted">(@archivo.Extension)</span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
+                                    @onclick="() => VerArchivo(archivo)">
+                                <i class="bi bi-eye me-1"></i> Ver
+                            </button>
+
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="@ObtenerUrlDescarga(archivo)"
+                               download="@archivo.Nombre">
+                                <i class="bi bi-download me-1"></i> Descargar
+                            </a>
+
+                            <button class="btn btn-sm btn-outline-danger"
+                                    type="button"
+                                    @onclick="() => EliminarArchivo(archivo)">
+                                <i class="bi bi-x-circle me-1"></i> Quitar
+                            </button>
+                        </div>
+                    </div>
+
+                }
+            </div>
+        }
+
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <h6 class="mt-4">📅 Agendar este movimiento</h6>
+
+                <div class="form-check form-switch mb-2" style="margin-top:10px">
+                    <input type="checkbox" class="form-check-input" id="swAgendar" @bind="Agendar" />
+                    <label class="form-check-label" for="swAgendar">Crear evento en la agenda</label>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+            @if (AgendaExistenteId.HasValue)
+            
+            {
+            
+            
+                <button class="btn btn-outline-danger" 
+                        type="button"
+                        @onclick="EliminarAgendaActual">
+                    <i class="bi bi-trash3-fill"></i> Quitar agenda
+                </button>
+            
+            }
+                </div>
+        </div>
+
+        @if (Agendar)
+{<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+            <label >Tipo de agendamiento</label>
+            <InputSelect class="form-select" @bind-Value="AgendaTipoAgendamientoId">
+                <option value="">-- Seleccione --</option>
+                @foreach (var t in TiposAgendamiento)
+                {
+                    <option value="@t.Id">@t.Nombre</option>
+                }
+            </InputSelect>
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label>Estado</label>
+                <InputSelect class="form-select" @bind-Value="FiltroEstado">
+                    @foreach (var estado in Enum.GetValues(typeof(EstadoAgenda)).Cast<EstadoAgenda>())
+                    {
+                        <option value="@estado">@estado</option>
+                    }
+                </InputSelect>
+            </div>
+           </div>
+
+
+
+
+                <div class="row">
+@*                     <div class="col-md-3">
+                        <label class="form-label">Fecha y hora</label>
+                        <InputDateTime @bind-Value="AgendaFechaHoraLocal" class="form-control" />
+                    </div> *@
+
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha y hora</label>
+                        <InputDateTime @bind-Value="AgendaFechaHoraLocal"
+                                       @bind-Value:after="OnInicioChangedAsync"
+                                       class="form-control" />
+                    </div>
+
+
+
+
+@*                 <div class="col-md-3">
+                    <label class="form-label">Duración</label>
+                    <InputSelect class="form-select" TValue="int" @bind-Value="AgendaDuracionMin">
+                        @foreach (var d in DuracionesLabeled)
+                        {
+                            <option value="@d.Min">@d.Label</option>
+                        }
+                    </InputSelect>
+                </div> *@
+
+                    <div class="col-md-3 mb-3">
+                        <label>Duración</label>
+                        <InputSelect class="form-select"
+                                     TValue="int"
+                                     @bind-Value="AgendaDuracionMin"
+                                     @bind-Value:after="OnDuracionChangedAsync">
+                            @foreach (var d in DuracionesLabeled)
+                            {
+                                <option value="@d.Min">@d.Label</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label>Fin (calculado)</label>
+                        <input class="form-control" value="@(AgendaFechaHoraFin.ToString("dd/MM/yyyy HH:mm") ?? "")" disabled />
+                    </div>
+
+
+
+
+
+                </div>
+                <div class="row">
+                    <!-- Usuario responsable -->
+                    <div class="col-md-6 mb-3">
+                        <label>Responsable (opcional)</label>
+                        <InputSelect class="form-control" @bind-Value="AgendaUsuarioId">
+                            <option value="">-- Seleccione un usuario --</option>
+                            @foreach (var u in Usuarios)
+                            {
+                                <option value="@u.Id">@u.Nombre</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+
+                <div class="col-md-6 mb-3">
+                    <label >Cliente (persona)</label>
+
+                    @if (AgendaPersonaBloqueada)
+                    {
+                        <div class="input-group">
+                            <input class="form-control" value="@AgendaPersonaNombreFijo" disabled />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="DesbloquearPersonaAsync">
+                                Cambiar
+                            </button>
+                        </div>
+                        <small class="text-muted">Tomado de la gestión asociada</small>
+                    }
+                    else
+                    {
+                        <InputSelect class="form-select"
+                                     TValue="int?"
+                                     @bind-Value="AgendaPersonaId">
+                            <option value="">-- Seleccione cliente --</option>
+                            @foreach (var p in Personas)
+                            {
+                                var etiqueta = !string.IsNullOrWhiteSpace(p.RazonSocial)
+                                ? p.RazonSocial
+                                : $"{p.Apellido}, {p.Nombre}";
+                                <option value="@p.Id">@etiqueta</option>
+                            }
+                        </InputSelect>
+                    }
+                    </div>
+                </div>
+
+
+
+
+ @*                <div class="col-md-9">
+                    <label class="form-label">Observaciones</label>
+                    <InputText class="form-control" @bind-Value="AgendaObservaciones" />
+                </div> *@
+    </div>
+
+
+    <div class="card-body">
+    <div class="card">
+        <div class="card-header" >
+            <i class="bi bi-bell me-2"></i>
+            <strong>Notificaciones</strong>
+        </div>
+
+        <div class="card-body">
+           @*  <div class="col-md-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chkNotifApp" @bind="AgendaNotificarApp" />
+                    <label class="form-check-label" for="chkNotifApp">Aviso en la app</label>
+                </div>
+            </div> *@
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Visible para</label>
+                            <InputRadioGroup @bind-Value="AgendarEsParaTodos" Name="visibilidad" class="d-flex flex-column gap-2">
+                                <div class="form-check">
+                                    <InputRadio class="form-check-input" Value="@(true)" id="rbTodos" />
+                                    <label class="form-check-label" for="rbTodos">Todos</label>
+                                </div>
+                                <div class="form-check">
+                                    <InputRadio class="form-check-input" Value="@(false)" id="rbUsuarios" />
+                                    <label class="form-check-label" for="rbUsuarios">Usuarios específicos</label>
+                                </div>
+                            </InputRadioGroup>
+                        </div>
+
+                        @if (!AgendarEsParaTodos)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Seleccionar usuarios</label>
+                                <div class="d-flex flex-wrap gap-3">
+                                    @foreach (var u in (Usuarios ?? Enumerable.Empty<UsuarioDto>()))
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   checked="@AgendarUsuarioIds.Contains(u.Id)"
+                                                   @onchange="(e) => ToggleUsuarioAgendar(u.Id, e)" />
+                                            <label class="form-check-label">@u.Nombre</label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                        </div>
+
+                    <div class="row" style="margin-left:10px">
+                            <div class="form-check" style="margin-left:10px; margin-bottom:10px">
+                    <input class="form-check-input" type="checkbox" id="chkNotifMail" @bind="AgendaNotificarEmail" />
+                    <label class="form-check-label" for="chkNotifMail">Aviso por email</label>
+                </div>
+            </div>
+
+
+            
+                    @if (AgendaNotificarEmail)
+                    {
+                     <div class="card-body">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                <div class="col-md-3">
+                                <label class="form-label">Anticipación</label>
+                                <InputSelect class="form-select" TValue="int?" @bind-Value="AgendaRecordatorioMinAntes">
+                                    <option value="">-- Sin recordatorio --</option>
+                                    @foreach (var r in RecordatorioOpciones)
+                                    {
+                                        <option value="@r.Min">@r.Label</option>
+                                    }
+                                </InputSelect>
+                                </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label">Usuario (email)</label>
+                                <InputSelect class="form-select" @bind-Value="AgendaNotificarEmailUsuarioId">
+                                    <option value="">-- Otro correo --</option>
+                                    @foreach (var u in Usuarios)
+                                    {
+                                        <option value="@u.Id">@u.Nombre (@u.email)</option>
+                                    }
+                                </InputSelect>
+                                    </div>
+                                    
+
+                                @if (AgendaNotificarEmailUsuarioId is null)
+                                {
+                                    <div class="col-md-3">
+                                        <label class="form-label">Correo destino</label>
+                                        <InputText class="form-control" @bind-Value="AgendaNotificarEmailTo" />
+                                    </div>
+                                }
+                            
+                                </div>
+
+                            </div>
+
+             
+                        </div>
+                     </div>
+                    }
+
+                        
+
+                        @if (!AgendaExistenteId.HasValue || !AgendaGoogleRegistrado)
+                        {
+                            <div class="row" style="margin-left:10px; margin-bottom:10px">
+                                <div class="form-check" style="margin-left:10px">
+                                    <input class="form-check-input" type="checkbox" id="chkSyncGoogleMov"
+                                    @bind="AgendarSincronizarGoogle" />
+                                    <label class="form-check-label" for="chkSyncGoogleMov">
+                                        Sincronizar con Google
+                                    </label>
+                                </div>
+                            </div>
+                        }
+
+                        
+                        @if (AgendarSincronizarGoogle )
+                        {
+                            <div class="card-body">
+                            <div class="card">
+                                <div class="card-body">
+
+                                    <label class="form-label">Usuario Google</label>
+                                    <InputSelect class="form-select" @bind-Value="AgendarUsuarioGoogleId" @bind-Value:after="VerificarUsuarioGoogleMovAsync">
+                                        <option value="">-- Seleccione usuario --</option>
+                                        @foreach (var u in Usuarios)
+                                        {
+                                            <option value="@u.Id">@u.Nombre</option>
+                                        }
+                                    </InputSelect>
+
+                                    @if (AgendarGoogleVinculado == true)
+                                    {
+                                        <div class="text-success mt-1">✅ Vinculado: @AgendarGoogleEmail</div>
+                                    }
+                                    else if (AgendarGoogleVinculado == false)
+                                    {
+                                        <div class="text-danger mt-1">❌ Ese usuario no tiene cuenta Google vinculada</div>
+                                    }
+                                </div>
+                            </div>
+                            </div>
+                        }
+                        
+
+            
+                    @if (AgendaExistenteId.HasValue && AgendaGoogleRegistrado)
+                    {
+                     <div class="card-body">
+                        <div class="alert alert-success d-flex justify-content-between align-items-center" style="margin-top:10px">
+                            <div>
+                                ✅ Sincronizado con Google.
+                                @if (!string.IsNullOrWhiteSpace(AgendaGoogleHtmlLink))
+                                {
+                                    <a href="@AgendaGoogleHtmlLink" target="_blank" class="ms-2">Abrir en Google</a>
+                                }
+                                <small class="text-muted ms-2">
+                                    Última sync: @AgendaGoogleLastSyncUtc?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small> <br>
+                                <small class="text-muted ms-2">
+                                            Sincro con Usuario: <strong>@AgendarGoogleEmail</strong>
+                                </small>
+
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="ResincronizarAgendaMovAsync">
+                                    🔄 Resincronizar
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" @onclick="EliminarAgendaMovGoogleAsync">
+                                    🗑️ Eliminar en Google
+                                </button>
+                            </div>
+                        </div>
+                      </div>
+
+                    }
+
+                        
+          
+                   
+                        
+
+
+                    </div>
+
+@*         @if (AgendaNotificarApp)
+        {
+            <div class="row g-2 mt-2">
+                <div class="col-md-6">
+                    <label class="form-label">Usuario (app)</label>
+                    <InputSelect class="form-select" @bind-Value="AgendaNotificarAppUsuarioId">
+                        <option value="">-- Asignado por defecto --</option>
+                        @foreach (var u in Usuarios)
+                        {
+                            <option value="@u.Id">@u.Nombre</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        } *@
+
+
+                
+                </div>
+
+                
+
+
+
+    </div>
+}
+
+
+
+
+
+        <div class="mt-4">
+            @* <button class="btn btn-primary me-2" type="submit"><i class="bi bi-floppy2"></i> Guardar</button> *@
+            <button class="btn btn-primary" disabled="@IsSaving" @onclick="Guardar">
+                <i class="bi bi-floppy2"></i> @(IsSaving ? "Guardando..." : "Guardar")
+            </button>
+            <button class="btn btn-secondary" type="button" @onclick="Volver"><i class="bi bi-arrow-left-circle"></i> Volver</button>
+        </div>
+    </EditForm>
+
+
+
+
+    
+
+</div>
+
+
+@if (MostrarModalArchivo && ArchivoSeleccionadoParaVer is not null)
+{
+    <div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@ArchivoSeleccionadoParaVer.Nombre</h5>
+                    <button type="button" class="btn-close" @onclick="() => MostrarModalArchivo = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (ArchivoSeleccionadoParaVer.TipoMime == "application/pdf")
+                    {
+                        <iframe src="@ArchivoSeleccionadoParaVer.DataUrlBase64" width="100%" height="600px"></iframe>
+                    }
+                    else if (ArchivoSeleccionadoParaVer.TipoMime.StartsWith("image/"))
+                    {
+                        <img src="@ArchivoSeleccionadoParaVer.DataUrlBase64" class="img-fluid" />
+                    }
+                    else
+                    {
+                        <p class="text-muted">No se puede mostrar vista previa.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

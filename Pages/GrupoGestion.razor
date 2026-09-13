@@ -1,0 +1,44 @@
+﻿@attribute [Authorize]
+
+@page "/gruposgestion"
+@inherits GrupoGestionBase
+@layout AdminLayout
+
+<div class="container mt-4 grupo-gestion-list">
+    <h3>📂 Grupos de Gestión</h3>
+    <button class="btn btn-success mb-3" @onclick="Nuevo">➕ Nuevo Grupo</button>
+
+    @if (Grupos == null)
+    {
+        <p>Cargando...</p>
+    }
+    else if (!Grupos.Any())
+    {
+        <p>No hay grupos de gestión registrados.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Grupos)
+                {
+                    <tr>
+                        <td>@g.Id</td>
+                        <td>@g.Nombre</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @onclick="() => Editar(g.Id)">✏️ Editar</button>
+                            <button class="btn btn-danger btn-sm ms-2" @onclick="() => Eliminar(g.Id)">🗑️ Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
