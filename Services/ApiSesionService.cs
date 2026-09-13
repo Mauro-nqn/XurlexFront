@@ -35,45 +35,117 @@ namespace IurixBlazor.Services
             _js = js;
         }
 
+
+        //Metodo login que usabamos en azure
+        //public async Task<LoginResponseDto?> LoginAsync(UsuarioLoginDto loginDto)
+        //{
+        //    try
+        //    {
+        //        //await _js.InvokeVoidAsync("console.log", $"Consultando en: {_httpClient.BaseAddress}");
+        //        var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginDto);
+
+        //        var responseContent = await response.Content.ReadAsStringAsync();
+
+        //        //await _js.InvokeVoidAsync("console.log", $"[Login] Status: {(int)response.StatusCode} {response.StatusCode}");
+        //        //await _js.InvokeVoidAsync("console.log", $"[Login] Respuesta: {responseContent}");
+
+        //        if (response.IsSuccessStatusCode)
+        //        {
+        //            var loginResponse = JsonSerializer.Deserialize<LoginResponseDto>(responseContent, new JsonSerializerOptions
+        //            {
+        //                PropertyNameCaseInsensitive = true
+        //            });
+
+        //            return loginResponse;
+        //        }
+        //        else
+        //        {
+        //            //System.Diagnostics.Debug.WriteLine("?? Intentando parsear respuesta de error:");
+        //            //System.Diagnostics.Debug.WriteLine(responseContent);
+
+        //            using var doc = JsonDocument.Parse(responseContent);
+        //            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+        //                doc.RootElement.TryGetProperty("mensaje", out var mensajeElement))
+        //            {
+        //                var mensaje = mensajeElement.GetString();
+        //                if (!string.IsNullOrWhiteSpace(mensaje))
+        //                {
+        //                    //System.Diagnostics.Debug.WriteLine("? Mensaje extraído: " + mensaje);
+        //                    throw new Exception(mensaje);
+        //                }
+        //            }
+
+        //            throw new Exception("Error desconocido al iniciar sesión.");
+        //        }
+        //    }
+        //    catch
+        //    {
+        //        throw;
+        //    }
+        //}
+
+
+
+
         public async Task<LoginResponseDto?> LoginAsync(UsuarioLoginDto loginDto)
         {
             try
             {
-                //await _js.InvokeVoidAsync("console.log", $"Consultando en: {_httpClient.BaseAddress}");
                 var response = await _httpClient.PostAsJsonAsync("api/auth/login", loginDto);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
 
-                //await _js.InvokeVoidAsync("console.log", $"[Login] Status: {(int)response.StatusCode} {response.StatusCode}");
-                //await _js.InvokeVoidAsync("console.log", $"[Login] Respuesta: {responseContent}");
+                await _js.InvokeVoidAsync(
+                    "console.log",
+                    $"[Login] Status: {(int)response.StatusCode} {response.StatusCode}"
+                );
+
+                await _js.InvokeVoidAsync(
+                    "console.log",
+                    $"[Login] Respuesta: '{responseContent}'"
+                );
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var loginResponse = JsonSerializer.Deserialize<LoginResponseDto>(responseContent, new JsonSerializerOptions
+                    if (string.IsNullOrWhiteSpace(responseContent))
                     {
-                        PropertyNameCaseInsensitive = true
-                    });
+                        throw new Exception(
+                            $"El backend respondió {(int)response.StatusCode} {response.StatusCode} pero sin contenido."
+                        );
+                    }
+
+                    var loginResponse = JsonSerializer.Deserialize<LoginResponseDto>(
+                        responseContent,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
 
                     return loginResponse;
                 }
                 else
                 {
-                    //System.Diagnostics.Debug.WriteLine("?? Intentando parsear respuesta de error:");
-                    //System.Diagnostics.Debug.WriteLine(responseContent);
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        throw new Exception(
+                            $"Error de login: {(int)response.StatusCode} {response.StatusCode}, sin contenido."
+                        );
+                    }
 
                     using var doc = JsonDocument.Parse(responseContent);
+
                     if (doc.RootElement.ValueKind == JsonValueKind.Object &&
                         doc.RootElement.TryGetProperty("mensaje", out var mensajeElement))
                     {
                         var mensaje = mensajeElement.GetString();
+
                         if (!string.IsNullOrWhiteSpace(mensaje))
-                        {
-                            //System.Diagnostics.Debug.WriteLine("? Mensaje extraído: " + mensaje);
                             throw new Exception(mensaje);
-                        }
                     }
 
-                    throw new Exception("Error desconocido al iniciar sesión.");
+                    throw new Exception(
+                        $"Error desconocido al iniciar sesión. Status: {(int)response.StatusCode}"
+                    );
                 }
             }
             catch
@@ -81,6 +153,9 @@ namespace IurixBlazor.Services
                 throw;
             }
         }
+
+
+
 
         //public async Task<bool> CerrarSesionAsync(string claveLicencia, string dispositivoSesionId, string token)
         //{
