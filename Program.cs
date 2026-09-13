@@ -26,12 +26,30 @@ configService.LeerConfiguracion();                         // <-- LEE YA
 System.Diagnostics.Debug.WriteLine($"[CFG-BOOT] AuthMode={configService.AuthMode}  URL={configService.ServidorBackendUrl}");
 builder.Services.AddSingleton(configService);
 
-// Si estás en local y querés que Blazor escuche en una IP/puerto fijos:
-bool isAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
+//// Si estás en local y querés que Blazor escuche en una IP/puerto fijos:
+//bool isAzure = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
+//if (!isAzure)
+//{
+//    // si querés forzar por ini: p.ej., puerto 7000
+//    builder.WebHost.UseUrls($"http://{configService.IpServidor}:7000");
+//}
+
+
+
+var isAzure =
+    !string.IsNullOrEmpty(
+        Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID")
+    );
+
+var portEnv = Environment.GetEnvironmentVariable("PORT");
+
 if (!isAzure)
 {
-    // si querés forzar por ini: p.ej., puerto 7000
-    builder.WebHost.UseUrls($"http://{configService.IpServidor}:7000");
+    var port = int.TryParse(portEnv, out var hostingPort)
+        ? hostingPort
+        : 7000;
+
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
 
