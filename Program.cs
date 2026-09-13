@@ -475,5 +475,6 @@ app.Use(async (context, next) =>
 app.Run();
 
 Console.WriteLine($"?? Entorno actual: {builder.Environment.EnvironmentName}");
-Console.WriteLine($"?? ContentRootPath: {app.Environment.ContentRootPath}");
+Console.WriteLine($"?? ContentRootPath: {builder.Environment.ContentRootPath}");
+
 Console.WriteLine($"?? WebRootPath: {app.Environment.WebRootPath}");
