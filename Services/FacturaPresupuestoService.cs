@@ -1,23 +1,20 @@
-﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http;
 
 
 public class FacturaPresupuestoService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IApiRequestSender _sender;
 
-    public FacturaPresupuestoService(IHttpClientFactory factory, ConfigService config)
+    public FacturaPresupuestoService(IApiRequestSender sender)
     {
-        //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
-        //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _httpClient = factory.CreateClient("Api");
+        _sender = sender;
     }
 
     public async Task<List<FacturaResumenDto>> ObtenerPorPresupuestoAsync(int presupuestoId)
     {
-        var resp = await _httpClient.GetAsync($"api/FacturaPresupuesto/por-presupuesto/{presupuestoId}");
+        using var resp = await _sender.SendAsync(HttpMethod.Get, $"api/FacturaPresupuesto/por-presupuesto/{presupuestoId}");
         resp.EnsureSuccessStatusCode();
         var data = await resp.Content.ReadFromJsonAsync<List<FacturaResumenDto>>();
         return data ?? new List<FacturaResumenDto>();

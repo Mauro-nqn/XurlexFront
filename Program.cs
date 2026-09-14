@@ -1,6 +1,7 @@
 using IurixBlazor.Data;
 using IurixBlazor.Services;
 using IurixBlazor.Services.Auth;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Services.Interfaces;
 using IurixBlazor.Services.Windowing;
 using IurixBlazor.Shared.Config;
@@ -234,6 +235,19 @@ builder.Services.AddHttpClient("Api", (sp, client) =>
     client.Timeout = TimeSpan.FromMinutes(5); // o el valor que prefieras
 })
 .AddHttpMessageHandler<JwtAuthorizationMessageHandler>();
+// Transporte sin identidad. El cliente legacy "Api" sigue disponible.
+builder.Services.AddHttpClient("ApiTransport", (sp, client) =>
+{
+    var config = sp.GetRequiredService<ConfigService>();
+    client.BaseAddress = new Uri(config.ServidorBackendUrl);
+    client.Timeout = TimeSpan.FromMinutes(5);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    UseCookies = false,
+    AllowAutoRedirect = false
+});
+builder.Services.AddScoped<IApiRequestSender, ApiRequestSender>();
 
 
 // Igual para IApiSesionService (si querés que también lleve JWT cuando corresponde)
