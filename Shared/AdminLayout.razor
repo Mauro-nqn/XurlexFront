@@ -823,7 +823,9 @@
                         <div class="collapse @(IsGroupActive("/personas", "/clasificacionpersona", "/caracteresintervencion", "/domicilios") ? "show" : "")"
                              id="grpPersonas">
                             <ul class="nav flex-column sub-menu ms-2">
+                                <PermisoView Permiso="@Permisos.Personas.Ver">
                                 <li><NavLink class="nav-link text-light sub-link" href="/personas">👤 Personas</NavLink></li>
+                                </PermisoView>
                                 <PermisoView Permiso="@Permisos.ClasificacionPersonas.Ver">
                                 <li><NavLink class="nav-link text-light sub-link" href="/clasificacionpersona">📝 Clasificacion</NavLink></li>
                                 </PermisoView>

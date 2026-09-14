@@ -28,10 +28,10 @@
 
         public static class CaracteresIntervencion
         {
-            public const string Ver = "CaracateresIntervencion.Ver";
-            public const string Crear = "CaracateresIntervencion.Crear";
-            public const string Editar = "CaracateresIntervencion.Editar";
-            public const string Eliminar = "CaracateresIntervencion.Eliminar";
+            public const string Ver = "CaracteresIntervencion.Ver";
+            public const string Crear = "CaracteresIntervencion.Crear";
+            public const string Editar = "CaracteresIntervencion.Editar";
+            public const string Eliminar = "CaracteresIntervencion.Eliminar";
         }
 
         public static class Domicilios
