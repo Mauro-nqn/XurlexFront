@@ -1,33 +1,43 @@
-﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
-using System.Net.Http;
 using System.Net.Http.Json;
+
 
 public class GrupoGestionService
 {
-    private readonly HttpClient _http;
+    private readonly IApiRequestSender _sender;
 
-    public GrupoGestionService(IHttpClientFactory factory, ConfigService config)
+    public GrupoGestionService(IApiRequestSender sender)
     {
-        //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
-        //_http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _http = factory.CreateClient("Api");
-
+        _sender = sender;
     }
 
     public async Task<List<GrupoGestionDto>> ObtenerTodosAsync()
-        => await _http.GetFromJsonAsync<List<GrupoGestionDto>>("api/GrupoGestion") ?? new();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, "api/GrupoGestion");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<GrupoGestionDto>>() ?? new();
+    }
 
     public async Task<GrupoGestionDto?> ObtenerPorIdAsync(int id)
-        => await _http.GetFromJsonAsync<GrupoGestionDto>($"api/GrupoGestion/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/GrupoGestion/{id}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GrupoGestionDto>();
+    }
 
     public async Task CrearAsync(CrearGrupoGestionDto dto)
-        => await _http.PostAsJsonAsync("api/GrupoGestion", dto);
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Post, "api/GrupoGestion", JsonContent.Create(dto));
+    }
 
     public async Task ActualizarAsync(int id, CrearGrupoGestionDto dto)
-        => await _http.PatchAsync($"api/GrupoGestion/{id}", JsonContent.Create(dto));
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/GrupoGestion/{id}", JsonContent.Create(dto));
+    }
 
     public async Task EliminarAsync(int id)
-        => await _http.DeleteAsync($"api/GrupoGestion/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/GrupoGestion/{id}");
+    }
 }

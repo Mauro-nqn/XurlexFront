@@ -1,32 +1,43 @@
-﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
-using System.Net.Http;
 using System.Net.Http.Json;
+
 
 public class TipoProcesoService
 {
-    private readonly HttpClient _http;
+    private readonly IApiRequestSender _sender;
 
-    public TipoProcesoService(IHttpClientFactory factory, ConfigService config)
+    public TipoProcesoService(IApiRequestSender sender)
     {
-        //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
-        //_http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _http = factory.CreateClient("Api");
+        _sender = sender;
     }
 
     public async Task<List<TipoProcesoDto>> ObtenerTodosAsync()
-        => await _http.GetFromJsonAsync<List<TipoProcesoDto>>("api/TipoProceso") ?? new();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, "api/TipoProceso");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<TipoProcesoDto>>() ?? new();
+    }
 
     public async Task<TipoProcesoDto?> ObtenerPorIdAsync(int id)
-        => await _http.GetFromJsonAsync<TipoProcesoDto>($"api/TipoProceso/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/TipoProceso/{id}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TipoProcesoDto>();
+    }
 
     public async Task CrearAsync(CrearTipoProcesoDto dto)
-        => await _http.PostAsJsonAsync("api/TipoProceso", dto);
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Post, "api/TipoProceso", JsonContent.Create(dto));
+    }
 
     public async Task ActualizarAsync(int id, CrearTipoProcesoDto dto)
-        => await _http.PatchAsync($"api/TipoProceso/{id}", JsonContent.Create(dto));
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/TipoProceso/{id}", JsonContent.Create(dto));
+    }
 
     public async Task EliminarAsync(int id)
-        => await _http.DeleteAsync($"api/TipoProceso/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/TipoProceso/{id}");
+    }
 }

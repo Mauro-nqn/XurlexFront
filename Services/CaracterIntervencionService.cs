@@ -1,5 +1,4 @@
-﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -7,28 +6,40 @@ namespace IurixBlazor.Services
 {
     public class CaracterIntervencionService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public CaracterIntervencionService(IHttpClientFactory factory, ConfigService config)
+        public CaracterIntervencionService(IApiRequestSender sender)
         {
-            //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
-            //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<CaracterIntervencionDto>> ObtenerTodosAsync()
-            => await _httpClient.GetFromJsonAsync<List<CaracterIntervencionDto>>("api/CaracterIntervencion") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/CaracterIntervencion");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<CaracterIntervencionDto>>() ?? new();
+        }
 
         public async Task<CaracterIntervencionDto?> ObtenerPorIdAsync(int id)
-            => await _httpClient.GetFromJsonAsync<CaracterIntervencionDto>($"api/CaracterIntervencion/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/CaracterIntervencion/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<CaracterIntervencionDto>();
+        }
 
         public async Task CrearAsync(CaracterIntervencionDto dto)
-            => await _httpClient.PostAsJsonAsync("api/CaracterIntervencion", dto);
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/CaracterIntervencion", JsonContent.Create(dto));
+        }
 
         public async Task ActualizarAsync(int id, CaracterIntervencionDto dto)
-            => await _httpClient.PatchAsync($"api/CaracterIntervencion/{id}", JsonContent.Create(dto));
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/CaracterIntervencion/{id}", JsonContent.Create(dto));
+        }
 
         public async Task EliminarAsync(int id)
-            => await _httpClient.DeleteAsync($"api/CaracterIntervencion/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/CaracterIntervencion/{id}");
+        }
     }
 }
