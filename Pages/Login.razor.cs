@@ -161,12 +161,12 @@ namespace IurixBlazor.Pages
         {
             var fondos = new List<string>
             {
-                "login.jpeg",
-                "login2.jpeg",
-                "login3.jpg",
-                "login4.jpg",
-                "login5.jpg",
-                "login6.jpg"
+                "login.webp",
+                "login2.webp",
+                "login3.webp",
+                "login4.webp",
+                "login5.webp",
+                "login6.webp"
             };
             FondoSeleccionado = fondos[new Random().Next(fondos.Count)];
         }
