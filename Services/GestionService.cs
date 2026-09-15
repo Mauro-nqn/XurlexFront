@@ -1,22 +1,26 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Text.Json;
 using static System.Net.WebRequestMethods;
 
 public class GestionService
 {
-    private readonly HttpClient _httpClient;
+    private readonly IApiRequestSender _sender;
 
-    public GestionService(IHttpClientFactory factory, ConfigService config)
+    public GestionService(IApiRequestSender sender)
     {
         //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
         //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _httpClient = factory.CreateClient("Api");
+        _sender = sender;
     }
 
     public async Task<List<GestionDto>> ObtenerTodasAsync()
-        => await _httpClient.GetFromJsonAsync<List<GestionDto>>("api/Gestion") ?? new();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, "api/Gestion");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<GestionDto>>() ?? new();
+    }
 
     //public async Task<GestionDto?> ObtenerPorIdAsync(int id)
 
@@ -25,13 +29,17 @@ public class GestionService
     public async Task<GestionDto?> ObtenerPorIdAsync(int id)
     {
         System.Diagnostics.Debug.WriteLine($"[GestionService] GET api/gestiones/{id}");
-        return await _httpClient.GetFromJsonAsync<GestionDto>($"api/Gestion/{id}");
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Gestion/{id}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GestionDto>();
     }
 
     public async Task<List<GestionDto>> FiltrarGestionesAsync(int? responsableId, string? tipo, string? nombreProceso, int? personaId)
     {
         var url = $"api/gestion/filtrar?responsableId={responsableId}&tipo={tipo}&nombreProceso={nombreProceso}&personaId={personaId}";
-        return await _httpClient.GetFromJsonAsync<List<GestionDto>>(url) ?? new List<GestionDto>();
+        using var response = await _sender.SendAsync(HttpMethod.Get, url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<GestionDto>>() ?? new List<GestionDto>();
     }
 
 
@@ -39,7 +47,9 @@ public class GestionService
     //    => await _httpClient.PostAsJsonAsync("api/Gestion", dto);
 
     public async Task CrearAsync(CrearGestionDto dto)
-    => await _httpClient.PostAsJsonAsync("api/Gestion/crear-con-proceso", dto);
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Post, "api/Gestion/crear-con-proceso", JsonContent.Create(dto));
+    }
 
     public async Task ActualizarAsync(int id, CrearGestionDto dto)
     {
@@ -48,7 +58,7 @@ public class GestionService
         System.Diagnostics.Debug.WriteLine($"[PATCH] Enviando JSON para actualizar gestión (ID={id}):\n{json}");
 
         // Ejecutar la petición PATCH
-        await _httpClient.PatchAsync($"api/Gestion/{id}", JsonContent.Create(dto));
+        using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/Gestion/{id}", JsonContent.Create(dto));
     }
 
 
@@ -56,27 +66,39 @@ public class GestionService
     public async Task<ProcesoInfoDto?> ObtenerDatosProcesoAsync(string tipo, int procesoId)
     {
         var url = $"api/gestion/datos-proceso/{tipo}/{procesoId}";
-        return await _httpClient.GetFromJsonAsync<ProcesoInfoDto>(url);
+        using var response = await _sender.SendAsync(HttpMethod.Get, url);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ProcesoInfoDto>();
     }
 
 
-    public Task<GestionPersonaDto?> ObtenerPersonaPorMovimientoAsync(int movimientoId)
-    => _httpClient.GetFromJsonAsync<GestionPersonaDto>($"api/gestion/persona-por-movimiento/{movimientoId}");
+    public async Task<GestionPersonaDto?> ObtenerPersonaPorMovimientoAsync(int movimientoId)
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/gestion/persona-por-movimiento/{movimientoId}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GestionPersonaDto>();
+    }
 
 
 
     public async Task<List<ParteProcesoDto>> ObtenerPartesPorProcesoJudicialAsync(int procesoId)
-    => await _httpClient.GetFromJsonAsync<List<ParteProcesoDto>>(
-        $"api/parteproceso/por-proceso-judicial/{procesoId}")
-       ?? new List<ParteProcesoDto>();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/parteproceso/por-proceso-judicial/{procesoId}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<ParteProcesoDto>>() ?? new List<ParteProcesoDto>();
+    }
 
     public async Task<List<ParteProcesoDto>> ObtenerPartesPorProcesoExtrajudicialAsync(int procesoId)
-        => await _httpClient.GetFromJsonAsync<List<ParteProcesoDto>>(
-            $"api/parteproceso/por-proceso-extrajudicial/{procesoId}")
-           ?? new List<ParteProcesoDto>();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/parteproceso/por-proceso-extrajudicial/{procesoId}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<ParteProcesoDto>>() ?? new List<ParteProcesoDto>();
+    }
 
 
 
     public async Task EliminarAsync(int id)
-        => await _httpClient.DeleteAsync($"api/Gestion/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/Gestion/{id}");
+    }
 }
