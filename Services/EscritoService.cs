@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -7,13 +7,13 @@ namespace IurixBlazor.Shared.Services
 {
     public class EscritoService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public EscritoService(IHttpClientFactory factory, ConfigService config)
+        public EscritoService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<ResultadoPaginadoDto<EscritoDto>> ObtenerEscritosAsync(int page = 1, int pageSize = 20, string? filtro = null)
@@ -22,7 +22,7 @@ namespace IurixBlazor.Shared.Services
             if (!string.IsNullOrWhiteSpace(filtro))
                 query += $"&filtro={Uri.EscapeDataString(filtro)}";
 
-            var response = await _httpClient.GetAsync(query);
+            using var response = await _sender.SendAsync(HttpMethod.Get, query);
             if (!response.IsSuccessStatusCode) return new();
 
             return await response.Content.ReadFromJsonAsync<ResultadoPaginadoDto<EscritoDto>>() ?? new();
@@ -30,27 +30,27 @@ namespace IurixBlazor.Shared.Services
 
         public async Task<EscritoDto?> ObtenerEscritoPorIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"api/escritos/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/escritos/{id}");
             return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<EscritoDto>() : null;
         }
 
         public async Task<bool> GuardarEscritoAsync(string titulo, string html)
         {
             var dto = new { titulo, contenidoHtml = html };
-            var response = await _httpClient.PostAsJsonAsync("api/escritos/guardar", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/escritos/guardar", JsonContent.Create(dto));
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> ActualizarEscritoAsync(int id, string titulo, string html)
         {
             var dto = new { titulo, contenidoHtml = html };
-            var response = await _httpClient.PatchAsJsonAsync($"api/escritos/{id}", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/escritos/{id}", JsonContent.Create(dto));
             return response.IsSuccessStatusCode;
         }
 
         public async Task<bool> EliminarEscritoAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/escritos/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/escritos/{id}");
             return response.IsSuccessStatusCode;
         }
     }
