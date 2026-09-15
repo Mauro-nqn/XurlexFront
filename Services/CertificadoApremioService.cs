@@ -1,5 +1,6 @@
 ﻿using IurixBlazor.Shared.Iademandas; // o el namespace donde pongas el DTO resultado
 using IurixBlazor.Shared.Dtos;
+using IurixBlazor.Services.Http;
 using Microsoft.AspNetCore.Components.Forms;
 
 using System.Net.Http.Headers;
@@ -7,11 +8,11 @@ using System.Net.Http.Json;
 
 public class CertificadoApremioService
 {
-    private readonly HttpClient _api;
+    private readonly IApiRequestSender _sender;
 
-    public CertificadoApremioService(IHttpClientFactory factory)
+    public CertificadoApremioService(IApiRequestSender sender)
     {
-        _api = factory.CreateClient("Api");
+        _sender = sender;
     }
 
     public async Task<CertificadoApremioParseResultDto?> ParseAsync(
@@ -27,7 +28,7 @@ public class CertificadoApremioService
 
         content.Add(fileContent, "archivo", archivo.Name);
 
-        var resp = await _api.PostAsync(
+        using var resp = await _sender.SendAsync(HttpMethod.Post,
             $"api/certificados/apremio/parse?procesoJudicialId={procesoJudicialId}",
             content,
             ct);
