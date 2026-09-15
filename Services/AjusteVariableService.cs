@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http;
 
@@ -7,42 +7,54 @@ namespace IurixBlazor.Services
 {
     public class AjusteVariableService
     {
-        private readonly HttpClient _http;
-        public AjusteVariableService(IHttpClientFactory factory, ConfigService config)
+        private readonly IApiRequestSender _sender;
+        public AjusteVariableService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _http = factory.CreateClient("Api");
+            _sender = sender;
         }
 
-        public Task<List<AjusteVariableDto>?> ObtenerTodosAsync()
-            => _http.GetFromJsonAsync<List<AjusteVariableDto>>("api/AjustesVariables");
+        public async Task<List<AjusteVariableDto>?> ObtenerTodosAsync()
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/AjustesVariables");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<AjusteVariableDto>>();
+        }
 
-        public Task<AjusteVariableDto?> ObtenerPorIdAsync(int id)
-            => _http.GetFromJsonAsync<AjusteVariableDto>($"api/AjustesVariables/{id}");
+        public async Task<AjusteVariableDto?> ObtenerPorIdAsync(int id)
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/AjustesVariables/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<AjusteVariableDto>();
+        }
 
         public async Task CrearAsync(CrearAjusteVariableDto dto)
         {
-            var r = await _http.PostAsJsonAsync("api/AjustesVariables", dto);
+            using var r = await _sender.SendAsync(HttpMethod.Post, "api/AjustesVariables", JsonContent.Create(dto));
             r.EnsureSuccessStatusCode();
         }
 
         public async Task ActualizarAsync(int id, PatchAjusteVariableDto dto)
         {
-            var r = await _http.PatchAsJsonAsync($"api/AjustesVariables/{id}", dto);
+            using var r = await _sender.SendAsync(HttpMethod.Patch, $"api/AjustesVariables/{id}", JsonContent.Create(dto));
             r.EnsureSuccessStatusCode();
         }
 
         public async Task EliminarAsync(int id)
         {
-            var r = await _http.DeleteAsync($"api/AjustesVariables/{id}");
+            using var r = await _sender.SendAsync(HttpMethod.Delete, $"api/AjustesVariables/{id}");
             r.EnsureSuccessStatusCode();
         }
 
 
-        public Task<List<AjusteVariableHistDto>?> ObtenerHistorialAsync(int id, int? take = null)
-            => _http.GetFromJsonAsync<List<AjusteVariableHistDto>>(
+        public async Task<List<AjusteVariableHistDto>?> ObtenerHistorialAsync(int id, int? take = null)
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get,
                 $"api/AjustesVariables/{id}/historial{(take is null ? "" : $"?take={take}")}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<AjusteVariableHistDto>>();
+        }
     }
 
 

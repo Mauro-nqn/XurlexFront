@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -8,29 +8,29 @@ namespace IurixBlazor.Services
 {
     public class DomicilioService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
 
 
-        public DomicilioService(IHttpClientFactory factory, ConfigService config)
+        public DomicilioService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
 
 
         public async Task<List<DomicilioDto>> ObtenerTodosAsync()
         {
-            var response = await _httpClient.GetAsync("api/Domicilio");
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/Domicilio");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<DomicilioDto>>() ?? new();
         }
 
         public async Task<DomicilioDto?> ObtenerPorIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"api/Domicilio/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Domicilio/{id}");
             if (!response.IsSuccessStatusCode) return null;
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<DomicilioDto>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -38,7 +38,7 @@ namespace IurixBlazor.Services
 
         public async Task<List<DomicilioDto>> ObtenerPorTipoAsync(TipoDomicilio tipo)
         {
-            var response = await _httpClient.GetAsync($"api/Domicilio?tipo={tipo}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Domicilio?tipo={tipo}");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<DomicilioDto>>() ?? new();
         }
@@ -54,7 +54,7 @@ namespace IurixBlazor.Services
 
         public async Task CrearAsync(CrearDomicilioDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/Domicilio", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/Domicilio", JsonContent.Create(dto));
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
@@ -74,7 +74,7 @@ namespace IurixBlazor.Services
 
         public async Task ActualizarAsync(int id, DomicilioDto dto)
         {
-            var response = await _httpClient.PatchAsync($"api/Domicilio/{id}", JsonContent.Create(dto));
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/Domicilio/{id}", JsonContent.Create(dto));
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
@@ -115,7 +115,7 @@ namespace IurixBlazor.Services
 
         public async Task EliminarAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/Domicilio/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/Domicilio/{id}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
