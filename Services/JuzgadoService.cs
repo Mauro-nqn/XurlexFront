@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -7,33 +7,47 @@ namespace IurixBlazor.Services
 {
     public class JuzgadoService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public JuzgadoService(IHttpClientFactory factory, ConfigService config)
+        public JuzgadoService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<JuzgadoDto>> ObtenerTodosAsync()
-            => await _httpClient.GetFromJsonAsync<List<JuzgadoDto>>("api/Juzgado") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/Juzgado");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<JuzgadoDto>>() ?? new();
+        }
 
         public async Task<JuzgadoDto?> ObtenerPorIdAsync(int id)
-            => await _httpClient.GetFromJsonAsync<JuzgadoDto>($"api/Juzgado/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Juzgado/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<JuzgadoDto>();
+        }
 
         public async Task CrearAsync(CrearJuzgadoDto dto)
-            => await _httpClient.PostAsJsonAsync("api/Juzgado", dto);
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/Juzgado", JsonContent.Create(dto));
+        }
 
         public async Task ActualizarAsync(int id, CrearJuzgadoDto dto)
-            => await _httpClient.PatchAsync($"api/Juzgado/{id}", JsonContent.Create(dto));
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/Juzgado/{id}", JsonContent.Create(dto));
+        }
 
         public async Task EliminarAsync(int id)
-            => await _httpClient.DeleteAsync($"api/Juzgado/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/Juzgado/{id}");
+        }
 
         public async Task<List<JuzgadoDto>> ObtenerPorCircunscripcionAsync(int circunscripcionId)
         {
-            var response = await _httpClient.GetAsync($"api/Juzgado/por-circunscripcion/{circunscripcionId}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Juzgado/por-circunscripcion/{circunscripcionId}");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<JuzgadoDto>>() ?? new();
         }

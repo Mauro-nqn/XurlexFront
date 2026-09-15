@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -7,34 +7,48 @@ namespace IurixBlazor.Services
 {
     public class CircunscripcionService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public CircunscripcionService(IHttpClientFactory factory, ConfigService config)
+        public CircunscripcionService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<CircunscripcionDto>> ObtenerTodosAsync()
-            => await _httpClient.GetFromJsonAsync<List<CircunscripcionDto>>("api/Circunscripcion") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/Circunscripcion");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<CircunscripcionDto>>() ?? new();
+        }
 
         public async Task<CircunscripcionDto?> ObtenerPorIdAsync(int id)
-            => await _httpClient.GetFromJsonAsync<CircunscripcionDto>($"api/Circunscripcion/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Circunscripcion/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<CircunscripcionDto>();
+        }
 
         public async Task CrearAsync(CrearCircunscripcionDto dto)
-            => await _httpClient.PostAsJsonAsync("api/Circunscripcion", dto);
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/Circunscripcion", JsonContent.Create(dto));
+        }
 
         public async Task ActualizarAsync(int id, CrearCircunscripcionDto dto)
-            => await _httpClient.PatchAsync($"api/Circunscripcion/{id}", JsonContent.Create(dto));
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/Circunscripcion/{id}", JsonContent.Create(dto));
+        }
 
         public async Task EliminarAsync(int id)
-            => await _httpClient.DeleteAsync($"api/Circunscripcion/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/Circunscripcion/{id}");
+        }
 
 
         public async Task<List<CircunscripcionDto>> ObtenerPorJurisdiccionAsync(int jurisdiccionId)
         {
-            var response = await _httpClient.GetAsync($"api/Circunscripcion/por-jurisdiccion/{jurisdiccionId}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Circunscripcion/por-jurisdiccion/{jurisdiccionId}");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<CircunscripcionDto>>() ?? new();
         }

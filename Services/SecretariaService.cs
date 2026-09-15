@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -7,24 +7,32 @@ namespace IurixBlazor.Services
 {
     public class SecretariaService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public SecretariaService(IHttpClientFactory factory, ConfigService config)
+        public SecretariaService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<SecretariaDto>> ObtenerTodosAsync()
-            => await _httpClient.GetFromJsonAsync<List<SecretariaDto>>("api/Secretaria") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/Secretaria");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<SecretariaDto>>() ?? new();
+        }
 
         public async Task<SecretariaDto?> ObtenerPorIdAsync(int id)
-            => await _httpClient.GetFromJsonAsync<SecretariaDto>($"api/Secretaria/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Secretaria/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<SecretariaDto>();
+        }
 
         public async Task<List<SecretariaDto>> ObtenerPorJuzgadoAsync(int juzgadoId)
         {
-            var response = await _httpClient.GetAsync($"api/Secretaria/por-juzgado/{juzgadoId}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Secretaria/por-juzgado/{juzgadoId}");
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return new List<SecretariaDto>(); // Si no hay resultados, devolvemos lista vacía
 
@@ -33,12 +41,18 @@ namespace IurixBlazor.Services
         }
 
         public async Task CrearAsync(CrearSecretariaDto dto)
-            => await _httpClient.PostAsJsonAsync("api/Secretaria", dto);
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/Secretaria", JsonContent.Create(dto));
+        }
 
         public async Task ActualizarAsync(int id, CrearSecretariaDto dto)
-            => await _httpClient.PatchAsync($"api/Secretaria/{id}", JsonContent.Create(dto));
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/Secretaria/{id}", JsonContent.Create(dto));
+        }
 
         public async Task EliminarAsync(int id)
-            => await _httpClient.DeleteAsync($"api/Secretaria/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/Secretaria/{id}");
+        }
     }
 }

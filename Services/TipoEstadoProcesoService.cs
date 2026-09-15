@@ -1,4 +1,4 @@
-﻿using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 
@@ -6,33 +6,51 @@ namespace IurixBlazor.Services
 {
     public class TipoEstadoProcesoService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public TipoEstadoProcesoService(IHttpClientFactory factory, ConfigService config)
+        public TipoEstadoProcesoService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<TipoEstadoProcesoDto>> ObtenerTodosAsync()
-            => await _httpClient.GetFromJsonAsync<List<TipoEstadoProcesoDto>>("api/TipoEstadoProceso") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/TipoEstadoProceso");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<TipoEstadoProcesoDto>>() ?? new();
+        }
 
         public async Task<TipoEstadoProcesoDto?> ObtenerPorIdAsync(int id)
-            => await _httpClient.GetFromJsonAsync<TipoEstadoProcesoDto>($"api/TipoEstadoProceso/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/TipoEstadoProceso/{id}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<TipoEstadoProcesoDto>();
+        }
 
         public async Task<List<TipoEstadoProcesoDto>> ObtenerPorTipoAsync(string tipo)
-    => await _httpClient.GetFromJsonAsync<List<TipoEstadoProcesoDto>>($"api/TipoEstadoProceso/por-tipo/{tipo}") ?? new();
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/TipoEstadoProceso/por-tipo/{tipo}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<List<TipoEstadoProcesoDto>>() ?? new();
+        }
 
 
         public async Task CrearAsync(TipoEstadoProcesoDto dto)
-            => await _httpClient.PostAsJsonAsync("api/TipoEstadoProceso", dto);
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/TipoEstadoProceso", JsonContent.Create(dto));
+        }
 
         public async Task ActualizarAsync(int id, TipoEstadoProcesoDto dto)
-            => await _httpClient.PatchAsync($"api/TipoEstadoProceso/{id}", JsonContent.Create(dto));
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/TipoEstadoProceso/{id}", JsonContent.Create(dto));
+        }
 
         public async Task EliminarAsync(int id)
-            => await _httpClient.DeleteAsync($"api/TipoEstadoProceso/{id}");
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/TipoEstadoProceso/{id}");
+        }
 
 
     }

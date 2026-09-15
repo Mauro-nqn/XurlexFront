@@ -1,4 +1,4 @@
-﻿using IurixBlazor.Shared.Config;
+﻿using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -7,21 +7,29 @@ using static Org.BouncyCastle.Math.EC.ECCurve;
 
 public class TipoAgendamientoService
 {
-    private readonly HttpClient _http;
+    private readonly IApiRequestSender _sender;
 
-    public TipoAgendamientoService(IHttpClientFactory factory, ConfigService config)
+    public TipoAgendamientoService(IApiRequestSender sender)
     {
         //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
         //_http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _http = factory.CreateClient("Api");
+        _sender = sender;
 
     }
 
     public async Task<List<TipoAgendamientoDto>> ObtenerTodosAsync()
-        => await _http.GetFromJsonAsync<List<TipoAgendamientoDto>>("api/tipoagendamiento") ?? new();
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, "api/tipoagendamiento");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<TipoAgendamientoDto>>() ?? new();
+    }
 
     public async Task<TipoAgendamientoDto?> ObtenerPorIdAsync(int id)
-        => await _http.GetFromJsonAsync<TipoAgendamientoDto?>($"api/tipoagendamiento/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/tipoagendamiento/{id}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TipoAgendamientoDto?>();
+    }
 
     //public async Task CrearAsync(CrearTipoAgendamientoDto dto)
     //    => await _http.PostAsJsonAsync("api/tipoagendamiento", dto);
@@ -36,7 +44,7 @@ public class TipoAgendamientoService
         System.Diagnostics.Debug.WriteLine(jsonDebug);
 
         // Enviar al backend
-        var response = await _http.PostAsJsonAsync("api/tipoagendamiento", dto);
+        using var response = await _sender.SendAsync(HttpMethod.Post, "api/tipoagendamiento", JsonContent.Create(dto));
 
         // Por si querés ver la respuesta
         var body = await response.Content.ReadAsStringAsync();
@@ -46,8 +54,12 @@ public class TipoAgendamientoService
     }
 
     public async Task ActualizarAsync(int id, TipoAgendamientoDto dto)
-        => await _http.PatchAsJsonAsync($"api/tipoagendamiento/{id}", dto);
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/tipoagendamiento/{id}", JsonContent.Create(dto));
+    }
 
     public async Task EliminarAsync(int id)
-        => await _http.DeleteAsync($"api/tipoagendamiento/{id}");
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/tipoagendamiento/{id}");
+    }
 }
