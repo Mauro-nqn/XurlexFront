@@ -1,4 +1,5 @@
 ﻿using IurixBlazor.Shared.Dtos;
+using IurixBlazor.Services.Http;
 using System.Net.Http;
 using System.Net.Http.Json;
 
@@ -6,21 +7,22 @@ namespace IurixBlazor.Services
 {
     public class ParteProcesoService
     {
-        private readonly HttpClient _http;
+        private readonly IApiRequestSender _sender;
 
 
 
-        public ParteProcesoService(IHttpClientFactory factory)
+        public ParteProcesoService(IApiRequestSender sender)
         {
             //_http = http;
-            _http = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         // === OBTENER PARTES POR PROCESO JUDICIAL ===
         public async Task<List<ParteProcesoDto>> ObtenerPorProcesoJudicialAsync(int procesoJudicialId)
         {
-            var result = await _http.GetFromJsonAsync<List<ParteProcesoDto>>(
-                $"api/partes-proceso/por-proceso-judicial/{procesoJudicialId}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/partes-proceso/por-proceso-judicial/{procesoJudicialId}");
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<ParteProcesoDto>>();
 
             return result ?? new List<ParteProcesoDto>();
         }
@@ -28,8 +30,9 @@ namespace IurixBlazor.Services
         // === OBTENER PARTES POR PROCESO EXTRAJUDICIAL ===
         public async Task<List<ParteProcesoDto>> ObtenerPorProcesoExtrajudicialAsync(int procesoExtrajudicialId)
         {
-            var result = await _http.GetFromJsonAsync<List<ParteProcesoDto>>(
-                $"api/partes-proceso/por-proceso-extrajudicial/{procesoExtrajudicialId}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/partes-proceso/por-proceso-extrajudicial/{procesoExtrajudicialId}");
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<List<ParteProcesoDto>>();
 
             return result ?? new List<ParteProcesoDto>();
         }
@@ -37,14 +40,14 @@ namespace IurixBlazor.Services
         // === CREAR PARTE ===
         public async Task CrearAsync(CrearParteProcesoDto dto)
         {
-            var response = await _http.PostAsJsonAsync("api/partes-proceso", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/partes-proceso", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
         // === ELIMINAR PARTE ===
         public async Task EliminarAsync(int id)
         {
-            var response = await _http.DeleteAsync($"api/partes-proceso/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/partes-proceso/{id}");
             response.EnsureSuccessStatusCode();
         }
     }

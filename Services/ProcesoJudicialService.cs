@@ -1,21 +1,22 @@
 ﻿
-    using IurixBlazor.Shared.Dtos;   
+    using IurixBlazor.Shared.Dtos;
+    using IurixBlazor.Services.Http;
     using System.Net.Http.Json;
 
     namespace IurixBlazor.Services
     {
         public class ProcesoJudicialService
         {
-            private readonly HttpClient _http;
+            private readonly IApiRequestSender _sender;
 
-            public ProcesoJudicialService(IHttpClientFactory httpClientFactory)
+            public ProcesoJudicialService(IApiRequestSender sender)
             {
-                _http = httpClientFactory.CreateClient("Api");
+                _sender = sender;
             }
 
             public async Task<ProcesoJudicialDto?> ObtenerPorIdAsync(int id)
             {
-                var resp = await _http.GetAsync($"api/ProcesoJudicial/{id}");
+                using var resp = await _sender.SendAsync(HttpMethod.Get, $"api/ProcesoJudicial/{id}");
 
                 if (!resp.IsSuccessStatusCode)
                     return null;
@@ -25,7 +26,7 @@
 
             public async Task ActualizarCertificadoAsync(int procesoJudicialId, ActualizarCertificadoProcesoJudicialDto dto)
             {
-                var resp = await _http.PatchAsync(
+                using var resp = await _sender.SendAsync(HttpMethod.Patch,
                     $"api/ProcesoJudicial/{procesoJudicialId}/certificado",
                     JsonContent.Create(dto)
                 );

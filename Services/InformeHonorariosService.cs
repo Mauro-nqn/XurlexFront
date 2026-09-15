@@ -1,20 +1,22 @@
 ﻿using IurixBlazor.Shared.Dtos;
+using IurixBlazor.Services.Http;
 using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace IurixBlazor.Services
 {
     public class InformeHonorariosService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public InformeHonorariosService(IHttpClientFactory factory)
+        public InformeHonorariosService(IApiRequestSender sender)
         {
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<LineaHonorarioDto>> ObtenerInformeAsync(InformeHonorariosFiltroDto filtro)
         {
-            var resp = await _httpClient.PostAsJsonAsync("api/informes/honorarios", filtro);
+            using var resp = await _sender.SendAsync(HttpMethod.Post, "api/informes/honorarios", JsonContent.Create(filtro));
             resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<List<LineaHonorarioDto>>()
                    ?? new List<LineaHonorarioDto>();

@@ -1,6 +1,6 @@
 ﻿// IurixBlazor/Services/RubroService.cs
 using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -10,35 +10,43 @@ namespace IurixBlazor.Services;
 
 public class RubroService
 {
-    private readonly HttpClient _http;
-    public RubroService(IHttpClientFactory factory, ConfigService config)
+    private readonly IApiRequestSender _sender;
+    public RubroService(IApiRequestSender sender)
     {
         //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
         //_http = new HttpClient { BaseAddress = new Uri(baseUrl) };
-        _http = factory.CreateClient("Api");
+        _sender = sender;
     }
 
-    public Task<List<RubroDto>?> ObtenerTodosAsync()
-        => _http.GetFromJsonAsync<List<RubroDto>>("api/Rubros");
+    public async Task<List<RubroDto>?> ObtenerTodosAsync()
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, "api/Rubros");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<List<RubroDto>>();
+    }
 
-    public Task<RubroDto?> ObtenerPorIdAsync(int id)
-        => _http.GetFromJsonAsync<RubroDto>($"api/Rubros/{id}");
+    public async Task<RubroDto?> ObtenerPorIdAsync(int id)
+    {
+        using var response = await _sender.SendAsync(HttpMethod.Get, $"api/Rubros/{id}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<RubroDto>();
+    }
 
     public async Task CrearAsync(CrearRubroDto dto)
     {
-        var r = await _http.PostAsJsonAsync("api/Rubros", dto);
+        using var r = await _sender.SendAsync(HttpMethod.Post, "api/Rubros", JsonContent.Create(dto));
         r.EnsureSuccessStatusCode();
     }
 
     public async Task ActualizarAsync(int id, RubroDto dto)
     {
-        var r = await _http.PatchAsJsonAsync($"api/Rubros/{id}", dto);
+        using var r = await _sender.SendAsync(HttpMethod.Patch, $"api/Rubros/{id}", JsonContent.Create(dto));
         r.EnsureSuccessStatusCode();
     }
 
     public async Task EliminarAsync(int id)
     {
-        var r = await _http.DeleteAsync($"api/Rubros/{id}");
+        using var r = await _sender.SendAsync(HttpMethod.Delete, $"api/Rubros/{id}");
         r.EnsureSuccessStatusCode();
     }
 }
