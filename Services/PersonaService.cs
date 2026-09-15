@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net;
 using System.Net.Http.Headers;
@@ -12,20 +12,20 @@ namespace IurixBlazor.Services
 {
     public class PersonaService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public PersonaService(IHttpClientFactory factory, ConfigService config)
+        public PersonaService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         //  Personas
         public async Task<List<PersonaDto>> ObtenerPersonasAsync()
         {
             
-            var response = await _httpClient.GetAsync("api/persona");
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/persona");
             if (!response.IsSuccessStatusCode)
                 return new List<PersonaDto>();
 
@@ -39,7 +39,7 @@ namespace IurixBlazor.Services
         public async Task<PersonaDto?> ObtenerPersonaPorIdAsync(int id, CancellationToken ct = default)
         {
             // Ajustá el path si tu controlador se llama distinto (e.g. api/persona)
-            var response = await _httpClient.GetAsync($"api/persona/{id}", ct);
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/persona/{id}", cancellationToken: ct);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
                 return null; // no existe
@@ -73,7 +73,9 @@ namespace IurixBlazor.Services
             if (query.Length < 2) return new();
 
             var url = $"api/persona/buscar?q={Uri.EscapeDataString(query)}&take={take}";
-            var res = await _httpClient.GetFromJsonAsync<List<PersonaDto>>(url);
+            using var response = await _sender.SendAsync(HttpMethod.Get, url);
+            response.EnsureSuccessStatusCode();
+            var res = await response.Content.ReadFromJsonAsync<List<PersonaDto>>();
             return res ?? new();
         }
 
@@ -82,7 +84,7 @@ namespace IurixBlazor.Services
 
         public async Task CrearPersonaAsync(PersonaDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/persona", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/persona", JsonContent.Create(dto));
 
             if (response.StatusCode == HttpStatusCode.Conflict)
             {
@@ -101,7 +103,7 @@ namespace IurixBlazor.Services
             var json = JsonSerializer.Serialize(patch);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PatchAsync($"api/persona/{id}", content);
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/persona/{id}", content);
             return response.IsSuccessStatusCode;
         }
 
@@ -113,7 +115,7 @@ namespace IurixBlazor.Services
 
         public async Task EliminarPersonaAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/persona/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/persona/{id}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
@@ -135,7 +137,7 @@ namespace IurixBlazor.Services
         // ✅ Clasificación Personas
         public async Task<List<ClasificacionPersonaDto>> ObtenerClasificacionesAsync()
         {
-            var response = await _httpClient.GetAsync("api/ClasificacionPersona");
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/ClasificacionPersona");
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<List<ClasificacionPersonaDto>>() ?? new();
@@ -143,19 +145,19 @@ namespace IurixBlazor.Services
 
         public async Task CrearClasificacionAsync(ClasificacionPersonaDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/ClasificacionPersona", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/ClasificacionPersona", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
         public async Task ActualizarClasificacionAsync(int id, ClasificacionPersonaDto dto)
         {
-            var response = await _httpClient.PatchAsJsonAsync($"api/ClasificacionPersona/{id}", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/ClasificacionPersona/{id}", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
         public async Task EliminarClasificacionAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/ClasificacionPersona/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/ClasificacionPersona/{id}");
             response.EnsureSuccessStatusCode();
         }
     }
