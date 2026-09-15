@@ -263,7 +263,7 @@
 
                                         <div class="col-md-6">
                                             <label class="form-label">Circunscripción </label>
-                                            <InputSelect class="form-select" @bind-Value="CircunscripcionSeleccionada" TValue="int?" disabled="@(!Circunscripciones.Any())">
+                                            <InputSelect class="form-select" @bind-Value="CircunscripcionSeleccionada" TValue="int?" >
                                                 <option value="@((int?)null)">Seleccione…</option>
                                                 @foreach (var c in Circunscripciones)
                                                 {

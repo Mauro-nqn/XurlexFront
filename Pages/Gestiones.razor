@@ -116,7 +116,8 @@
                 <option value="">Todos</option>
                 @foreach (var r in Responsables)
                 {
-                    <option value="@r.Id">@r.Nombre</option>
+                    <option value="@r.Id">@r.Nombre @r.Apellido</option>
+            
                 }
             </InputSelect>
 
@@ -172,7 +173,7 @@
                     <option value="">Todos</option>
                     @foreach (var r in Responsables)
                     {
-                        <option value="@r.Id">@r.Nombre</option>
+                        <option value="@r.Id">@r.Nombre @r.Apellido</option>
                     }
                 </InputSelect>
             </div>

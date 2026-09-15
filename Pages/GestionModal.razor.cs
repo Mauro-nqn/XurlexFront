@@ -559,6 +559,12 @@ protected string PersonaNombre => Form?.PersonaId is int ? "Cliente vinculado" :
 
             // reconstruir cascada partiendo de Secretaría
             //await ReconstruirJerarquiaJudicialAsync(dto.ProcesoJudicial.SecretariaId);
+
+            // Reconstruir las listas dependientes al abrir una gestión existente
+            if (dto.ProcesoJudicial.SecretariaId is int secretariaId && secretariaId > 0)
+            {
+                await ReconstruirJerarquiaJudicialAsync(secretariaId);
+            }
         }
 
         // Extrajudicial
