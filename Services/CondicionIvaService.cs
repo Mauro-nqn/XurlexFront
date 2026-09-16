@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -8,13 +8,13 @@ namespace IurixBlazor.Services
 {
     public class CondicionIvaService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public CondicionIvaService(IHttpClientFactory factory, ConfigService config)
+        public CondicionIvaService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         /// <summary>
@@ -22,7 +22,7 @@ namespace IurixBlazor.Services
         /// </summary>
         public async Task<List<CondicionIvaDto>> ObtenerTodasAsync()
         {
-            var response = await _httpClient.GetAsync("api/CondicionIva");
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/CondicionIva");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<CondicionIvaDto>>() ?? new();
         }
@@ -32,7 +32,7 @@ namespace IurixBlazor.Services
         /// </summary>
         public async Task<CondicionIvaDto?> ObtenerPorIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"api/CondicionIva/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/CondicionIva/{id}");
             if (!response.IsSuccessStatusCode)
                 return null;
 
@@ -45,7 +45,7 @@ namespace IurixBlazor.Services
         /// </summary>
         public async Task CrearAsync(CondicionIvaDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/CondicionIva", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/CondicionIva", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
@@ -54,7 +54,7 @@ namespace IurixBlazor.Services
         /// </summary>
         public async Task ActualizarAsync(int id, CondicionIvaDto dto)
         {
-            var response = await _httpClient.PatchAsync($"api/CondicionIva/{id}", JsonContent.Create(dto));
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/CondicionIva/{id}", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
@@ -63,7 +63,7 @@ namespace IurixBlazor.Services
         /// </summary>
         public async Task EliminarAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/CondicionIva/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/CondicionIva/{id}");
             response.EnsureSuccessStatusCode();
         }
     }
