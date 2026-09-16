@@ -1,5 +1,5 @@
 ﻿using IurixBlazor.Pages;
-using IurixBlazor.Shared.Config;
+using IurixBlazor.Services.Http;
 using IurixBlazor.Shared.Dtos;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -8,25 +8,25 @@ namespace IurixBlazor.Services
 {
     public class IvaAlicuotaService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IApiRequestSender _sender;
 
-        public IvaAlicuotaService(IHttpClientFactory factory, ConfigService config)
+        public IvaAlicuotaService(IApiRequestSender sender)
         {
             //var baseUrl = $"{(config.UsaHttpsServidorBackend ? "https" : "http")}://{config.IpServidor}:{config.Puerto}/";
             //_httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
-            _httpClient = factory.CreateClient("Api");
+            _sender = sender;
         }
 
         public async Task<List<IvaAlicuotaDto>> ObtenerTodasAsync()
         {
-            var response = await _httpClient.GetAsync("api/IvaAlicuota");
+            using var response = await _sender.SendAsync(HttpMethod.Get, "api/IvaAlicuota");
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<List<IvaAlicuotaDto>>() ?? new();
         }
 
         public async Task<IvaAlicuotaDto?> ObtenerPorIdAsync(int id)
         {
-            var response = await _httpClient.GetAsync($"api/IvaAlicuota/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/IvaAlicuota/{id}");
             if (!response.IsSuccessStatusCode)
                 return null;
 
@@ -37,24 +37,26 @@ namespace IurixBlazor.Services
         //Obtener por CodigoAfip
         public async Task<IvaAlicuotaDto?> ObtenerPorCodigoAfipAsync(int codigoAfip)
         {
-            return await _httpClient.GetFromJsonAsync<IvaAlicuotaDto>($"api/ivAlicuota/codigoAfip/{codigoAfip}");
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/ivAlicuota/codigoAfip/{codigoAfip}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<IvaAlicuotaDto>();
         }
 
         public async Task CrearAsync(IvaAlicuotaDto dto)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/IvaAlicuota", dto);
+            using var response = await _sender.SendAsync(HttpMethod.Post, "api/IvaAlicuota", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
         public async Task ActualizarAsync(int id, IvaAlicuotaDto dto)
         {
-            var response = await _httpClient.PatchAsync($"api/IvaAlicuota/{id}", JsonContent.Create(dto));
+            using var response = await _sender.SendAsync(HttpMethod.Patch, $"api/IvaAlicuota/{id}", JsonContent.Create(dto));
             response.EnsureSuccessStatusCode();
         }
 
         public async Task EliminarAsync(int id)
         {
-            var response = await _httpClient.DeleteAsync($"api/IvaAlicuota/{id}");
+            using var response = await _sender.SendAsync(HttpMethod.Delete, $"api/IvaAlicuota/{id}");
             response.EnsureSuccessStatusCode();
         }
     }
