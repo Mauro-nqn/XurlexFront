@@ -30,6 +30,13 @@ namespace IurixBlazor.Services
             return await response.Content.ReadFromJsonAsync<TipoComprobanteDto>();
         }
 
+        public async Task<TipoComprobanteDto?> ObtenerPorCodigoAfipAsync(int codigoAfip)
+        {
+            using var response = await _sender.SendAsync(HttpMethod.Get, $"api/tipocomprobante/por-codigo-afip/{codigoAfip}");
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<TipoComprobanteDto>();
+        }
+
         public async Task CrearAsync(CrearTipoComprobanteDto dto)
         {
             using var response = await _sender.SendAsync(HttpMethod.Post, "api/tipocomprobante", JsonContent.Create(dto));

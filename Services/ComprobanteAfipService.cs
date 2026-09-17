@@ -121,7 +121,7 @@
                 cbteTipo = FacturaDe(codIvaEmisor, codIvaReceptor);
             }
 
-            var tipoComprobante = await _tipoComprobanteService.ObtenerPorCodigoAsync(cbteTipo)
+            var tipoComprobante = await _tipoComprobanteService.ObtenerPorCodigoAfipAsync(cbteTipo)
                 ?? throw new InvalidOperationException($"No se encontró el tipo de comprobante con código {cbteTipo}");
 
             return (cbteTipo, tipoComprobante.Descripcion, tipoComprobante.Letra);

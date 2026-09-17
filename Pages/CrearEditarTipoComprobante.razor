@@ -12,9 +12,14 @@
         <h3>@(Codigo.HasValue ? "✏️ Editar Tipo de Comprobante" : "➕ Nuevo Tipo de Comprobante")</h3>
 
         <div class="row">
-            <div class="col-md-6 mb-3">
+      @*       <div class="col-md-6 mb-3">
                 <label for="codigo">Código</label>
                 <InputNumber id="codigo" class="form-control" @bind-Value="Tipo.Id" disabled="@Codigo.HasValue" />
+            </div> *@
+
+            <div class="col-md-6 mb-3">
+                <label for="letra">Codigo Afip</label>
+                <InputNumber id="CodigoAfip" class="form-control" @bind-Value="Tipo.CodigoAfip" />
             </div>
 
             <div class="col-md-6 mb-3">
