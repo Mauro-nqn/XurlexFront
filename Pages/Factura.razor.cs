@@ -817,7 +817,7 @@ public class FacturasBase : ComponentBase
         bool esNotaCredito = OperacionSeleccionada == "NotaCredito";
         bool esNotaDebito = OperacionSeleccionada == "NotaDebito";
 
-        var (cbteTipo, descripcion, letra) = await ComprobanteAfipService.DeterminarComprobanteAsync(
+        var (cbteTipo, descripcion, letra, tipoComprobanteId) = await ComprobanteAfipService.DeterminarComprobanteAsync(
             UsuarioEmisorCondicionCodigo,   // Emisor (AFIP)
             codReceptorAfip,                // Receptor (AFIP) ✅
             esNotaCredito,
@@ -825,7 +825,7 @@ public class FacturasBase : ComponentBase
         );
 
         Factura.CbteTipo = cbteTipo;
-        Factura.TipoComprobanteId = cbteTipo;
+        Factura.TipoComprobanteId = tipoComprobanteId;
         Factura.TipoComprobanteDescripcion = descripcion;
         Factura.TipoComprobanteLetra = letra;
         letraComprobante = letra;
@@ -1901,9 +1901,6 @@ public class FacturasBase : ComponentBase
     {
         // ✅ Asegurar que el CUIT/DNI del receptor está bien
         Factura.PersonaCUIT = Factura.DocTipo == 80 ? Factura.DocNro : null;
-
-        // ✅ Usar CbteTipo también como TipoComprobanteId para AFIP
-        Factura.TipoComprobanteId = Factura.CbteTipo;
 
         // ✅ Completar letra del comprobante desde la tabla de tipos
        

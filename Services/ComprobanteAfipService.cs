@@ -97,7 +97,7 @@
         public ComprobanteAfipService(TipoComprobanteService tipoComprobanteService)
             => _tipoComprobanteService = tipoComprobanteService;
 
-        public async Task<(int CbteTipo, string Descripcion, string Letra)> DeterminarComprobanteAsync(
+        public async Task<(int CbteTipo, string Descripcion, string Letra, int TipoComprobanteId)> DeterminarComprobanteAsync(
             int codIvaEmisor,
             int codIvaReceptor,
             bool esNotaCredito = false,
@@ -124,7 +124,7 @@
             var tipoComprobante = await _tipoComprobanteService.ObtenerPorCodigoAfipAsync(cbteTipo)
                 ?? throw new InvalidOperationException($"No se encontró el tipo de comprobante con código {cbteTipo}");
 
-            return (cbteTipo, tipoComprobante.Descripcion, tipoComprobante.Letra);
+            return (cbteTipo, tipoComprobante.Descripcion, tipoComprobante.Letra, tipoComprobante.Id);
         }
 
         private static int FacturaDe(int codIvaEmisor, int codIvaReceptor)
