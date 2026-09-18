@@ -2190,12 +2190,19 @@ public class FacturasBase : ComponentBase
             MonCotiz = Factura.MonCotiz,
             Concepto = Factura.Concepto,
 
+            CbteAsocTipo = Factura.CbteAsocTipo,
+            CbteAsocPtoVta = Factura.CbteAsocPtoVta,
+            CbteAsocNro = Factura.CbteAsocNro,
+            CbteAsocCuit = Factura.CbteAsocCuit,
+            CbteAsocFecha = Factura.CbteAsocFecha,
+
             FormaVenta = Factura.FormaVenta,
             UsuarioId = UsuarioId,
             // …campos de cabecera…
             Neto = Factura.Neto,
             Iva = Factura.Iva,
             Total = Factura.Total,
+            IvaDiscriminado = Factura.IvaDiscriminado,
             Detalles = Detalles.Select(d => new CrearFacturaDetalleDto
             {
                 Descripcion = d.Descripcion,
