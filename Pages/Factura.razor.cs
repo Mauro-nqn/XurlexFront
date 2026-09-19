@@ -255,6 +255,8 @@ public class FacturasBase : ComponentBase
         ComprobantesAsociables =
             await FacturaService.ObtenerComprobantesAsociablesPorPersonaAsync(
                 Factura.PersonaId,
+                UsuarioId,
+                Factura.CbteTipo,
                 OperacionSeleccionada);
 
         await JS.InvokeVoidAsync(

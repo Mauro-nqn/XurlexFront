@@ -51,10 +51,12 @@ namespace IurixBlazor.Services
         //Metodo para obtener facturas para nota de credito y debito
         public async Task<List<FacturaDto>> ObtenerComprobantesAsociablesPorPersonaAsync(
     int personaId,
+    int emisorUsuarioId,
+    int cbteTipoNota,
     string operacion)
         {
             return await _httpClient.GetFromJsonAsync<List<FacturaDto>>(
-                $"api/Factura/asociables/persona/{personaId}?operacion={operacion}")
+                $"api/Factura/asociables/persona/{personaId}?emisorUsuarioId={emisorUsuarioId}&cbteTipoNota={cbteTipoNota}&operacion={operacion}")
                 ?? new List<FacturaDto>();
         }
 
