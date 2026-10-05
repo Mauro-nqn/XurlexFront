@@ -1,0 +1,168 @@
+﻿@page "/casual"
+@attribute [Authorize]
+@layout AdminLayout
+
+@using IurixBlazor.Services
+
+@inject CasualService CasualService
+@inject NavigationManager Navigation
+
+<PageTitle>Escritos - XurLex</PageTitle>
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-0">Escritos</h4>
+            <small class="text-muted">
+                Documentos DOCX administrados con Casual Office
+            </small>
+        </div>
+
+        <InputFile OnChange="ImportarDocumento"
+                   accept=".docx"
+                   class="form-control"
+                   style="max-width:350px;" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="alert alert-danger">
+            @Error
+        </div>
+    }
+
+    @if (Cargando)
+    {
+        <p>Cargando documentos...</p>
+    }
+    else if (Documentos.Count == 0)
+    {
+        <div class="alert alert-light border">
+            No hay escritos cargados.
+        </div>
+    }
+    else
+    {
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Formato</th>
+                    <th>Fecha</th>
+                    <th style="width:180px;"></th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var doc in Documentos)
+                {
+                    <tr>
+                        <td>@doc.Titulo</td>
+
+                        <td>
+                            @doc.Formato
+                        </td>
+
+                        <td>
+                            @doc.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+
+                        <td class="text-end">
+
+                            <button class="btn btn-sm btn-primary me-2"
+                                    @onclick="() => Abrir(doc.Id)">
+                                Abrir
+                            </button>
+
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="() => Eliminar(doc.Id)">
+                                Eliminar
+                            </button>
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
+
+@code {
+
+    private List<CasualDocumentoDto> Documentos = new();
+
+    private bool Cargando = true;
+
+    private string? Error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        try
+        {
+            Cargando = true;
+            Error = null;
+
+            Documentos = await CasualService.ListarAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            Cargando = false;
+        }
+    }
+
+    private async Task ImportarDocumento(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            Error = null;
+
+            var archivo = e.File;
+
+            await using var stream =
+                archivo.OpenReadStream(50 * 1024 * 1024);
+
+            await CasualService.ImportarAsync(
+                stream,
+                archivo.Name
+            );
+
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    private void Abrir(int id)
+    {
+        Navigation.NavigateTo($"/casual/editor/{id}");
+    }
+
+    private async Task Eliminar(int id)
+    {
+        try
+        {
+            Error = null;
+
+            await CasualService.EliminarAsync(id);
+
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+}

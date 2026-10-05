@@ -370,6 +370,10 @@ builder.Services.AddScoped<ProcuracionService>();
 
 builder.Services.AddScoped<DextraService>();
 
+builder.Services.AddScoped<CollaboraService>();
+
+builder.Services.AddScoped<CasualService>();
+
 
 // Registrar servicio de manejo de archivos
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();

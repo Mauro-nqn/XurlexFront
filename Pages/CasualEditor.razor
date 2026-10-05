@@ -1,0 +1,451 @@
+﻿@page "/casual/editor/{Id:int}"
+@attribute [Authorize]
+@layout AdminLayout
+
+@using IurixBlazor.Services
+
+@inject IJSRuntime JS
+@inject CasualService CasualService
+
+
+<PageTitle>Editor XurLex</PageTitle>
+
+<div class="casual-page">
+
+    <div class="casual-toolbar-xurlex">
+        <div>
+            <button class="btn btn-outline-secondary"
+                    @onclick="Volver">
+                ← Volver
+            </button>
+
+            <strong class="ms-3">
+                Editor de escritos
+            </strong>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+
+        <button class="btn btn-primary"
+                @onclick="Guardar">
+            💾 Guardar
+        </button>
+
+        <button class="btn btn-outline-primary"
+                @onclick="AbrirGuardarComo">
+            📄 Guardar como...
+        </button>
+
+        </div>
+
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="alert alert-danger">
+            @Error
+        </div>
+
+    }
+
+    @if (!string.IsNullOrWhiteSpace(MensajeExito))
+    {
+        <div class="alert alert-success py-2 mb-2">
+            ✓ @MensajeExito
+        </div>
+    }
+
+
+    
+
+    @if (_mostrarGuardarComo)
+    {
+        <div class="casual-modal-backdrop">
+
+            <div class="casual-modal">
+
+                <h5>Guardar como</h5>
+
+                <p class="text-muted">
+                    Se creará un nuevo escrito sin modificar el original.
+                </p>
+
+                <input class="form-control"
+                       @bind="_nuevoTitulo"
+                       placeholder="Nombre del escrito" />
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
+
+                    <button class="btn btn-outline-secondary"
+                            @onclick="CancelarGuardarComo">
+                        Cancelar
+                    </button>
+
+                    <button class="btn btn-primary"
+                            @onclick="GuardarComo"
+                            disabled="@_guardandoComo">
+                        @(_guardandoComo
+                            ? "Guardando..."
+                            : "Guardar")
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+    <div id="casual-editor"
+         class="casual-editor-container">
+    </div>
+
+</div>
+
+@code {
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private string? Error;
+    private bool _inicializado;
+
+    private DotNetObjectReference<CasualEditor>? _dotNetRef;
+    private bool _mostrarGuardarComo;
+    private bool _guardandoComo;
+    private string _nuevoTitulo = "";
+
+    private string? MensajeExito;
+
+
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _inicializado)
+            return;
+
+        _inicializado = true;
+
+        try
+        {
+            Error = null;
+
+            var contenido =
+                await CasualService.ObtenerContenidoAsync(Id);
+
+            if (contenido == null || contenido.Length == 0)
+            {
+                Error = "No se pudo obtener el documento.";
+                StateHasChanged();
+                return;
+            }
+
+            _dotNetRef =
+                DotNetObjectReference.Create(this);
+
+            await JS.InvokeVoidAsync(
+                "casualXurlex.openBytes",
+                "casual-editor",
+                contenido,
+                _dotNetRef
+            );
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine(
+                $"[Casual] OnAfterRender cancelado: {ex}"
+            );
+        }
+        catch (OperationCanceledException ex)
+        {
+            Console.WriteLine(
+                $"[Casual] OnAfterRender cancelado: {ex}"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Casual] ERROR OnAfterRender: {ex}"
+            );
+
+            Error = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Guardar()
+    {
+
+
+        try
+        {
+            Error = null;
+
+            var base64 = await JS.InvokeAsync<string>(
+                 "casualXurlex.save"
+             );
+
+            if (string.IsNullOrWhiteSpace(base64))
+            {
+                Error = "Casual no devolvió contenido para guardar.";
+                return;
+            }
+
+            var contenido = Convert.FromBase64String(base64);
+
+            var ok = await CasualService.GuardarAsync(
+                Id,
+                contenido
+            );
+
+            if (!ok)
+            {
+                Error = "No se pudo guardar el documento.";
+                return;
+            }
+
+            await JS.InvokeVoidAsync(
+                "casualXurlex.clearAutosave"
+            );
+
+            MensajeExito = "Documento guardado correctamente.";
+        }
+        catch (TaskCanceledException ex)
+        {
+            Console.WriteLine(
+                $"[Casual] Guardar cancelado: {ex}"
+            );
+        }
+        catch (OperationCanceledException ex)
+        {
+            Console.WriteLine(
+                $"[Casual] Guardar cancelado: {ex}"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Casual] ERROR Guardar: {ex}"
+            );
+
+            Error = ex.Message;
+            StateHasChanged();
+        }
+    }
+
+
+    private void AbrirGuardarComo()
+    {
+        Error = null;
+
+        _nuevoTitulo = $"Copia del escrito {Id}";
+        _mostrarGuardarComo = true;
+    }
+
+    private void CancelarGuardarComo()
+    {
+        _mostrarGuardarComo = false;
+        _nuevoTitulo = "";
+    }
+
+
+
+    private async Task GuardarComo()
+    {
+        if (string.IsNullOrWhiteSpace(_nuevoTitulo))
+        {
+            Error = "Ingresá un nombre para el documento.";
+            return;
+        }
+
+        try
+        {
+            Error = null;
+            _guardandoComo = true;
+
+            // Obtiene el DOCX ACTUAL directamente
+            // desde el editor, sin guardar el original.
+            var base64 = await JS.InvokeAsync<string>(
+                "casualXurlex.save"
+            );
+
+            if (string.IsNullOrWhiteSpace(base64))
+            {
+                Error =
+                    "Casual no devolvió contenido para guardar.";
+
+                return;
+            }
+
+            var contenido =
+                Convert.FromBase64String(base64);
+
+            var nuevo =
+                await CasualService.GuardarComoAsync(
+                    _nuevoTitulo.Trim(),
+                    contenido
+                );
+
+            if (nuevo == null)
+            {
+                Error =
+                    "No se pudo crear el nuevo escrito.";
+
+                return;
+            }
+
+            // El nuevo documento ya fue creado correctamente.
+            // Eliminamos el recovery correspondiente al documento actual.
+            await JS.InvokeVoidAsync(
+                "casualXurlex.clearAutosave"
+            );
+
+            _mostrarGuardarComo = false;
+
+            // Abrimos el NUEVO escrito.
+            Navigation.NavigateTo(
+                $"/casual/editor/{nuevo.Id}"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Casual] ERROR GuardarComo: {ex}"
+            );
+
+            Error = ex.Message;
+        }
+        finally
+        {
+            _guardandoComo = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/casual");
+    }
+
+
+
+
+   
+
+
+
+    [JSInvokable]
+    public async Task GuardarDesdeCasual(string base64)
+    {
+        try
+        {
+            Error = null;
+
+            var contenido =
+                Convert.FromBase64String(base64);
+
+            var ok =
+                await CasualService.GuardarAsync(
+                    Id,
+                    contenido
+                );
+
+            if (!ok)
+            {
+                Error = "No se pudo guardar el documento.";
+            }
+
+            // El backend confirmó el guardado.
+            // Ya podemos eliminar la recuperación pendiente de Casual.
+            await JS.InvokeVoidAsync(
+                "casualXurlex.clearAutosave"
+            );
+
+            MensajeExito =
+                "Documento guardado correctamente.";          
+
+          
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+}
+
+    
+
+
+
+<style>
+    .casual-page {
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .casual-toolbar-xurlex {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px 0;
+    }
+
+        .casual-toolbar-xurlex > div {
+            display: flex;
+            align-items: center;
+        }
+
+    .casual-editor-container {
+        flex: 1 1 0;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    body:has(.casual-page) {
+        overflow: hidden !important;
+    }
+
+
+
+    .casual-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, .35);
+    }
+
+    .casual-modal {
+        width: min(480px, calc(100vw - 32px));
+        padding: 24px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+    }
+</style>
+
+

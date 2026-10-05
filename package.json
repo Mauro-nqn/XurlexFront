@@ -1,9 +1,16 @@
 {
   "dependencies": {
+    "@casualoffice/docs": "^1.4.2",
     "@fullcalendar/core": "^5.11.5",
     "@fullcalendar/daygrid": "^5.11.5",
     "@fullcalendar/list": "^5.11.5",
     "@fullcalendar/timegrid": "^5.11.5",
-    "bootstrap-icons": "^1.13.1"
+    "@hocuspocus/provider": "^2.15.3",
+    "bootstrap-icons": "^1.13.1",
+    "y-prosemirror": "^1.3.7",
+    "yjs": "^13.6.32"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

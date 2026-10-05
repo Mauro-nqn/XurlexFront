@@ -1,0 +1,33 @@
+﻿@page "/collabora/editor/{Id:int}"
+@attribute [Authorize]
+@layout AdminLayout
+
+
+<div class="collabora-editor-container">
+
+    <div class="collabora-toolbar">
+        <button class="btn btn-outline-secondary btn-sm"
+                @onclick="Volver">
+            ← Volver
+        </button>
+
+        <span class="ms-3 fw-bold">
+            Editor de escritos
+        </span>
+
+        <button class="btn btn-outline-primary btn-sm ms-auto"
+                @onclick="GuardarComo">
+            💾 Guardar como nuevo
+        </button>
+    </div>
+
+    <div class="collabora-frame-container">
+        <iframe src="@CollaboraUrl"
+                class="collabora-frame"
+                allowfullscreen>
+        </iframe>
+    </div>
+
+</div>
+
+
