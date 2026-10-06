@@ -1,8 +1,9 @@
 using IurixBlazor.Services;
 using IurixBlazor.Shared.Dtos;
+using IurixBlazor.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using IurixBlazor.Shared.Services;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 
@@ -17,6 +18,8 @@ namespace IurixBlazor.Pages
 
         [Inject] private IJSRuntime JS { get; set; } = default!;
 
+        [Inject] IConfiguration Configuration { get; set; } = default!;
+
         [Parameter]
         public int Id { get; set; }
 
@@ -25,22 +28,44 @@ namespace IurixBlazor.Pages
 
         private string CollaboraUrl = string.Empty;
 
+        //protected override void OnParametersSet()
+        //{
+        //    var wopiSrc =
+        //        $"http://host.docker.internal:8080/api/collabora/wopi/files/{Id}";
+
+        //    var encodedWopi =
+        //        Uri.EscapeDataString(wopiSrc);
+
+        //    //Local
+        //    //CollaboraUrl =
+        //    //    $"http://192.168.1.254:9980/browser/dist/cool.html?WOPISrc={encodedWopi}";
+
+        //    //Tunel Cloudflare
+        //    CollaboraUrl =
+        //        $"https://collabora.xurlex.com.ar/browser/dist/cool.html?WOPISrc={encodedWopi}";
+
+        //}
+
         protected override void OnParametersSet()
         {
+            var collaboraServer =
+                Configuration["Collabora:ServerUrl"]
+                ?? throw new InvalidOperationException(
+                    "Falta configurar Collabora:ServerUrl");
+
+            var wopiBaseUrl =
+                Configuration["Collabora:WopiBaseUrl"]
+                ?? throw new InvalidOperationException(
+                    "Falta configurar Collabora:WopiBaseUrl");
+
             var wopiSrc =
-                $"http://host.docker.internal:8080/api/collabora/wopi/files/{Id}";
+                $"{wopiBaseUrl.TrimEnd('/')}/api/collabora/wopi/files/{Id}";
 
             var encodedWopi =
                 Uri.EscapeDataString(wopiSrc);
 
-            //Local
-            //CollaboraUrl =
-            //    $"http://192.168.1.254:9980/browser/dist/cool.html?WOPISrc={encodedWopi}";
-
-            //Tunel Cloudflare
             CollaboraUrl =
-                $"https://collabora.xurlex.com.ar/browser/dist/cool.html?WOPISrc={encodedWopi}";
-
+                $"{collaboraServer.TrimEnd('/')}/browser/dist/cool.html?WOPISrc={encodedWopi}";
         }
 
         private void Volver()
